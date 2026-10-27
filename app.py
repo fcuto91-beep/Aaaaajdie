@@ -84,46 +84,55 @@ if submitted:
         st.rerun()
 
 st.markdown("---")
-st.subheader("📋 검사 이력 조회 및 관리")
+st.subheader("📋 전체 검사 내역 리스트 및 돋보기 확인")
 
 if os.path.exists(DATA_FILE):
     try:
         df_load = pd.read_csv(DATA_FILE)
         
-        # 🔍 사용자가 헷갈리지 않게 크게 만든 검색 창
+        # 🔍 상단 검색 창
         search_query = st.text_input("🔍 이력 검색 (LOT명 또는 특이사항 입력)", placeholder="검색어를 입력하세요...")
         if search_query:
-            # 검색어가 포함된 행만 필터링
             df_filtered = df_load[
                 df_load.astype(str).apply(lambda row: row.str.contains(search_query, case=False).any(), axis=1)
-            ]
+            ].reset_index(drop=True)
         else:
-            df_filtered = df_load
+            df_filtered = df_load.reset_index(drop=True)
 
-        st.markdown("##### 📊 전체 검사 내역 리스트")
+        # 전체 표 보여주기
         st.dataframe(df_filtered, use_container_width=True)
         
-        # 🖼️ 돋보기(미리보기) 기능: 저장된 사진을 선택해서 크게 보기
         st.markdown("---")
-        st.markdown("##### 🔍 현장 사진 돋보기 미리보기")
-        
-        # 사진 파일명이 존재하는 항목들만 추출
-        image_list = df_load[df_load["사진파일명"] != "없음"]["사진파일명"].tolist()
-        
-        if image_list:
-            selected_img_name = st.selectbox("확인할 사진 선택 (LOT 파일명)", image_list)
-            if selected_img_name:
-                target_img_path = os.path.join(IMAGE_DIR, selected_img_name)
-                if os.path.exists(target_img_path):
-                    st.image(target_img_path, caption=f"미리보기: {selected_img_name}", width=400)
+        st.markdown("### 🔍 돋보기 사진 미리보기 (각 이력별 확인)")
+        st.markdown("리스트에 등록된 검사 건별로 돋보기 버튼을 눌러 사진을 바로 확인하세요.")
+
+        # 각 행마다 돋보기 버튼과 함께 상세 정보 및 사진 팝업처럼 띄우기
+        for idx, row in df_filtered.iterrows():
+            lot_val = row["자재/LOT명"]
+            date_val = row["검사일시"]
+            img_file = row["사진파일명"]
+            
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.write(f"📌 **[{idx}] LOT: {lot_val}** ({date_val})")
+            with col2:
+                # 돋보기 버튼
+                preview_btn = st.button(f"🔍 돋보기 #{idx}", key=f"preview_{idx}")
+            
+            if preview_btn:
+                if img_file != "없음":
+                    target_img_path = os.path.join(IMAGE_DIR, img_file)
+                    if os.path.exists(target_img_path):
+                        st.image(target_img_path, caption=f"LOT: {lot_val} / 파일명: {img_file}", width=350)
+                    else:
+                        st.warning(f"⚠️ 사진 파일을 찾을 수 없습니다: {img_file}")
                 else:
-                    st.warning("⚠️ 해당 사진 파일을 폴더에서 찾을 수 없습니다.")
-        else:
-            st.info("💡 첨부된 사진이 없습니다.")
+                    st.info("💡 이 검사 건에는 첨부된 사진이 없습니다.")
+            st.markdown("<hr style='margin: 5px 0;'>", unsafe_allow_html=True)
 
         st.markdown("---")
         
-        # 📦 다운로드 버튼을 큼직하고 눈에 띄게 배치
+        # 📦 전체 데이터 및 사진 ZIP 다운로드 버튼
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             if os.path.exists(DATA_FILE):
