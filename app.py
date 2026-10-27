@@ -84,13 +84,12 @@ if submitted:
         st.rerun()
 
 st.markdown("---")
-st.subheader("📋 전체 검사 내역 리스트 및 돋보기 확인")
+st.subheader("📋 전체 검사 내역 리스트")
 
 if os.path.exists(DATA_FILE):
     try:
         df_load = pd.read_csv(DATA_FILE)
         
-        # 🔍 상단 검색 창
         search_query = st.text_input("🔍 이력 검색 (LOT명 또는 특이사항 입력)", placeholder="검색어를 입력하세요...")
         if search_query:
             df_filtered = df_load[
@@ -99,40 +98,65 @@ if os.path.exists(DATA_FILE):
         else:
             df_filtered = df_load.reset_index(drop=True)
 
-        # 전체 표 보여주기
-        st.dataframe(df_filtered, use_container_width=True)
-        
         st.markdown("---")
-        st.markdown("### 🔍 돋보기 사진 미리보기 (각 이력별 확인)")
-        st.markdown("리스트에 등록된 검사 건별로 돋보기 버튼을 눌러 사진을 바로 확인하세요.")
+        st.markdown("💡 **사진파일명 바로 옆의 🔍 버튼을 누르면 현장 사진이 아래에 바로 표시됩니다.**")
 
-        # 각 행마다 돋보기 버튼과 함께 상세 정보 및 사진 팝업처럼 띄우기
+        # 미리보기 상태 관리
+        if "preview_img" not in st.session_state:
+            st.session_state.preview_img = None
+        if "preview_title" not in st.session_state:
+            st.session_state.preview_title = ""
+
+        # 표 형태의 깔끔한 행 출력 (파일명 + 돋보기 버튼 나란히 배치)
         for idx, row in df_filtered.iterrows():
-            lot_val = row["자재/LOT명"]
             date_val = row["검사일시"]
-            img_file = row["사진파일명"]
-            
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.write(f"📌 **[{idx}] LOT: {lot_val}** ({date_val})")
-            with col2:
-                # 돋보기 버튼
-                preview_btn = st.button(f"🔍 돋보기 #{idx}", key=f"preview_{idx}")
-            
-            if preview_btn:
-                if img_file != "없음":
-                    target_img_path = os.path.join(IMAGE_DIR, img_file)
-                    if os.path.exists(target_img_path):
-                        st.image(target_img_path, caption=f"LOT: {lot_val} / 파일명: {img_file}", width=350)
-                    else:
-                        st.warning(f"⚠️ 사진 파일을 찾을 수 없습니다: {img_file}")
-                else:
-                    st.info("💡 이 검사 건에는 첨부된 사진이 없습니다.")
-            st.markdown("<hr style='margin: 5px 0;'>", unsafe_allow_html=True)
+            lot_val = row["자재/LOT명"]
+            nail_val = row["손톱박리"]
+            tape_val = row["테이프박리"]
+            file_val = row["사진파일명"]
+            rem_val = row["특이사항"]
+
+            with st.container():
+                cols = st.columns([2.2, 1.5, 1, 1, 3, 1.2])
+                with cols[0]:
+                    st.markdown(f"<small>{date_val}</small>", unsafe_allow_html=True)
+                with cols[1]:
+                    st.markdown(f"**{lot_val}**")
+                with cols[2]:
+                    st.markdown(f"{nail_val}")
+                with cols[3]:
+                    st.markdown(f"{tape_val}")
+                with cols[4]:
+                    # 파일명과 돋보기 버튼을 한 칸 안에서 나란히 배치
+                    f_col1, f_col2 = st.columns([3, 1])
+                    with f_col1:
+                        st.markdown(f"<small style='word-break: break-all;'>{file_val}</small>", unsafe_allow_html=True)
+                    with f_col2:
+                        if file_val != "없음":
+                            if st.button("🔍", key=f"zoom_{idx}"):
+                                st.session_state.preview_img = file_val
+                                st.session_state.preview_title = f"LOT: {lot_val} ({file_val})"
+                        else:
+                            st.markdown("-")
+                with cols[5]:
+                    st.markdown(f"<small>{rem_val}</small>", unsafe_allow_html=True)
+                st.markdown("<hr style='margin: 5px 0; border: 0.5px solid #eee;'>", unsafe_allow_html=True)
+
+        # 돋보기 버튼을 눌렀을 때 표시되는 미리보기 영역
+        if st.session_state.preview_img:
+            st.markdown("---")
+            st.markdown(f"### 🖼️ 사진 미리보기: {st.session_state.preview_title}")
+            target_path = os.path.join(IMAGE_DIR, st.session_state.preview_img)
+            if os.path.exists(target_path):
+                st.image(target_path, width=400)
+                if st.button("❌ 미리보기 닫기"):
+                    st.session_state.preview_img = None
+                    st.rerun()
+            else:
+                st.warning("⚠️ 사진 파일을 찾을 수 없습니다.")
 
         st.markdown("---")
         
-        # 📦 전체 데이터 및 사진 ZIP 다운로드 버튼
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             if os.path.exists(DATA_FILE):
