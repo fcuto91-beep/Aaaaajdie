@@ -39,7 +39,11 @@ if submitted:
     else:
         image_filename = "없음"
         if uploaded_file is not None:
-            image_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uploaded_file.name}"
+            # 💡 파일명에 자재/LOT명이 들어가도록 수정 (특수문자나 공백이 파일명에 문제를 일으키지 않게 처리)
+            safe_lot_name = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            image_filename = f"{safe_lot_name}_{timestamp}_{uploaded_file.name}"
+            
             image_path = os.path.join(IMAGE_DIR, image_filename)
             with open(image_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
