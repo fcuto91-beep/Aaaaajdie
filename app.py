@@ -103,7 +103,7 @@ if os.path.exists(DATA_FILE):
             str(row["자재/LOT명"]),
             str(row["검사결과"]),
             "",  # 사진 칸 비우기
-            str(row["특이사항"],
+            str(row["특이사항"]),  # <- 이 부분 괄호 오타 수정 완료!
         ]
         ws.append(row_data)
 
@@ -126,7 +126,6 @@ if os.path.exists(DATA_FILE):
               img.height = 90
               ws.add_image(img, f"D{current_row}")
             except Exception as e:
-              # 혹시라도 에러나면 엑셀 셀에 에러 문구를 띄워 원인을 바로 알 수 있게 처리
               ws.cell(
                   row=current_row, column=4, value=f"[이미지 에러: {str(e)}]"
               )
