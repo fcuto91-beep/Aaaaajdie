@@ -102,8 +102,8 @@ if os.path.exists(DATA_FILE):
             str(row["검사일시"]),
             str(row["자재/LOT명"]),
             str(row["검사결과"]),
-            "",  # 사진 칸 비우기
-            str(row["특이사항"]),  # <- 이 부분 괄호 오타 수정 완료!
+            "",  # D열(첨부사진 칸)은 빈칸으로 비워둠 (이미지가 들어갈 자리)
+            str(row["특이사항"]),
         ]
         ws.append(row_data)
 
@@ -111,7 +111,7 @@ if os.path.exists(DATA_FILE):
         ws.row_dimensions[current_row].height = 80
         ws.column_dimensions["D"].width = 16
 
-        # 이미지 삽입 처리
+        # 이미지 삽입 처리 (사진파일명 컬럼 참조)
         img_filename = row["사진파일명"]
         if (
             pd.notna(img_filename)
