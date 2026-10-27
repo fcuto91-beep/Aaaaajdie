@@ -39,7 +39,7 @@ if submitted:
     else:
         image_filename = "없음"
         if uploaded_file is not None:
-            # 💡 파일명에 자재/LOT명이 들어가도록 수정 (특수문자나 공백이 파일명에 문제를 일으키지 않게 처리)
+            # 💡 형님이 보신 그 자동 파일명 변환 로직이 바로 이 부분입니다!
             safe_lot_name = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             image_filename = f"{safe_lot_name}_{timestamp}_{uploaded_file.name}"
