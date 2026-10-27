@@ -14,13 +14,16 @@ IMAGE_DIR = "inspection_images"
 if not os.path.exists(IMAGE_DIR):
     os.makedirs(IMAGE_DIR)
 
-inspection_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+# 💡 실시간 현재 날짜 및 시간 자동 생성
+current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+st.info(f"⏰ 현재 검사 시각: **{current_time_str}**")
+
 material_lot = st.text_input("자재 / LOT명 입력")
 
 st.markdown("---")
 st.subheader("📝 시험 항목별 결과 판정")
 
-# 💡 손톱박리와 테이프박리 각각 결과 선택 가능
+# 손톱박리와 테이프박리 각각 결과 선택
 nail_peel_result = st.selectbox(
     "1️⃣ 손톱박리 검사 결과", ["적합", "부적합"]
 )
@@ -45,6 +48,9 @@ if submitted:
     if not material_lot:
         st.warning("⚠️ 자재/LOT명을 입력해 주세요.")
     else:
+        # 저장하는 순간의 정확한 시간 기록
+        inspection_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         image_filename = "없음"
         if uploaded_file is not None:
             safe_lot_name = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
@@ -55,7 +61,6 @@ if submitted:
             with open(image_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
-        # 💡 데이터프레임에 두 가지 시험 결과가 각각 들어가도록 수정
         new_data = pd.DataFrame([{
             "검사일시": inspection_date,
             "자재/LOT명": material_lot,
