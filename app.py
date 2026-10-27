@@ -57,6 +57,14 @@ with st.form("inspection_form", clear_on_submit=True):
     uploaded_file = st.file_uploader(
         "현장 사진 첨부 (촬영 또는 파일 선택)", type=["jpg", "jpeg", "png"]
     )
+    if uploaded_file is not None:
+      st.markdown("---")
+      st.text(f"• 파일 명: {uploaded_file.name}")
+      st.image(
+          uploaded_file,
+          caption="첨부된 현장 검사 사진 미리보기",
+          use_container_width=True,
+      )
 
     # 5. 특이사항
     remarks = st.text_area(
