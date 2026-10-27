@@ -98,54 +98,41 @@ if os.path.exists(DATA_FILE):
         else:
             df_filtered = df_load.reset_index(drop=True)
 
-        st.markdown("---")
-        st.markdown("💡 **사진파일명 바로 옆의 🔍 버튼을 누르면 현장 사진이 아래에 바로 표시됩니다.**")
+        # 💡 깔끔한 기본 표 형식 그대로 출력
+        st.dataframe(df_filtered, use_container_width=True)
 
-        # 미리보기 상태 관리
+        st.markdown("---")
+        st.markdown("### 🔍 현장 사진 미리보기")
+        st.markdown("저장된 이력의 사진을 확인하려면 아래에서 해당 돋보기 버튼을 눌러주세요.")
+
+        # 세션 상태 관리 (미리보기용)
         if "preview_img" not in st.session_state:
             st.session_state.preview_img = None
         if "preview_title" not in st.session_state:
             st.session_state.preview_title = ""
 
-        # 표 형태의 깔끔한 행 출력 (파일명 + 돋보기 버튼 나란히 배치)
+        # 표 아래에 각 항목별로 파일명과 돋보기(미리보기) 버튼을 깔끔하게 행 형태로 배치
         for idx, row in df_filtered.iterrows():
-            date_val = row["검사일시"]
             lot_val = row["자재/LOT명"]
-            nail_val = row["손톱박리"]
-            tape_val = row["테이프박리"]
             file_val = row["사진파일명"]
-            rem_val = row["특이사항"]
+            date_val = row["검사일시"]
 
-            with st.container():
-                cols = st.columns([2.2, 1.5, 1, 1, 3, 1.2])
-                with cols[0]:
-                    st.markdown(f"<small>{date_val}</small>", unsafe_allow_html=True)
-                with cols[1]:
-                    st.markdown(f"**{lot_val}**")
-                with cols[2]:
-                    st.markdown(f"{nail_val}")
-                with cols[3]:
-                    st.markdown(f"{tape_val}")
-                with cols[4]:
-                    # 파일명과 돋보기 버튼을 한 칸 안에서 나란히 배치
-                    f_col1, f_col2 = st.columns([3, 1])
-                    with f_col1:
-                        st.markdown(f"<small style='word-break: break-all;'>{file_val}</small>", unsafe_allow_html=True)
-                    with f_col2:
-                        if file_val != "없음":
-                            if st.button("🔍", key=f"zoom_{idx}"):
-                                st.session_state.preview_img = file_val
-                                st.session_state.preview_title = f"LOT: {lot_val} ({file_val})"
-                        else:
-                            st.markdown("-")
-                with cols[5]:
-                    st.markdown(f"<small>{rem_val}</small>", unsafe_allow_html=True)
-                st.markdown("<hr style='margin: 5px 0; border: 0.5px solid #eee;'>", unsafe_allow_html=True)
+            if file_val != "없음":
+                col1, col2, col3 = st.columns([2, 4, 1])
+                with col1:
+                    st.write(f"[{idx}] {lot_val}")
+                with col2:
+                    st.write(f"<small>{file_val}</small>", unsafe_allow_html=True)
+                with col3:
+                    # 💡 마우스를 올리면 "미리보기" 글자가 뜨는 돋보기 버튼
+                    if st.button("🔍", key=f"zoom_{idx}", help="미리보기"):
+                        st.session_state.preview_img = file_val
+                        st.session_state.preview_title = f"LOT: {lot_val} ({date_val})"
 
-        # 돋보기 버튼을 눌렀을 때 표시되는 미리보기 영역
+        # 돋보기 버튼을 눌렀을 때 사진이 나타나는 영역
         if st.session_state.preview_img:
             st.markdown("---")
-            st.markdown(f"### 🖼️ 사진 미리보기: {st.session_state.preview_title}")
+            st.markdown(f"🖼️ **미리보기 — {st.session_state.preview_title}**")
             target_path = os.path.join(IMAGE_DIR, st.session_state.preview_img)
             if os.path.exists(target_path):
                 st.image(target_path, width=400)
