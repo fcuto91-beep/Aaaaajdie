@@ -125,32 +125,45 @@ if os.path.exists(DATA_FILE):
       ws = wb.active
       ws.title = "검사 이력"
 
-      headers = list(df_load.columns)
+      # 엑셀 헤더 (사진파일명 텍스트 대신 '첨부사진'으로 지정)
+      headers = ["검사일시", "자재/LOT명", "검사결과", "첨부사진", "특이사항"]
       ws.append(headers)
 
+      # 데이터 행 추가 및 이미지 삽입
       for r_idx, row in df_load.iterrows():
+        # 파일명 텍스트는 빼고 빈 칸으로 둠
         row_data = [
             row["검사일시"],
             row["자재/LOT명"],
             row["검사결과"],
-            row["사진파일명"],
+            "",  # 텍스트 대신 빈 칸
             row["특이사항"],
         ]
         ws.append(row_data)
 
+        # 이미지 파일 삽입 작업
         img_filename = row["사진파일명"]
-        img_path = os.path.join(IMAGE_DIR, str(img_filename))
+        if (
+            pd.notna(img_filename)
+            and img_filename != "없음"
+            and str(img_filename).strip() != ""
+        ):
+          img_path = os.path.join(IMAGE_DIR, str(img_filename))
+          if os.path.exists(img_path):
+            try:
+              img = OpxImage(img_path)
+              img.width = 90
+              img.height = 90
+              # D열에 사진 삽입
+              cell_location = f"D{r_idx + 2}"
+              ws.add_image(img, cell_location)
+            except Exception as e:
+              pass
 
-        if pd.notna(img_filename) and os.path.exists(img_path):
-          try:
-            img = OpxImage(img_path)
-            img.width = 100
-            img.height = 100
-            cell_location = f"D{r_idx + 2}"
-            ws.add_image(img, cell_location)
-            ws.row_dimensions[r_idx + 2].height = 80
-          except Exception as e:
-            pass
+        # 사진이 잘 보이도록 행 높이와 D열 너비 조절
+        ws.row_dimensions[r_idx + 2].height = 75
+
+      ws.column_dimensions["D"].width = 16
 
       wb.save(excel_path)
 
