@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(page_title="현장 검사 시스템", layout="centered")
-st.title("포장재 사전 점검 착인 박리 이력 관리")
+st.title("🛡️ 공정 검사 및 이력 관리")
 
 DATA_FILE = "inspection_history.csv"
 IMAGE_DIR = "inspection_images"
@@ -17,8 +17,15 @@ if not os.path.exists(IMAGE_DIR):
 # 1. 입력 항목들
 inspection_date = datetime.now().strftime("%Y-%m-%d %H:%M")
 material_lot = st.text_input("자재 / LOT명 입력")
+
+# 💡 시험 방법 2가지 구분 (손톱박리 / 테이프 박리)
+test_method = st.selectbox(
+    "시험 방법", ["손톱박리", "테이프 박리"]
+)
+
+# 💡 선택 항목 (적합 / 부적합 구분)
 inspection_result = st.selectbox(
-    "검사 결과", ["Pass (적합)", "Fail (부적합)", "Warning (주의)"]
+    "검사 결과", ["적합", "부적합"]
 )
 
 uploaded_file = st.file_uploader(
@@ -39,7 +46,7 @@ if submitted:
     else:
         image_filename = "없음"
         if uploaded_file is not None:
-            # 💡 형님이 보신 그 자동 파일명 변환 로직이 바로 이 부분입니다!
+            # 💡 자재/LOT명과 날짜시간이 조합된 자동 파일명 생성
             safe_lot_name = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             image_filename = f"{safe_lot_name}_{timestamp}_{uploaded_file.name}"
@@ -48,9 +55,11 @@ if submitted:
             with open(image_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
+        # 💡 데이터프레임에 시험방법 항목 추가
         new_data = pd.DataFrame([{
             "검사일시": inspection_date,
             "자재/LOT명": material_lot,
+            "시험방법": test_method,
             "검사결과": inspection_result,
             "사진파일명": image_filename,
             "특이사항": remarks,
@@ -81,37 +90,7 @@ if os.path.exists(DATA_FILE):
         # 📦 전체 데이터(엑셀 + 사진 폴더)를 ZIP 파일로 한 번에 다운로드하는 버튼
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            # 엑셀 파일 추가
             if os.path.exists(DATA_FILE):
                 zip_file.write(DATA_FILE, arcname="inspection_history.csv")
-            # 이미지 폴더 내의 모든 사진 추가
             if os.path.exists(IMAGE_DIR):
-                for root, dirs, files in os.walk(IMAGE_DIR):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.join("inspection_images", file)
-                        zip_file.write(file_path, arcname=arcname)
-        
-        zip_buffer.seek(0)
-        
-        st.download_button(
-            label="📦 전체 이력 및 사진(ZIP) 다운로드",
-            data=zip_buffer,
-            file_name=f"inspection_backup_{datetime.now().strftime('%Y%m%d')}.zip",
-            mime="application/zip",
-            type="primary"
-        )
-        
-        st.markdown("")
-        # 데이터가 꼬여서 에러가 나면 폰에서 바로 초기화할 수 있는 버튼
-        if st.button("🗑️ 데이터 파일 초기화하기 (오류 복구용)"):
-            os.remove(DATA_FILE)
-            st.success("초기화 완료! 페이지를 새로고침 해주세요.")
-            st.rerun()
-    except Exception as e:
-        st.error(f"데이터 파일 읽기 오류: {e}")
-        if st.button("🗑️ 손상된 데이터 삭제하기"):
-            os.remove(DATA_FILE)
-            st.rerun()
-else:
-  st.info("아직 저장된 검사 이력이 없습니다.")
+                for root, dirs, files in os.walk(IMAGE_DIR
