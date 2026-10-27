@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import io
 import os
 import zipfile
@@ -14,9 +14,12 @@ IMAGE_DIR = "inspection_images"
 if not os.path.exists(IMAGE_DIR):
     os.makedirs(IMAGE_DIR)
 
-# 💡 실시간 현재 날짜 및 시간 자동 생성
-current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-st.info(f"⏰ 현재 검사 시각: **{current_time_str}**")
+# 💡 한국 시간(KST, UTC+9)으로 실시간 시간 설정
+KST = timezone(timedelta(hours=9))
+current_time_kst = datetime.now(KST)
+current_time_str = current_time_kst.strftime("%Y-%m-%d %H:%M:%S")
+
+st.info(f"⏰ 현재 검사 시각 (한국 시간): **{current_time_str}**")
 
 material_lot = st.text_input("자재 / LOT명 입력")
 
@@ -48,13 +51,13 @@ if submitted:
     if not material_lot:
         st.warning("⚠️ 자재/LOT명을 입력해 주세요.")
     else:
-        # 저장하는 순간의 정확한 시간 기록
-        inspection_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 저장하는 순간의 정확한 한국 시간 기록
+        inspection_date = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         
         image_filename = "없음"
         if uploaded_file is not None:
             safe_lot_name = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
             image_filename = f"{safe_lot_name}_{timestamp}_{uploaded_file.name}"
             
             image_path = os.path.join(IMAGE_DIR, image_filename)
@@ -107,7 +110,7 @@ if os.path.exists(DATA_FILE):
         st.download_button(
             label="📦 전체 이력 및 사진(ZIP) 다운로드",
             data=zip_buffer,
-            file_name=f"inspection_backup_{datetime.now().strftime('%Y%m%d')}.zip",
+            file_name=f"inspection_backup_{datetime.now(KST).strftime('%Y%m%d')}.zip",
             mime="application/zip",
             type="primary"
         )
