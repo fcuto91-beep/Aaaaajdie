@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(page_title="현장 검사 시스템", layout="centered")
-st.title("🛡️ 공정 검사 및 이력 관리")
+st.title("포장재 사전 점검 착인 박리 이력 관리")
 
 DATA_FILE = "inspection_history.csv"
 IMAGE_DIR = "inspection_images"
