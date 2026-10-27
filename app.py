@@ -1,5 +1,7 @@
-import os
 from datetime import datetime
+import io
+import os
+import zipfile
 import pandas as pd
 import streamlit as st
 
@@ -63,16 +65,41 @@ if submitted:
         st.success("🎉 검사 이력이 성공적으로 저장되었습니다!")
         st.rerun()
 
-# 3. 이력 조회 및 초기화 기능
+# 3. 이력 조회 및 다운로드, 초기화 기능
 st.markdown("---")
-st.subheader("📋 검사 이력 조회")
+st.subheader("📋 검사 이력 조회 및 다운로드")
 
 if os.path.exists(DATA_FILE):
     try:
         df_load = pd.read_csv(DATA_FILE)
         st.dataframe(df_load)
         
-        # 만약 데이터가 꼬여서 에러가 나면 폰에서 바로 초기화할 수 있는 버튼
+        # 📦 전체 데이터(엑셀 + 사진 폴더)를 ZIP 파일로 한 번에 다운로드하는 버튼
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            # 엑셀 파일 추가
+            if os.path.exists(DATA_FILE):
+                zip_file.write(DATA_FILE, arcname="inspection_history.csv")
+            # 이미지 폴더 내의 모든 사진 추가
+            if os.path.exists(IMAGE_DIR):
+                for root, dirs, files in os.walk(IMAGE_DIR):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.join("inspection_images", file)
+                        zip_file.write(file_path, arcname=arcname)
+        
+        zip_buffer.seek(0)
+        
+        st.download_button(
+            label="📦 전체 이력 및 사진(ZIP) 다운로드",
+            data=zip_buffer,
+            file_name=f"inspection_backup_{datetime.now().strftime('%Y%m%d')}.zip",
+            mime="application/zip",
+            type="primary"
+        )
+        
+        st.markdown("")
+        # 데이터가 꼬여서 에러가 나면 폰에서 바로 초기화할 수 있는 버튼
         if st.button("🗑️ 데이터 파일 초기화하기 (오류 복구용)"):
             os.remove(DATA_FILE)
             st.success("초기화 완료! 페이지를 새로고침 해주세요.")
