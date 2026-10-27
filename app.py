@@ -17,14 +17,19 @@ if not os.path.exists(IMAGE_DIR):
 inspection_date = datetime.now().strftime("%Y-%m-%d %H:%M")
 material_lot = st.text_input("자재 / LOT명 입력")
 
-test_method = st.selectbox(
-    "시험 방법", ["손톱박리", "테이프 박리"]
+st.markdown("---")
+st.subheader("📝 시험 항목별 결과 판정")
+
+# 💡 손톱박리와 테이프박리 각각 결과 선택 가능
+nail_peel_result = st.selectbox(
+    "1️⃣ 손톱박리 검사 결과", ["적합", "부적합"]
 )
 
-inspection_result = st.selectbox(
-    "검사 결과", ["적합", "부적합"]
+tape_peel_result = st.selectbox(
+    "2️⃣ 테이프 박리 검사 결과", ["적합", "부적합"]
 )
 
+st.markdown("---")
 uploaded_file = st.file_uploader(
     "현장 사진 첨부 (촬영 또는 파일 선택)", type=["jpg", "jpeg", "png"]
 )
@@ -50,11 +55,12 @@ if submitted:
             with open(image_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
+        # 💡 데이터프레임에 두 가지 시험 결과가 각각 들어가도록 수정
         new_data = pd.DataFrame([{
             "검사일시": inspection_date,
             "자재/LOT명": material_lot,
-            "시험방법": test_method,
-            "검사결과": inspection_result,
+            "손톱박리": nail_peel_result,
+            "테이프박리": tape_peel_result,
             "사진파일명": image_filename,
             "특이사항": remarks,
         }])
@@ -110,3 +116,6 @@ if os.path.exists(DATA_FILE):
         st.error(f"데이터 파일 읽기 오류: {e}")
         if st.button("🗑️ 손상된 데이터 삭제하기"):
             os.remove(DATA_FILE)
+            st.rerun()
+else:
+  st.info("아직 저장된 검사 이력이 없습니다.")
