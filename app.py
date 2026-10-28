@@ -30,6 +30,14 @@ st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-wei
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
+# 💡 화면 정중앙에 뜨는 저장 완료 팝업 모달 함수
+@st.dialog("🎉 저장 완료")
+def show_save_success_popup():
+    st.success("검사 결과가 안전하게 저장되었습니다!")
+    st.info("아래 전체 검사 내역에 정상적으로 반영되었습니다.")
+    if st.button("확인", type="primary", use_container_width=True):
+        st.rerun()
+
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
@@ -79,9 +87,14 @@ if ok:
 
         df_c.to_csv(F, index=False, encoding="utf-8-sig")
         
-        st.toast("🎉 검사 결과가 안전하게 저장되었습니다!", icon="✅")
-        st.success("✅ 저장 완료! 아래 전체 검사 내역에 반영되었습니다.")
+        # 💡 저장 직후 화면 정중앙 팝업 모달 호출 상태를 세션에 저장
+        st.session_state["show_saved_modal"] = True
         st.rerun()
+
+# 💡 세션에 저장된 팝업 플래그가 있으면 정중앙 모달 띄우기
+if st.session_state.get("show_saved_modal", False):
+    st.session_state["show_saved_modal"] = False
+    show_save_success_popup()
 
 # 💡 사진 팝업 모달 함수
 @st.dialog("📸 사진 미리보기")
@@ -266,7 +279,6 @@ if os.path.exists(F):
                     st.info("수정할 내역이 없습니다.")
 
                 st.markdown("---")
-                # 💡 초기화 시 CSV 파일뿐만 아니라 사진 폴더(inspection_images) 내 모든 사진 파일도 함께 삭제하도록 수정
                 if st.button("🗑️ 전체 검사 내역 및 사진 초기화", use_container_width=True):
                     if os.path.exists(F):
                         os.remove(F)
