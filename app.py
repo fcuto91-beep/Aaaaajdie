@@ -19,8 +19,8 @@ st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
-    pack_name = st.text_input("포장재 약호")
     mat_no = st.text_input("포장재 번호")
+    pack_name = st.text_input("포장재 약호")
     nail = st.selectbox("손톱 박리 결과", ["적합", "부적합"])
     tape = st.selectbox("테이프 박리 결과", ["적합", "부적합"])
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
@@ -28,13 +28,13 @@ with st.form("f1", clear_on_submit=True):
     ok = st.form_submit_button("💾 Save", type="primary")
 
 if ok:
-    if not pack_name.strip():
-        st.warning("⚠️ 포장재 약호를 입력해 주세요!")
+    if not mat_no.strip():
+        st.warning("⚠️ 포장재 번호를 입력해 주세요!")
     else:
         dt_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         fn = "none"
         if up_file:
-            s_lot = "".join(c for c in pack_name if c.isalnum())
+            s_lot = "".join(c for c in mat_no if c.isalnum())
             t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
             fn = f"{s_lot}_{t_str}_{up_file.name}"
             file_path = os.path.join(D, fn)
@@ -43,8 +43,8 @@ if ok:
 
         nd = pd.DataFrame([{
             "검사일시": dt_str,
-            "포장재약호": pack_name,
-            "포장재번호": mat_no if mat_no.strip() else "-",
+            "포장재번호": mat_no,
+            "포장재약호": pack_name if pack_name.strip() else "-",
             "손톱박리": nail,
             "테이프박리": tape,
             "사진파일명": fn,
@@ -55,7 +55,6 @@ if ok:
         if os.path.exists(F):
             try:
                 df_ex = pd.read_csv(F)
-                # 구버전 컬럼 자동 보정
                 if "포장재명" in df_ex.columns and "포장재약호" not in df_ex.columns:
                     df_ex = df_ex.rename(columns={"포장재명": "포장재약호"})
                 if "자재번호" in df_ex.columns and "포장재번호" not in df_ex.columns:
@@ -74,8 +73,8 @@ if ok:
 
 # 💡 사진 팝업 모달 함수
 @st.dialog("📸 사진 미리보기")
-def show_image_popup(img_path, p_name, date_str):
-    st.markdown(f"📦 **포장재 약호: {p_name}**")
+def show_image_popup(img_path, m_name, date_str):
+    st.markdown(f"📦 **포장재 번호: {m_name}**")
     st.caption(f"📅 검사 일자: {date_str}")
     st.image(img_path, use_column_width=True)
 
@@ -85,7 +84,6 @@ st.subheader("📋 전체 검사 내역")
 if os.path.exists(F):
     try:
         df = pd.read_csv(F)
-        # 구버전 컬럼 자동 보정
         if "포장재명" in df.columns and "포장재약호" not in df.columns:
             df = df.rename(columns={"포장재명": "포장재약호"})
         if "자재번호" in df.columns and "포장재번호" not in df.columns:
@@ -106,17 +104,17 @@ if os.path.exists(F):
                     if p_fname != "none":
                         p_ip = os.path.join(D, p_fname)
                         if os.path.exists(p_ip):
-                            show_image_popup(p_ip, str(p_row.get("포장재약호", "-")), str(p_row.get("검사일시", "-")))
+                            show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("검사일시", "-")))
                 st.query_params.clear()
             except:
                 st.query_params.clear()
 
-        # 💡 HTML 표 기반 렌더링
+        # 💡 HTML 표 기반 렌더링 (순서 변경: 포장재 번호 -> 포장재 약호)
         rows_list = []
         for idx, row in df_f.iterrows():
             d_val = str(row.get("검사일시", "-"))
-            p_val = str(row.get("포장재약호", "-"))
-            m_val = str(row.get("포장재번호", "-")) if pd.notna(row.get("포장재번호")) else "-"
+            m_val = str(row.get("포장재번호", "-"))
+            p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
             n_val = str(row.get("손톱박리", "-"))
             t_val = str(row.get("테이프박리", "-"))
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
@@ -133,8 +131,8 @@ if os.path.exists(F):
 
             row_str = '<tr>' \
                       '<td style="padding:8px 6px; width:110px; white-space:nowrap; font-size:11px; color:#333;">' + d_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px;">' + p_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555;">' + m_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px;">' + m_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555;">' + p_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px;">' + t_val + '</td>' \
                       '<td style="padding:8px 6px; text-align:center; width:60px;">' + img_td + '</td>' \
@@ -149,8 +147,8 @@ if os.path.exists(F):
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
                      '<th style="padding:8px 6px; width:110px; white-space:nowrap; font-size:11px;">일시</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재 약호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재 번호</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재 약호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">테이프</th>' \
                      '<th style="padding:8px 6px; text-align:center; width:60px; font-size:12px;">미리보기</th>' \
