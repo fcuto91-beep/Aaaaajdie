@@ -10,7 +10,7 @@ st.title("📦🧴 포장재 착인 검사 이력 관리")
 
 F = "inspection_history.csv"
 D = "inspection_images"
-ADMIN_PW = "1234"  # 💡 관리자 비밀번호 (원하시는 번호로 변경 가능합니다)
+ADMIN_PW = "1234"  # 💡 관리자 비밀번호
 
 if not os.path.exists(D):
     os.makedirs(D)
@@ -103,6 +103,15 @@ if os.path.exists(F):
             except:
                 st.query_params.clear()
 
+        # 💡 박리 결과 영문 표기 포함 예쁜 배지 변환 함수
+        def get_badge(val):
+            if val == "적합":
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟢 적합 (PASS)</span>'
+            elif val == "부적합":
+                return '<span style="background-color:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🔴 부적합 (FAIL)</span>'
+            else:
+                return f'<span>{val}</span>'
+
         # 💡 HTML 표 기반 렌더링
         rows_list = []
         for idx, row in df_f.iterrows():
@@ -110,8 +119,11 @@ if os.path.exists(F):
             d_val = raw_d[:10] if len(raw_d) >= 10 else raw_d
             m_val = str(row.get("포장재번호", "-"))
             p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
-            n_val = str(row.get("손톱박리", "-"))
-            t_val = str(row.get("테이프박리", "-"))
+            
+            # 박리 결과 배지 적용 (영문 표기 포함)
+            n_val = get_badge(str(row.get("손톱박리", "-")))
+            t_val = get_badge(str(row.get("테이프박리", "-")))
+            
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
             fname = str(row.get("사진파일명", "none"))
@@ -164,7 +176,6 @@ if os.path.exists(F):
             if admin_input == ADMIN_PW:
                 st.success("✅ 관리자 인증이 완료되었습니다.")
                 
-                # 다운로드 버튼
                 zb = io.BytesIO()
                 with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
                     zf.write(F, arcname="inspection_history.csv")
