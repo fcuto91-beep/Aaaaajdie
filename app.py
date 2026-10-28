@@ -22,8 +22,9 @@ with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     mat_no = st.text_input("포장재 번호")
     pack_name = st.text_input("포장재 약호")
-    nail = st.selectbox("손톱 박리 결과", ["적합 (PASS)", "부적합 (FAIL)"])
-    tape = st.selectbox("테이프 박리 결과", ["적합 (PASS)", "부적합 (FAIL)"])
+    # 💡 입력 셀렉박스에 이모지와 PASS/FAIL 적용
+    nail = st.selectbox("손톱 박리 결과", ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
+    tape = st.selectbox("테이프 박리 결과", ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
     rem = st.text_area("특이사항")
     ok = st.form_submit_button("💾 Save", type="primary")
