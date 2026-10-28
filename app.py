@@ -15,13 +15,14 @@ if not os.path.exists(D):
     os.makedirs(D)
 
 KST = timezone(timedelta(hours=9))
-st.info(f"⏰ 시각: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
+st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     pack_name = st.text_input("자재번호")
     mat_no = st.text_input("포장자 약호")
-    nail = st.selectbox("1️⃣ 손톱박리", ["적합", "부적합"])
+    nst.subheader("📝 시험 결과 입력")
+    st.selectbox("1️⃣ 손톱박리", ["적합", "부적합"])
     tape = st.selectbox("2️⃣ 테이프박리", ["적합", "부적합"])
     up_file = st.file_uploader("현장 사진", type=["jpg", "jpeg", "png"])
     rem = st.text_area("특이사항")
