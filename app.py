@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 import os
 import io
 import zipfile
+import base64
 
 st.set_page_config(page_title="Inspection", layout="centered")
 st.title("🛡️ 공정 검사 및 이력 관리")
@@ -17,7 +18,7 @@ if not os.path.exists(D):
 KST = timezone(timedelta(hours=9))
 st.info(f"⏰ 시각: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
-with st.form("form_1", clear_on_submit=True):
+with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     lot = st.text_input("자재 / LOT명")
     nail = st.selectbox("1️⃣ 손톱박리", ["적합", "부적합"])
@@ -70,28 +71,28 @@ if os.path.exists(F):
         q = st.text_input("🔍 검색", placeholder="검색어...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        st.dataframe(df_f, use_container_width=True)
-
-        st.markdown("### 🔍 사진 확인")
-        has_img = False
+        rows_html = ""
         for idx, row in df_f.iterrows():
+            d_val = str(row["검사일시"])
+            l_val = str(row["자재/LOT명"])
+            n_val = str(row["손톱박리"])
+            t_val = str(row["테이프박리"])
+            r_val = str(row["특이사항"]) if pd.notna(row["특이사항"]) else ""
+            
+            img_td = "-"
             fname = str(row["사진파일명"])
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    has_img = True
                     with open(ip, "rb") as f:
-                        ib = f.read()
-                    st.download_button(
-                        f"📥 사진 보기 [{row['자재/LOT명']} / {row['검사일시']}]",
-                        ib,
-                        file_name=fname,
-                        mime="image/jpeg",
-                        key=f"z_{idx}",
-                        use_container_width=True
-                    )
-        if not has_img:
-            st.caption("저장된 사진이 없습니다.")
+                        enc = base64.b64encode(f.read()).decode()
+                    img_td = f'<a href="data:image/jpeg;base64,{enc}" target="_blank" style="text-decoration:none; font-size:1.4rem;" title="새 창으로 사진 보기">🔍</a>'
+
+            rows_html += f'<tr style="border-bottom: 1px solid #eee;"><td style="padding:8px; white-space:nowrap;">{d_val}</td><td style="padding:8px; white-space:nowrap;">{l_val}</td><td style="padding:8px; white-space:nowrap;">{n_val}</td><td style="padding:8px; white-space:nowrap;">{t_val}</td><td style="padding:8px; min-width:100px;">{r_val}</td><td style="padding:8px; text-align:center;">{img_td}</td></tr>'
+
+        table_html = f'<div style="overflow-x: auto; max-height: 450px; border: 1px solid #ddd; border-radius: 5px;"><table style="width: 100%; border-collapse: collapse; font-size: 13px; background-color: white;"><thead><tr style="background-color: #f8f9fa; border-bottom: 2px solid #ccc; text-align: left;"><th style="padding:8px; white-space:nowrap;">일시</th><th style="padding:8px; white-space:nowrap;">LOT</th><th style="padding:8px; white-space:nowrap;">손톱</th><th style="padding:8px; white-space:nowrap;">테이프</th><th style="padding:8px; white-space:nowrap;">특이사항</th><th style="padding:8px; white-space:nowrap; text-align:center;">미리보기</th></tr></thead><tbody>{rows_html}</tbody></table></div>'
+        
+        st.markdown(table_html, unsafe_allow_html=True)
 
         st.markdown("---")
         zb = io.BytesIO()
