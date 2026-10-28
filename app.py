@@ -103,11 +103,12 @@ if os.path.exists(F):
             except:
                 st.query_params.clear()
 
-        # 💡 박리 결과 영문 표기 포함 예쁜 배지 변환 함수
+        # 💡 기존 데이터의 텍스트까지 완벽하게 배지로 변환하는 함수
         def get_badge(val):
-            if val == "적합":
+            v_str = str(val).strip()
+            if "적합" in v_str or "PASS" in v_str:
                 return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟢 적합 (PASS)</span>'
-            elif val == "부적합":
+            elif "부적합" in v_str or "FAIL" in v_str:
                 return '<span style="background-color:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🔴 부적합 (FAIL)</span>'
             else:
                 return f'<span>{val}</span>'
@@ -120,9 +121,9 @@ if os.path.exists(F):
             m_val = str(row.get("포장재번호", "-"))
             p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
             
-            # 박리 결과 배지 적용 (영문 표기 포함)
-            n_val = get_badge(str(row.get("손톱박리", "-")))
-            t_val = get_badge(str(row.get("테이프박리", "-")))
+            # 박리 결과 배지 적용 (기존 저장된 데이터도 완벽 변환)
+            n_val = get_badge(row.get("손톱박리", "-"))
+            t_val = get_badge(row.get("테이프박리", "-"))
             
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
