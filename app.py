@@ -29,7 +29,7 @@ with st.form("f1", clear_on_submit=True):
 
 if ok:
     if not pack_name.strip():
-        st.warning("⚠️ 포장재 명을 입력해 주세요!")
+        st.warning("⚠️ 포장재 번호를 입력해 주세요!")
     else:
         dt_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         fn = "none"
@@ -43,8 +43,8 @@ if ok:
 
         nd = pd.DataFrame([{
             "검사일자": dt_str,
-            "포장재명": pack_name,
-            "자재번호": mat_no if mat_no.strip() else "-",
+            "포장재번호": pack_name,
+            "포장재약호": mat_no if mat_no.strip() else "-",
             "손톱박리": nail,
             "테이프박리": tape,
             "사진파일명": fn,
@@ -55,12 +55,6 @@ if ok:
         if os.path.exists(F):
             try:
                 df_ex = pd.read_csv(F)
-                # 이전 버전 데이터 호환을 위해 컬럼명이 다를 경우 자동 보정
-                if "자재/LOT명" in df_ex.columns and "포장재명" not in df_ex.columns:
-                    df_ex = df_ex.rename(columns={"자재/LOT명": "포장재명"})
-                if "자재번호" not in df_ex.columns:
-                    df_ex.insert(2, "자재번호", "-")
-                
                 if not df_ex.empty:
                     df_c = pd.concat([df_ex, nd], ignore_index=True)
             except:
@@ -73,7 +67,7 @@ if ok:
 # 💡 사진 팝업 모달 함수
 @st.dialog("📸 사진 미리보기")
 def show_image_popup(img_path, p_name, date_str):
-    st.markdown(f"📦 **포장재 명: {p_name}**")
+    st.markdown(f"📦 **포장재 번호: {p_name}**")
     st.caption(f"📅 검사일시: {date_str}")
     st.image(img_path, use_column_width=True)
 
@@ -83,14 +77,12 @@ st.subheader("📋 전체 검사 내역")
 if os.path.exists(F):
     try:
         df = pd.read_csv(F)
-        # 구버전 호환 컬럼 정리
-        if "자재/LOT명" in df.columns and "포장재명" not in df.columns:
-            df = df.rename(columns={"자재/LOT명": "포장재명"})
-        if "자재번호" not in df.columns:
-            df.insert(2, "자재번호", "-")
-            
         q = st.text_input("🔍 검색", placeholder="검색어 입력...")
-        df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
+        
+        if not df.empty:
+            df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
+        else:
+            df_f = df
 
         # 💡 URL 쿼리를 통한 팝업 모달 호출 연동
         if "pop_idx" in st.query_params:
@@ -98,26 +90,28 @@ if os.path.exists(F):
                 p_idx = int(st.query_params["pop_idx"])
                 if 0 <= p_idx < len(df_f):
                     p_row = df_f.iloc[p_idx]
-                    p_fname = str(p_row["사진파일명"])
+                    p_fname = str(p_row.get("사진파일명", "none"))
+                    p_pname = str(p_row.get("포장재번호", p_row.get("포장재명", p_row.get("포장재 약호", "-"))))
+                    p_date = str(p_row.get("검사일자", p_row.get("검사일시", "-")))
                     if p_fname != "none":
                         p_ip = os.path.join(D, p_fname)
                         if os.path.exists(p_ip):
-                            show_image_popup(p_ip, str(p_row["포장재명"]), str(p_row["검사일시"]))
+                            show_image_popup(p_ip, p_pname, p_date)
                 st.query_params.clear()
             except:
                 st.query_params.clear()
 
-        # 💡 HTML 표 기반 렌더링
+        # 💡 HTML 표 기반 렌더링 (안전한 키 매핑)
         rows_list = []
         for idx, row in df_f.iterrows():
-            d_val = str(row["일자"])
-            p_val = str(row["포장재 약호"])
-            m_val = str(row["자재번호"]) if pd.notna(row["자재번호"]) else "-"
-            n_val = str(row["손톱박리"])
-            t_val = str(row["테이프박리"])
-            r_val = str(row["특이사항"]) if pd.notna(row["특이사항"]) else "-"
+            d_val = str(row.get("검사일자", row.get("검사일시", row.get("일자", "-"))))
+            p_val = str(row.get("포장재번호", row.get("포장재명", row.get("포장재 약호", "-"))))
+            m_val = str(row.get("포장재약호", row.get("자재번호", "-"))) if pd.notna(row.get("포장재약호", row.get("자재번호"))) else "-"
+            n_val = str(row.get("손톱박리", "-"))
+            t_val = str(row.get("테이프박리", "-"))
+            r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
-            fname = str(row["사진파일명"])
+            fname = str(row.get("사진파일명", "none"))
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
@@ -145,8 +139,8 @@ if os.path.exists(F):
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
                      '<th style="padding:8px 6px; width:110px; white-space:nowrap; font-size:11px;">검사일시</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재명</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">자재번호</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재번호</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재약호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">테이프</th>' \
                      '<th style="padding:8px 6px; text-align:center; width:60px; font-size:12px;">미리보기</th>' \
@@ -173,9 +167,4 @@ if os.path.exists(F):
         st.markdown("")
         if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
             os.remove(F)
-            st.success("Reset done!")
-            st.rerun()
-    except Exception as e:
-        st.error(f"Error: {e}")
-else:
-    st.info("아직 저장된 검사 이력이 없습니다.")
+            
