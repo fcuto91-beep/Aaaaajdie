@@ -15,7 +15,8 @@ if not os.path.exists(IMAGE_DIR):
     os.makedirs(IMAGE_DIR)
 
 KST = timezone(timedelta(hours=9))
-current_time_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+current_time_kst = datetime.now(KST)
+current_time_str = current_time_kst.strftime("%Y-%m-%d %H:%M:%S")
 
 st.info(f"⏰ 현재 검사 시각 (한국 시간): **{current_time_str}**")
 
@@ -90,7 +91,56 @@ if os.path.exists(DATA_FILE):
         else:
             df_filtered = df_load.reset_index(drop=True)
 
-        st.dataframe(df_filtered, use_container_width=True)
+        # 세션 상태 관리 (미리보기용)
+        if "preview_img" not in st.session_state:
+            st.session_state.preview_img = None
+        if "preview_title" not in st.session_state:
+            st.session_state.preview_title = ""
+
+        # 💡 표 헤더(제목 행) 생성
+        header_cols = st.columns([2.2, 1.5, 1.0, 1.0, 3.2, 0.8, 1.3])
+        header_cols[0].markdown("**검사일시**")
+        header_cols[1].markdown("**자재/LOT명**")
+        header_cols[2].markdown("**손톱**")
+        header_cols[3].markdown("**테이프**")
+        header_cols[4].markdown("**사진파일명**")
+        header_cols[5].markdown("**보기**")
+        header_cols[6].markdown("**특이사항**")
+        st.markdown("<hr style='margin: 0px 0 10px 0; border: 1px solid #ddd;'>", unsafe_allow_html=True)
+
+        # 💡 각 데이터 행마다 표 형식으로 출력하고 돋보기 버튼을 사진파일명 바로 옆에 배치
+        for idx, row in df_filtered.iterrows():
+            row_cols = st.columns([2.2, 1.5, 1.0, 1.0, 3.2, 0.8, 1.3])
+            
+            row_cols[0].write(row["검사일시"])
+            row_cols[1].write(row["자재/LOT명"])
+            row_cols[2].write(row["손톱박리"])
+            row_cols[3].write(row["테이프박리"])
+            row_cols[4].write(row["사진파일명"])
+            
+            with row_cols[5]:
+                if row["사진파일명"] != "없음":
+                    if st.button("🔍", key=f"zoom_{idx}", help="미리보기"):
+                        st.session_state.preview_img = row["사진파일명"]
+                        st.session_state.preview_title = f"LOT: {row['자재/LOT명']} ({row['검사일시']})"
+                else:
+                    st.write("-")
+                    
+            row_cols[6].write(row["특이사항"])
+            st.markdown("<hr style='margin: 5px 0; border: 0.5px solid #eee;'>", unsafe_allow_html=True)
+
+        # 돋보기 버튼을 눌렀을 때 나타나는 사진 미리보기 영역
+        if st.session_state.preview_img:
+            st.markdown("---")
+            st.markdown(f"🖼️ **현장 사진 미리보기 — {st.session_state.preview_title}**")
+            target_path = os.path.join(IMAGE_DIR, st.session_state.preview_img)
+            if os.path.exists(target_path):
+                st.image(target_path, width=400)
+                if st.button("❌ 미리보기 닫기"):
+                    st.session_state.preview_img = None
+                    st.rerun()
+            else:
+                st.warning("⚠️ 사진 파일을 찾을 수 없습니다.")
 
         st.markdown("---")
         
@@ -102,30 +152,4 @@ if os.path.exists(DATA_FILE):
                 for root, dirs, files in os.walk(IMAGE_DIR):
                     for file in files:
                         file_path = os.path.join(root, file)
-                        arcname = os.path.join("inspection_images", file)
-                        zip_file.write(file_path, arcname=arcname)
-        
-        zip_buffer.seek(0)
-        
-        st.download_button(
-            label="📦 [전체 데이터 + 현장 사진] ZIP 다운로드",
-            data=zip_buffer,
-            file_name=f"inspection_backup_{datetime.now(KST).strftime('%Y%m%d')}.zip",
-            mime="application/zip",
-            type="primary",
-            use_container_width=True
-        )
-        
-        st.markdown("")
-        if st.button("🗑️ 데이터 파일 초기화하기 (오류 복구용)", use_container_width=True):
-            os.remove(DATA_FILE)
-            st.success("초기화 완료! 페이지를 새로고침 해주세요.")
-            st.rerun()
-            
-    except Exception as e:
-        st.error(f"데이터 파일 읽기 오류: {e}")
-        if st.button("🗑️ 손상된 데이터 삭제하기"):
-            os.remove(DATA_FILE)
-            st.rerun()
-else:
-  st.info("아직 저장된 검사 이력이 없습니다.")
+                        arcname = os.path.join("inspection_images", file
