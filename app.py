@@ -98,4 +98,19 @@ if os.path.exists(DATA_FILE):
     h[4].markdown("**File**")
     h[5].markdown("**View**")
     h[6].markdown("**Note**")
-    st.markdown("<hr style='
+    st.divider()
+
+    for idx, row in df_filtered.iterrows():
+        rc = st.columns(c_spec)
+        rc[0].write(str(row["검사일시"]))
+        rc[1].write(str(row["자재/LOT명"]))
+        rc[2].write(str(row["손톱박리"]))
+        rc[3].write(str(row["테이프박리"]))
+        rc[4].write(str(row["사진파일명"]))
+        
+        fname = str(row["사진파일명"])
+        if fname != "none":
+            img_path = os.path.join(IMAGE_DIR, fname)
+            if os.path.exists(img_path):
+                with open(img_path, "rb") as img_file:
+                    img_bytes = img_
