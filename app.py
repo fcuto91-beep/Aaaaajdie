@@ -4,7 +4,6 @@ from datetime import datetime, timezone, timedelta
 import os
 import io
 import zipfile
-import base64
 
 st.set_page_config(page_title="Inspection", layout="centered")
 st.title("🛡️ 공정 검사 및 이력 관리")
@@ -44,8 +43,7 @@ if st.button("💾 Save", type="primary"):
             s_lot = "".join(c for c in lot if c.isalnum())
             t_str = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
             fn = f"{s_lot}_{t_str}_{up_file.name}"
-            path = D + "/" + fn
-            with open(path, "wb") as f:
+            with open(os.path.join(D, fn), "wb") as f:
                 f.write(up_file.getbuffer())
 
         nd = pd.DataFrame([{
@@ -67,25 +65,3 @@ if st.button("💾 Save", type="primary"):
                 pass
 
         df_c.to_csv(F, index=False, encoding="utf-8-sig")
-        st.success("✅ Saved!")
-        st.rerun()
-
-st.markdown("---")
-st.subheader("📋 전체 검사 내역 (표 형식)")
-
-if os.path.exists(F):
-    try:
-        df = pd.read_csv(F)
-        q = st.text_input("🔍 검색", placeholder="검색어...")
-        
-        if q:
-            df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True)
-        else:
-            df_f = df.reset_index(drop=True)
-
-        rows_html = ""
-        for idx, row in df_f.iterrows():
-            dt_val = str(row["검사일시"])
-            lot_val = str(row["자재/LOT명"])
-            nail_val = str(row["손톱박리"])
-            tape_
