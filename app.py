@@ -6,7 +6,7 @@ import io
 import zipfile
 
 st.set_page_config(page_title="Inspection", layout="centered")
-st.title("🛡️ 공정 검사 및 이력 관리")
+st.title("📦🧴 포장재 착인 박리 검사 이력 관리")
 
 F = "inspection_history.csv"
 D = "inspection_images"
