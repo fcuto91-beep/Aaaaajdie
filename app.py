@@ -38,6 +38,14 @@ def show_save_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
+# 💡 화면 정중앙에 뜨는 수정 완료 팝업 모달 함수
+@st.dialog("✏️ 수정 완료")
+def show_edit_success_popup():
+    st.success("검사 내역이 성공적으로 수정되었습니다!")
+    st.info("전체 검사 내역에 최신 내용이 반영되었습니다.")
+    if st.button("확인", type="primary", use_container_width=True):
+        st.rerun()
+
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
@@ -93,6 +101,10 @@ if ok:
 if st.session_state.get("show_saved_modal", False):
     st.session_state["show_saved_modal"] = False
     show_save_success_popup()
+
+if st.session_state.get("show_edited_modal", False):
+    st.session_state["show_edited_modal"] = False
+    show_edit_success_popup()
 
 # 💡 사진 팝업 모달 함수
 @st.dialog("📸 사진 미리보기")
@@ -221,10 +233,8 @@ if os.path.exists(F):
                 st.subheader("✏️ 검사 내역 수정 (번호 / 사진 변경)")
                 
                 if not df.empty:
-                    # 💡 수정용 검색창 추가
                     edit_q = st.text_input("🔎 수정할 항목 검색 (포장재 번호 또는 약호 입력)", placeholder="예: 5115558 또는 ANA")
                     
-                    # 검색어에 따라 대상 필터링
                     if edit_q:
                         mask = df.astype(str).apply(lambda r: r.str.contains(edit_q, case=False).any(), axis=1)
                         filtered_df = df[mask]
@@ -281,8 +291,7 @@ if os.path.exists(F):
                                         df.loc[sel_idx, "특이사항"] = str(edit_rem) if edit_rem.strip() else "-"
                                         
                                         df.to_csv(F, index=False, encoding="utf-8-sig")
-                                        st.toast("🎉 검사 내역이 성공적으로 수정되었습니다!", icon="✅")
-                                        st.success("✅ 수정 완료!")
+                                        st.session_state["show_edited_modal"] = True
                                         st.rerun()
                     else:
                         st.info("검색 결과가 없습니다.")
