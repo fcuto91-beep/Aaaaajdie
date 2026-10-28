@@ -60,18 +60,18 @@ if ok:
 
         nd = pd.DataFrame([{
             "검사일시": dt_str,
-            "포장재번호": mat_no,
-            "포장재약호": pack_name if pack_name.strip() else "-",
+            "포장재번호": str(mat_no),
+            "포장재약호": str(pack_name) if pack_name.strip() else "-",
             "손톱박리": nail,
             "테이프박리": tape,
             "사진파일명": fn,
-            "특이사항": rem,
+            "특이사항": str(rem) if rem.strip() else "-",
         }])
 
         df_c = nd
         if os.path.exists(F):
             try:
-                df_ex = pd.read_csv(F)
+                df_ex = pd.read_csv(F, dtype=str)
                 if not df_ex.empty:
                     df_c = pd.concat([df_ex, nd], ignore_index=True)
             except:
@@ -96,7 +96,8 @@ st.subheader("📋 전체 검사 내역")
 
 if os.path.exists(F):
     try:
-        df = pd.read_csv(F)
+        # 💡 CSV 로드 시 모든 열을 문자열(dtype=str)로 고정하여 타입 에러 방지
+        df = pd.read_csv(F, dtype=str)
         q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
@@ -210,12 +211,10 @@ if os.path.exists(F):
                 st.subheader("✏️ 검사 내역 수정 (번호 / 사진 변경)")
                 
                 if not df.empty:
-                    # 선택하기 쉽게 표시용 리스트 만들기
                     target_options = [f"[{i}] {row.get('검사일시','')} - 번호: {row.get('포장재번호','')}" for i, row in df.iterrows()]
                     selected_target_str = st.selectbox("수정할 검사 내역을 선택하세요", target_options)
                     
                     if selected_target_str:
-                        # 선택한 행의 인덱스 추출
                         sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
                         curr_row = df.loc[sel_idx]
                         
@@ -244,7 +243,6 @@ if os.path.exists(F):
                                 if not edit_mat_no.strip():
                                     st.warning("⚠️ 포장재 번호를 입력해 주세요!")
                                 else:
-                                    # 사진 파일 처리
                                     new_fn = str(curr_row.get("사진파일명", "none"))
                                     if edit_file:
                                         s_lot = "".join(c for c in edit_mat_no if c.isalnum())
@@ -254,13 +252,12 @@ if os.path.exists(F):
                                         with open(file_path, "wb") as f:
                                             f.write(edit_file.getbuffer())
                                     
-                                    # 데이터프레임 값 갱신
-                                    df.loc[sel_idx, "포장재번호"] = edit_mat_no
-                                    df.loc[sel_idx, "포장재약호"] = edit_pack_name if edit_pack_name.strip() else "-"
+                                    df.loc[sel_idx, "포장재번호"] = str(edit_mat_no)
+                                    df.loc[sel_idx, "포장재약호"] = str(edit_pack_name) if edit_pack_name.strip() else "-"
                                     df.loc[sel_idx, "손톱박리"] = edit_nail
                                     df.loc[sel_idx, "테이프박리"] = edit_tape
                                     df.loc[sel_idx, "사진파일명"] = new_fn
-                                    df.loc[sel_idx, "특이사항"] = edit_rem if edit_rem.strip() else "-"
+                                    df.loc[sel_idx, "특이사항"] = str(edit_rem) if edit_rem.strip() else "-"
                                     
                                     df.to_csv(F, index=False, encoding="utf-8-sig")
                                     st.toast("🎉 검사 내역이 성공적으로 수정되었습니다!", icon="✅")
