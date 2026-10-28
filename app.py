@@ -25,8 +25,8 @@ with col2:
 
 st.markdown("")
 
-# 💡 2단계: 제목 글자 크기를 더 키우고 모바일에서 보기 좋게 줄바꿈 적용
-st.markdown("<h1 style='text-align: center; font-size: 36px !important; font-weight: bold; margin-bottom: 10px; line-height: 1.3;'>포장재 착인 검사 이력<br>관리 📦🧴</h1>", unsafe_allow_html=True)
+# 💡 2단계: 모바일에서 딱 두 줄로 깔끔하게 떨어지도록 크기와 줄바꿈 최적화
+st.markdown("<h1 style='text-align: center; font-size: 30px !important; font-weight: bold; margin-bottom: 10px; line-height: 1.3;'>포장재 착인 검사<br>이력 관리 📦🧴</h1>", unsafe_allow_html=True)
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
