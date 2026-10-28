@@ -18,12 +18,12 @@ KST = timezone(timedelta(hours=9))
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
 with st.form("f1", clear_on_submit=True):
-    st.subheader("📝 시험 결과 입력")
-    pack_name = st.text_input("자재번호")
+    st.subheader("📝 검사 결과 입력")
+    pack_name = st.text_input("자재 번호")
     mat_no = st.text_input("포장재 약호")
-    nail = st.selectbox("1️⃣ 손톱박리", ["적합", "부적합"])
-    tape = st.selectbox("2️⃣ 테이프박리", ["적합", "부적합"])
-    up_file = st.file_uploader("현장 사진", type=["jpg", "jpeg", "png"])
+    nail = st.selectbox("손톱 박리", ["적합", "부적합"])
+    tape = st.selectbox("테이프 박리", ["적합", "부적합"])
+    up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
     rem = st.text_area("특이사항")
     ok = st.form_submit_button("💾 Save", type="primary")
 
@@ -42,7 +42,7 @@ if ok:
                 f.write(up_file.getbuffer())
 
         nd = pd.DataFrame([{
-            "검사일시": dt_str,
+            "검사일자": dt_str,
             "포장재명": pack_name,
             "자재번호": mat_no if mat_no.strip() else "-",
             "손톱박리": nail,
@@ -71,7 +71,7 @@ if ok:
         st.rerun()
 
 # 💡 사진 팝업 모달 함수
-@st.dialog("📸 사진 팝업 미리보기")
+@st.dialog("📸 사진 미리보기")
 def show_image_popup(img_path, p_name, date_str):
     st.markdown(f"📦 **포장재 명: {p_name}**")
     st.caption(f"📅 검사일시: {date_str}")
@@ -168,10 +168,10 @@ if os.path.exists(F):
                     zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
         zb.seek(0)
         
-        st.download_button("📦 Download ZIP", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
+        st.download_button("💾 전체 검사 내역 다운로드", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
         
         st.markdown("")
-        if st.button("🗑️ Reset", use_container_width=True):
+        if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
             os.remove(F)
             st.success("Reset done!")
             st.rerun()
