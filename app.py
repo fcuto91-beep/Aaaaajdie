@@ -36,21 +36,4 @@ if ok:
             s_lot = "".join(c for c in lot if c.isalnum())
             t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
             fn = f"{s_lot}_{t_str}_{up_file.name}"
-            with open(os.path.join(D, fn), "wb") as f:
-                f.write(up_file.getbuffer())
-
-        nd = pd.DataFrame([{
-            "검사일시": dt_str,
-            "자재/LOT명": lot,
-            "손톱박리": nail,
-            "테이프박리": tape,
-            "사진파일명": fn,
-            "특이사항": rem,
-        }])
-
-        df_c = nd
-        if os.path.exists(F):
-            try:
-                df_ex = pd.read_csv(F)
-                if not df_ex.empty:
-                    
+            with open(os
