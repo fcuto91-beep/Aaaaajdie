@@ -4,7 +4,6 @@ from datetime import datetime, timezone, timedelta
 import os
 import io
 import zipfile
-import base64
 
 st.set_page_config(page_title="Inspection", layout="centered")
 st.title("🛡️ 공정 검사 및 이력 관리")
@@ -62,6 +61,13 @@ if ok:
         st.success("✅ Saved!")
         st.rerun()
 
+# 💡 돋보기를 누르면 화면 중앙에 뜨는 사진 팝업 모달 함수
+@st.dialog("📸 사진 팝업 미리보기")
+def show_image_popup(img_path, lot_name, date_str):
+    st.markdown(f"📦 **LOT: {lot_name}**")
+    st.caption(f"📅 검사일시: {date_str}")
+    st.image(img_path, use_column_width=True)
+
 st.markdown("---")
 st.subheader("📋 전체 검사 내역")
 
@@ -71,46 +77,16 @@ if os.path.exists(F):
         q = st.text_input("🔍 검색", placeholder="검색어...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        rows_html = ""
+        # 💡 표 형태의 레이아웃 헤더
+        cols_w = [1.8, 1.2, 0.8, 0.8, 1.5, 0.8]
+        h = st.columns(cols_w)
+        h[0].markdown("**일시**")
+        h[1].markdown("**LOT**")
+        h[2].markdown("**손톱**")
+        h[3].markdown("**테이프**")
+        h[4].markdown("**특이사항**")
+        h[5].markdown("**미리보기**")
+        st.divider()
+
         for idx, row in df_f.iterrows():
-            d_val = str(row["검사일시"])
-            l_val = str(row["자재/LOT명"])
-            n_val = str(row["손톱박리"])
-            t_val = str(row["테이프박리"])
-            r_val = str(row["특이사항"]) if pd.notna(row["특이사항"]) else ""
             
-            img_td = "-"
-            fname = str(row["사진파일명"])
-            if fname != "none":
-                ip = os.path.join(D, fname)
-                if os.path.exists(ip):
-                    with open(ip, "rb") as f:
-                        enc = base64.b64encode(f.read()).decode()
-                    img_td = f'<a href="data:image/jpeg;base64,{enc}" target="_blank" style="text-decoration:none; font-size:1.4rem;" title="새 창으로 사진 보기">🔍</a>'
-
-            rows_html += f'<tr style="border-bottom: 1px solid #eee;"><td style="padding:8px; white-space:nowrap;">{d_val}</td><td style="padding:8px; white-space:nowrap;">{l_val}</td><td style="padding:8px; white-space:nowrap;">{n_val}</td><td style="padding:8px; white-space:nowrap;">{t_val}</td><td style="padding:8px; min-width:100px;">{r_val}</td><td style="padding:8px; text-align:center;">{img_td}</td></tr>'
-
-        table_html = f'<div style="overflow-x: auto; max-height: 450px; border: 1px solid #ddd; border-radius: 5px;"><table style="width: 100%; border-collapse: collapse; font-size: 13px; background-color: white;"><thead><tr style="background-color: #f8f9fa; border-bottom: 2px solid #ccc; text-align: left;"><th style="padding:8px; white-space:nowrap;">일시</th><th style="padding:8px; white-space:nowrap;">LOT</th><th style="padding:8px; white-space:nowrap;">손톱</th><th style="padding:8px; white-space:nowrap;">테이프</th><th style="padding:8px; white-space:nowrap;">특이사항</th><th style="padding:8px; white-space:nowrap; text-align:center;">미리보기</th></tr></thead><tbody>{rows_html}</tbody></table></div>'
-        
-        st.markdown(table_html, unsafe_allow_html=True)
-
-        st.markdown("---")
-        zb = io.BytesIO()
-        with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.write(F, arcname="inspection_history.csv")
-            for root, dirs, files in os.walk(D):
-                for file in files:
-                    zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
-        zb.seek(0)
-        
-        st.download_button("📦 Download ZIP", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
-        
-        st.markdown("")
-        if st.button("🗑️ Reset", use_container_width=True):
-            os.remove(F)
-            st.success("Reset done!")
-            st.rerun()
-    except Exception as e:
-        st.error(f"Error: {e}")
-else:
-    st.info("저장된 이력이 없습니다.")
