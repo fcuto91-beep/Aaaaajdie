@@ -118,7 +118,8 @@ if os.path.exists(DATA_FILE):
         
         fname = str(row["사진파일명"])
         if fname != "none":
-            if r_cols[5].button("🔍", key=f"zoom_{idx}", help="미리보기"):
+            # 💡 잘림 현상이 없는 HTML 돋보기 심볼 코드 적용
+            if r_cols[5].button("&#128269;", key=f"zoom_{idx}", help="미리보기"):
                 st.session_state.preview_img = fname
                 st.session_state.preview_title = f"LOT: {row['자재/LOT명']} ({row['검사일시']})"
         else:
@@ -141,32 +142,4 @@ if os.path.exists(DATA_FILE):
 
     st.markdown("---")
     
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        if os.path.exists(DATA_FILE):
-            zf.write(DATA_FILE, arcname="inspection_history.csv")
-        if os.path.exists(IMAGE_DIR):
-            for root, dirs, files in os.walk(IMAGE_DIR):
-                for file in files:
-                    f_path = os.path.join(root, file)
-                    arc = os.path.join("inspection_images", file)
-                    zf.write(f_path, arcname=arc)
-    
-    zip_buffer.seek(0)
-    
-    st.download_button(
-        label="📦 [전체 데이터 + 현장 사진] ZIP 다운로드",
-        data=zip_buffer,
-        file_name=f"inspection_backup_{datetime.now(KST).strftime('%Y%m%d')}.zip",
-        mime="application/zip",
-        type="primary",
-        use_container_width=True
-    )
-    
-    st.markdown("")
-    if st.button("🗑️ 데이터 파일 초기화하기", use_container_width=True):
-        os.remove(DATA_FILE)
-        st.success("Reset completed!")
-        st.rerun()
-else:
-  st.info("아직 저장된 검사 이력이 없습니다.")
+    zip
