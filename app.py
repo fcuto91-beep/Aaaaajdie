@@ -92,32 +92,6 @@ if os.path.exists(F):
             except:
                 st.query_params.clear()
 
-        # 💡 HTML 표 기반 렌더링 (일시 칸 너비 축소 & 미리보기 위치를 테이프와 특이사항 사이로 변경)
+        # 💡 HTML 표 기반 렌더링 (일시 폭 축소 & 미리보기 위치 변경)
         rows_list = []
-        for idx, row in df_f.iterrows():
-            d_val = str(row["검사일시"])
-            l_val = str(row["자재/LOT명"])
-            n_val = str(row["손톱박리"])
-            t_val = str(row["테이프박리"])
-            r_val = str(row["특이사항"]) if pd.notna(row["특이사항"]) else "-"
-            
-            fname = str(row["사진파일명"])
-            if fname != "none":
-                ip = os.path.join(D, fname)
-                if os.path.exists(ip):
-                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px;">🔍</a>'
-                else:
-                    img_td = '-'
-            else:
-                img_td = '-'
-
-            # 순서: 일시(폭 축소) | LOT | 손톱 | 테이프 | 미리보기 | 특이사항
-            row_str = f'<tr><td style="padding:8px 6px; width:110px; white-space:nowrap; font-size:11px; color:#333;">{d_val}</td><td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px;">{l_val}</td><td style="padding:8px 6px; white-space:nowrap; font-size:12px;">{n_val}</td><td style="padding:8px 6px; white-space:nowrap; font-size:12px;">{t_val}</td><td style="padding:8px 6px; text-align:center; width:60px;">{img_td}</td><td style="padding:8px 6px; min-width:90px; font-size:12px; color:#555;">{r_val}</td></tr>'
-            rows_list.append(row_str)
-
-        all_rows = "".join(rows_list)
-
-        table_code = f'''
-<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">
-    <table style="width:100%; border-collapse:collapse; text-align:left;">
-        <thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd
+        for idx, row in df_f.iterrows
