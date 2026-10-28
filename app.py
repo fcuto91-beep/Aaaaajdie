@@ -70,7 +70,7 @@ if st.button("💾 Save", type="primary"):
         st.rerun()
 
 st.markdown("---")
-st.subheader("📋 전체 내역 리스트")
+st.subheader("📋 전체 내역 표 (Table)")
 
 if os.path.exists(F):
     try:
@@ -82,37 +82,29 @@ if os.path.exists(F):
         else:
             df_f = df.reset_index(drop=True)
 
+        # 💡 모바일에서 깔끔하게 스크롤되는 네이티브 표 출력
+        st.dataframe(df_f, use_container_width=True)
+
+        st.markdown("### 🔍 사진 개별 확인")
+        has_img = False
         for idx, row in df_f.iterrows():
-            with st.container(border=True):
-                st.markdown(f"📦 **LOT: {row['자재/LOT명']}**")
-                st.caption(f"📅 {row['검사일시']}")
-                
-                c1, c2 = st.columns(2)
-                c1.write(f"손톱: **{row['손톱박리']}**")
-                c2.write(f"테이프: **{row['테이프박리']}**")
-                
-                note = str(row['특이사항'])
-                if note.strip() and note != "nan":
-                    st.markdown(f"💬 {note}")
-                
-                fname = str(row["사진파일명"])
-                if fname != "none":
-                    ip = D + "/" + fname
-                    if os.path.exists(ip):
-                        with open(ip, "rb") as f:
-                            ib = f.read()
-                        st.download_button(
-                            "🔍 View Photo",
-                            ib,
-                            file_name=fname,
-                            mime="image/jpeg",
-                            key=f"z_{idx}",
-                            use_container_width=True
-                        )
-                    else:
-                        st.write("📷 No photo")
-                else:
-                    st.write("📷 None")
+            fname = str(row["사진파일명"])
+            if fname != "none":
+                ip = D + "/" + fname
+                if os.path.exists(ip):
+                    has_img = True
+                    with open(ip, "rb") as f:
+                        ib = f.read()
+                    st.download_button(
+                        f"📥 [{row['자재/LOT명']}] 사진 보기 ({row['검사일시']})",
+                        ib,
+                        file_name=fname,
+                        mime="image/jpeg",
+                        key=f"z_{idx}",
+                        use_container_width=True
+                    )
+        if not has_img:
+            st.caption("저장된 사진이 없습니다.")
 
         st.markdown("---")
         zb = io.BytesIO()
