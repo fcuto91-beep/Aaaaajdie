@@ -26,7 +26,7 @@ with col2:
 st.markdown("")
 
 # 💡 2단계: 제목 글자 크기를 확실하게 큼직하게 키운 메인 제목 배치 (!important 적용)
-st.markdown("<h1 style='text-align: center; font-size: 32px !important; font-weight: bold; margin-bottom: 10px;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; font-size: 32px !important; font-weight: bold; margin-bottom: 10px;'> 포장재 착인 검사 이력 관리 📦🧴</h1>", unsafe_allow_html=True)
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
