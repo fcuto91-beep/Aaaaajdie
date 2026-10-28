@@ -25,8 +25,8 @@ with col2:
 
 st.markdown("")
 
-# 💡 2단계: 모바일/PC 반응형 제목 (모바일에서는 자연스럽게 줄바꿈되고 잘림 방지)
-st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'> 포장재 착인 검사 이력 관리 📦🧴</h1>", unsafe_allow_html=True)
+# 💡 2단계: 모바일/PC 반응형 제목 (잘림 방지)
+st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
@@ -210,3 +210,12 @@ if os.path.exists(F):
         st.error(f"Error: {e}")
 else:
     st.info("아직 저장된 검사 이력이 없습니다.")
+
+# 💡 페이지 맨 하단 우측 작성자 및 버전 표기
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
+    "Author : 김태현 책임기사<br>Version : v1.0.0" \
+    "</div>", 
+    unsafe_allow_html=True
+)
