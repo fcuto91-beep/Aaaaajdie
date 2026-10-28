@@ -22,7 +22,6 @@ with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     mat_no = st.text_input("포장재 번호")
     pack_name = st.text_input("포장재 약호")
-    # 💡 입력 폼 셀렉박스 옵션 변경
     nail = st.selectbox("손톱 박리 결과", ["적합 (PASS)", "부적합 (FAIL)"])
     tape = st.selectbox("테이프 박리 결과", ["적합 (PASS)", "부적합 (FAIL)"])
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
@@ -120,4 +119,81 @@ if os.path.exists(F):
             raw_d = str(row.get("검사일시", "-"))
             d_val = raw_d[:10] if len(raw_d) >= 10 else raw_d
             m_val = str(row.get("포장재번호", "-"))
-            p_val = str(row.get("포장재약호", "-"))
+            p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
+            
+            n_val = get_badge(row.get("손톱박리", "-"))
+            t_val = get_badge(row.get("테이프박리", "-"))
+            
+            r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
+            
+            fname = str(row.get("사진파일명", "none"))
+            if fname != "none":
+                ip = os.path.join(D, fname)
+                if os.path.exists(ip):
+                    img_td = '<a href="?pop_idx=' + str(idx) + '" target="_self" style="text-decoration:none; font-size:16px;">🔍</a>'
+                else:
+                    img_td = '-'
+            else:
+                img_td = '-'
+
+            row_str = '<tr>' \
+                      '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px; text-align:center; vertical-align:middle;">' + m_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle;">' + p_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle;">' + n_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle;">' + t_val + '</td>' \
+                      '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; vertical-align:middle;">' + img_td + '</td>' \
+                      '<td style="padding:8px 6px; min-width:90px; font-size:12px; color:#555; text-align:center; vertical-align:middle;">' + r_val + '</td>' \
+                      '</tr>'
+            rows_list.append(row_str)
+
+        all_rows = "".join(rows_list)
+
+        table_code = '<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
+                     '<table style="width:100%; border-collapse:collapse;">' \
+                     '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
+                     '<tr>' \
+                     '<th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">일자</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
+                     '<th style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">미리보기</th>' \
+                     '<th style="padding:8px 6px; min-width:90px; font-size:12px; text-align:center;">특이사항</th>' \
+                     '</tr>' \
+                     '</thead>' \
+                     '<tbody>' + all_rows + '</tbody>' \
+                     '</table>' \
+                     '</div>'
+
+        st.markdown(table_code, unsafe_allow_html=True)
+
+        # 🔒 관리자 인증 구역
+        st.markdown("---")
+        with st.expander("🔐 관리자 메뉴 (다운로드 / 초기화)"):
+            admin_input = st.text_input("관리자 비밀번호를 입력하세요", type="password")
+            
+            if admin_input == ADMIN_PW:
+                st.success("✅ 관리자 인증이 완료되었습니다.")
+                
+                zb = io.BytesIO()
+                with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
+                    zf.write(F, arcname="inspection_history.csv")
+                    for root, dirs, files in os.walk(D):
+                        for file in files:
+                            zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
+                zb.seek(0)
+                
+                st.download_button("💾 전체 검사 내역 다운로드", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
+                
+                st.markdown("")
+                if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
+                    os.remove(F)
+                    st.success("Reset done!")
+                    st.rerun()
+            elif admin_input:
+                st.error("❌ 비밀번호가 틀렸습니다.")
+    except Exception as e:
+        st.error(f"Error: {e}")
+else:
+    st.info("아직 저장된 검사 이력이 없습니다.")
