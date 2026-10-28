@@ -33,7 +33,7 @@ if up_file:
 
 rem = st.text_area("특이사항 및 조치 내용", placeholder="특이사항 입력")
 
-if st.button("💾 검사 이력 저장하기", type="primary"):
+if st.button("💾 Save Inspection", type="primary"):
     if not lot.strip():
         st.warning("⚠️ 자재 / LOT명을 입력해 주세요!")
     else:
@@ -58,71 +58,13 @@ if st.button("💾 검사 이력 저장하기", type="primary"):
             if os.path.exists(F):
                 try:
                     df_ex = pd.read_csv(F)
-                    if df_ex.empty:
-                        df_c = nd
-                    else:
-                        df_c = pd.concat([df_ex, nd], ignore_index=True)
+                    df_c = nd if df_ex.empty else pd.concat([df_ex, nd], ignore_index=True)
                 except:
                     df_c = nd
             else:
                 df_c = nd
 
             df_c.to_csv(F, index=False, encoding="utf-8-sig")
-            st.success("✅ 저장 완료!")
+            st.success("✅ Saved successfully!")
             st.rerun()
         except Exception as e:
-            st.error(f"저장 중 오류 발생: {e}")
-
-st.markdown("---")
-st.subheader("📋 전체 검사 내역 리스트")
-
-if os.path.exists(F):
-    try:
-        df = pd.read_csv(F)
-        q = st.text_input("🔍 이력 검색", placeholder="검색어 입력...")
-        df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
-
-        for idx, row in df_f.iterrows():
-            with st.container(border=True):
-                st.markdown(f"📦 **LOT: {row['자재/LOT명']}**")
-                st.caption(f"📅 검사일시: {row['검사일시']}")
-                
-                col1, col2 = st.columns(2)
-                col1.write(f"손톱: **{row['손톱박리']}**")
-                col2.write(f"테이프: **{row['테이프박리']}**")
-                
-                if str(row['특이사항']).strip() and str(row['특이사항']) != "nan":
-                    st.markdown(f"💬 특이사항: {row['특이사항']}")
-                
-                fname = str(row["사진파일명"])
-                if fname != "none":
-                    ip = os.path.join(D, fname)
-                    if os.path.exists(ip):
-                        with open(ip, "rb") as f:
-                            ib = f.read()
-                        st.download_button(
-                            "🔍 돋보기 (새 창으로 사진 보기)",
-                            ib,
-                            file_name=fname,
-                            mime="image/jpeg",
-                            key=f"z_{idx}",
-                            use_container_width=True
-                        )
-                    else:
-                        st.write("📷 사진 파일 없음")
-                else:
-                    st.write("📷 첨부된 사진 없음")
-
-        st.markdown("---")
-        zb = io.BytesIO()
-        with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.write(F, arcname="inspection_history.csv")
-            for root, dirs, files in os.walk(D):
-                for file in files:
-                    zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
-        zb.seek(0)
-        
-        st.download_button("📦 ZIP 다운로드", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
-        
-        st.markdown("")
-        if st.button("🗑️ 데이터 파일 초기화
