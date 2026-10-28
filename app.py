@@ -91,5 +91,11 @@ if os.path.exists(DATA_FILE):
 
     c_spec = [2.0, 1.4, 0.9, 0.9, 2.8, 1.1, 1.3]
     h = st.columns(c_spec)
-    h[0].markdown("**검사일시**")
-    h[1].markdown("**자재/LOT명**
+    h[0].markdown("**Date**")
+    h[1].markdown("**LOT**")
+    h[2].markdown("**Nail**")
+    h[3].markdown("**Tape**")
+    h[4].markdown("**File**")
+    h[5].markdown("**View**")
+    h[6].markdown("**Note**")
+    st.markdown("<hr style='
