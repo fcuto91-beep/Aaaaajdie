@@ -37,34 +37,9 @@ if st.button("💾 Save Inspection", type="primary"):
     if not lot.strip():
         st.warning("⚠️ 자재 / LOT명을 입력해 주세요!")
     else:
-        try:
-            dt = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
-            fn = "none"
-            if up_file:
-                s_lot = "".join(c for c in lot if c.isalnum() or c in ('_', '-'))
-                fn = f"{s_lot}_{datetime.now(KST).strftime('%Y%m%d_%H%M%S')}_{up_file.name}"
-                with open(os.path.join(D, fn), "wb") as f:
-                    f.write(up_file.getbuffer())
-
-            nd = pd.DataFrame([{
-                "검사일시": dt,
-                "자재/LOT명": lot,
-                "손톱박리": nail,
-                "테이프박리": tape,
-                "사진파일명": fn,
-                "특이사항": rem,
-            }])
-
-            if os.path.exists(F):
-                try:
-                    df_ex = pd.read_csv(F)
-                    df_c = nd if df_ex.empty else pd.concat([df_ex, nd], ignore_index=True)
-                except:
-                    df_c = nd
-            else:
-                df_c = nd
-
-            df_c.to_csv(F, index=False, encoding="utf-8-sig")
-            st.success("✅ Saved successfully!")
-            st.rerun()
-        except Exception as e:
+        dt = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+        fn = "none"
+        if up_file:
+            s_lot = "".join(c for c in lot if c.isalnum() or c in ('_', '-'))
+            fn = f"{s_lot}_{datetime.now(KST).strftime('%Y%m%d_%H%M%S')}_{up_file.name}"
+            with open(os.path.join(D,
