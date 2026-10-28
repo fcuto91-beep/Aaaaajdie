@@ -70,7 +70,7 @@ if st.button("💾 Save", type="primary"):
         st.rerun()
 
 st.markdown("---")
-st.subheader("📋 전체 내역 표 (Table)")
+st.subheader("📋 전체 검사 내역")
 
 if os.path.exists(F):
     try:
@@ -82,29 +82,46 @@ if os.path.exists(F):
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 모바일에서 깔끔하게 스크롤되는 네이티브 표 출력
-        st.dataframe(df_f, use_container_width=True)
+        # 💡 표 형태의 헤더 구성
+        cs = [1.8, 1.2, 0.8, 0.8, 1.6, 0.8]
+        h = st.columns(cs)
+        h[0].markdown("**일시**")
+        h[1].markdown("**LOT**")
+        h[2].markdown("**손톱**")
+        h[3].markdown("**테이프**")
+        h[4].markdown("**특이사항**")
+        h[5].markdown("**미리보기**")
+        st.divider()
 
-        st.markdown("### 🔍 사진 개별 확인")
-        has_img = False
+        # 💡 각 행을 표 레이아웃으로 출력하며 파일명 자리에 돋보기 버튼 배치
         for idx, row in df_f.iterrows():
+            rc = st.columns(cs)
+            rc[0].write(str(row["검사일시"]))
+            rc[1].write(str(row["자재/LOT명"]))
+            rc[2].write(str(row["손톱박리"]))
+            rc[3].write(str(row["테이프박리"]))
+            rc[4].write(str(row["특이사항"]))
+            
             fname = str(row["사진파일명"])
             if fname != "none":
                 ip = D + "/" + fname
                 if os.path.exists(ip):
-                    has_img = True
                     with open(ip, "rb") as f:
                         ib = f.read()
-                    st.download_button(
-                        f"📥 [{row['자재/LOT명']}] 사진 보기 ({row['검사일시']})",
+                    rc[5].download_button(
+                        "🔍",
                         ib,
                         file_name=fname,
                         mime="image/jpeg",
                         key=f"z_{idx}",
-                        use_container_width=True
+                        help="새 창으로 사진 보기"
                     )
-        if not has_img:
-            st.caption("저장된 사진이 없습니다.")
+                else:
+                    rc[5].write("없음")
+            else:
+                rc[5].write("-")
+            
+            st.divider()
 
         st.markdown("---")
         zb = io.BytesIO()
