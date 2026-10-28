@@ -61,7 +61,7 @@ if ok:
         st.success("✅ Saved!")
         st.rerun()
 
-# 💡 돋보기를 누르면 뜨는 팝업 모달 함수
+# 💡 돋보기를 누르면 화면 중앙에 뜨는 사진 팝업 모달 함수
 @st.dialog("📸 사진 팝업 미리보기")
 def show_image_popup(img_path, lot_name, date_str):
     st.markdown(f"📦 **LOT: {lot_name}**")
@@ -69,7 +69,7 @@ def show_image_popup(img_path, lot_name, date_str):
     st.image(img_path, use_column_width=True)
 
 st.markdown("---")
-st.subheader("📋 전체 검사 내역")
+st.subheader("📋 전체 검사 내역 (표 형식)")
 
 if os.path.exists(F):
     try:
@@ -79,8 +79,9 @@ if os.path.exists(F):
 
         cols_w = [1.8, 1.2, 0.8, 0.8, 1.5, 0.8]
 
-        # 💡 스크롤 가능한 표 영역 (높이 지정으로 깔끔한 스크롤 구현)
-        with st.container(height=450):
+        # 💡 스크롤과 테두리가 적용된 표 형식 컨테이너 박스
+        with st.container(height=450, border=True):
+            # 헤더 행
             h = st.columns(cols_w)
             h[0].markdown("**일시**")
             h[1].markdown("**LOT**")
@@ -88,15 +89,16 @@ if os.path.exists(F):
             h[3].markdown("**테이프**")
             h[4].markdown("**특이사항**")
             h[5].markdown("**미리보기**")
-            st.divider()
+            st.markdown("<hr style='margin:4px 0; border:1px solid #ddd;'>", unsafe_allow_html=True)
 
+            # 데이터 행들
             for idx, row in df_f.iterrows():
                 rc = st.columns(cols_w)
-                rc[0].write(str(row["검사일시"]))
-                rc[1].write(str(row["자재/LOT명"]))
-                rc[2].write(str(row["손톱박리"]))
-                rc[3].write(str(row["테이프박리"]))
-                rc[4].write(str(row["특이사항"]) if pd.notna(row["특이사항"]) else "-")
+                rc[0].markdown(f"<span style='font-size:12px;'>{str(row['검사일시'])</span>", unsafe_allow_html=True)
+                rc[1].markdown(f"<span style='font-size:12px; font-weight:bold;'>{str(row['자재/LOT명'])}</span>", unsafe_allow_html=True)
+                rc[2].markdown(f"<span style='font-size:12px;'>{str(row['손톱박리'])}</span>", unsafe_allow_html=True)
+                rc[3].markdown(f"<span style='font-size:12px;'>{str(row['테이프박리'])}</span>", unsafe_allow_html=True)
+                rc[4].markdown(f"<span style='font-size:12px;'>{str(row['특이사항']) if pd.notna(row['특이사항']) else '-'}</span>", unsafe_allow_html=True)
                 
                 fname = str(row["사진파일명"])
                 if fname != "none":
@@ -108,7 +110,9 @@ if os.path.exists(F):
                         rc[5].write("-")
                 else:
                     rc[5].write("-")
-                st.divider()
+                
+                if idx < len(df_f) - 1:
+                    st.markdown("<hr style='margin:2px 0; border:0.5px solid #eee;'>", unsafe_allow_html=True)
 
         st.markdown("---")
         zb = io.BytesIO()
