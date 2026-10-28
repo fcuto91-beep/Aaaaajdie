@@ -19,8 +19,8 @@ st.info(f"⏰ 시각: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
-    pack_name = st.text_input("포장재 명")
-    mat_no = st.text_input("자재번호")
+    pack_name = st.text_input("자재번호")
+    mat_no = st.text_input("포장자 약호")
     nail = st.selectbox("1️⃣ 손톱박리", ["적합", "부적합"])
     tape = st.selectbox("2️⃣ 테이프박리", ["적합", "부적합"])
     up_file = st.file_uploader("현장 사진", type=["jpg", "jpeg", "png"])
