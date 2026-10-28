@@ -92,7 +92,7 @@ if os.path.exists(F):
             except:
                 st.query_params.clear()
 
-        # 💡 HTML 표 기반 렌더링 (모바일 화면 깨짐 원천 차단)
+        # 💡 HTML 표 기반 렌더링 (일시 칸 너비 축소 & 미리보기 위치를 테이프와 특이사항 사이로 변경)
         rows_list = []
         for idx, row in df_f.iterrows():
             d_val = str(row["검사일시"])
@@ -111,7 +111,8 @@ if os.path.exists(F):
             else:
                 img_td = '-'
 
-            row_str = f'<tr><td style="padding:8px; white-space:nowrap; font-size:12px;">{d_val}</td><td style="padding:8px; white-space:nowrap; font-weight:bold; font-size:12px;">{l_val}</td><td style="padding:8px; white-space:nowrap; font-size:12px;">{n_val}</td><td style="padding:8px; white-space:nowrap; font-size:12px;">{t_val}</td><td style="padding:8px; min-width:100px; font-size:12px;">{r_val}</td><td style="padding:8px; text-align:center;">{img_td}</td></tr>'
+            # 순서: 일시(폭 축소) | LOT | 손톱 | 테이프 | 미리보기 | 특이사항
+            row_str = f'<tr><td style="padding:8px 6px; width:110px; white-space:nowrap; font-size:11px; color:#333;">{d_val}</td><td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px;">{l_val}</td><td style="padding:8px 6px; white-space:nowrap; font-size:12px;">{n_val}</td><td style="padding:8px 6px; white-space:nowrap; font-size:12px;">{t_val}</td><td style="padding:8px 6px; text-align:center; width:60px;">{img_td}</td><td style="padding:8px 6px; min-width:90px; font-size:12px; color:#555;">{r_val}</td></tr>'
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
@@ -119,42 +120,4 @@ if os.path.exists(F):
         table_code = f'''
 <div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">
     <table style="width:100%; border-collapse:collapse; text-align:left;">
-        <thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">
-            <tr>
-                <th style="padding:8px; white-space:nowrap; font-size:12px;">일시</th>
-                <th style="padding:8px; white-space:nowrap; font-size:12px;">LOT</th>
-                <th style="padding:8px; white-space:nowrap; font-size:12px;">손톱</th>
-                <th style="padding:8px; white-space:nowrap; font-size:12px;">테이프</th>
-                <th style="padding:8px; white-space:nowrap; font-size:12px;">특이사항</th>
-                <th style="padding:8px; white-space:nowrap; text-align:center; font-size:12px;">미리보기</th>
-            </tr>
-        </thead>
-        <tbody>
-            {all_rows}
-        </tbody>
-    </table>
-</div>
-'''
-
-        st.markdown(table_code, unsafe_allow_html=True)
-
-        st.markdown("---")
-        zb = io.BytesIO()
-        with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.write(F, arcname="inspection_history.csv")
-            for root, dirs, files in os.walk(D):
-                for file in files:
-                    zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
-        zb.seek(0)
-        
-        st.download_button("📦 Download ZIP", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
-        
-        st.markdown("")
-        if st.button("🗑️ Reset", use_container_width=True):
-            os.remove(F)
-            st.success("Reset done!")
-            st.rerun()
-    except Exception as e:
-        st.error(f"Error: {e}")
-else:
-    st.info("아직 저장된 검사 이력이 없습니다.")
+        <thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd
