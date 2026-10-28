@@ -96,7 +96,6 @@ st.subheader("📋 전체 검사 내역")
 
 if os.path.exists(F):
     try:
-        # 💡 CSV 로드 시 모든 열을 문자열(dtype=str)로 고정하여 타입 에러 방지
         df = pd.read_csv(F, dtype=str)
         q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
@@ -267,9 +266,16 @@ if os.path.exists(F):
                     st.info("수정할 내역이 없습니다.")
 
                 st.markdown("---")
-                if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
-                    os.remove(F)
-                    st.success("Reset done!")
+                # 💡 초기화 시 CSV 파일뿐만 아니라 사진 폴더(inspection_images) 내 모든 사진 파일도 함께 삭제하도록 수정
+                if st.button("🗑️ 전체 검사 내역 및 사진 초기화", use_container_width=True):
+                    if os.path.exists(F):
+                        os.remove(F)
+                    if os.path.exists(D):
+                        for f_name in os.listdir(D):
+                            f_path = os.path.join(D, f_name)
+                            if os.path.isfile(f_path):
+                                os.remove(f_path)
+                    st.success("Reset done! (기록 및 사진 전체 초기화 완료)")
                     st.rerun()
             elif admin_input:
                 st.error("❌ 비밀번호가 틀렸습니다.")
