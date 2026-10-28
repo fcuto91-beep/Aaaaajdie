@@ -144,13 +144,13 @@ if os.path.exists(F):
             except:
                 st.query_params.clear()
 
-        # 💡 결과에 따라 이쁜 색상 배지를 입혀주는 함수
+        # 💡 결과 배지 함수 수정 (부적합 조건이 적합보다 먼저 판별되도록 수정)
         def get_badge(val):
             v_str = str(val).strip()
-            if "적합" in v_str or "PASS" in v_str:
-                return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟢 적합 (PASS)</span>'
-            elif "부적합" in v_str or "FAIL" in v_str:
+            if "부적합" in v_str or "FAIL" in v_str:
                 return '<span style="background-color:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🔴 부적합 (FAIL)</span>'
+            elif "적합" in v_str or "PASS" in v_str:
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟢 적합 (PASS)</span>'
             else:
                 return f'<span>{val}</span>'
 
