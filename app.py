@@ -10,6 +10,7 @@ st.title("📦🧴 포장재 착인 검사 이력 관리")
 
 F = "inspection_history.csv"
 D = "inspection_images"
+ADMIN_PW = "1234"  # 💡 관리자 비밀번호 (원하시는 번호로 변경 가능합니다)
 
 if not os.path.exists(D):
     os.makedirs(D)
@@ -102,7 +103,7 @@ if os.path.exists(F):
             except:
                 st.query_params.clear()
 
-        # 💡 HTML 표 기반 렌더링 (일반 문자열 연결 방식 사용으로 모바일 복사 에러 원천 차단)
+        # 💡 HTML 표 기반 렌더링
         rows_list = []
         for idx, row in df_f.iterrows():
             raw_d = str(row.get("검사일시", "-"))
@@ -155,22 +156,32 @@ if os.path.exists(F):
 
         st.markdown(table_code, unsafe_allow_html=True)
 
+        # 🔒 관리자 인증 구역
         st.markdown("---")
-        zb = io.BytesIO()
-        with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.write(F, arcname="inspection_history.csv")
-            for root, dirs, files in os.walk(D):
-                for file in files:
-                    zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
-        zb.seek(0)
-        
-        st.download_button("💾 전체 검사 내역 다운로드", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
-        
-        st.markdown("")
-        if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
-            os.remove(F)
-            st.success("Reset done!")
-            st.rerun()
+        with st.expander("🔐 관리자 메뉴 (다운로드 / 초기화)"):
+            admin_input = st.text_input("관리자 비밀번호를 입력하세요", type="password")
+            
+            if admin_input == ADMIN_PW:
+                st.success("✅ 관리자 인증이 완료되었습니다.")
+                
+                # 다운로드 버튼
+                zb = io.BytesIO()
+                with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
+                    zf.write(F, arcname="inspection_history.csv")
+                    for root, dirs, files in os.walk(D):
+                        for file in files:
+                            zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
+                zb.seek(0)
+                
+                st.download_button("💾 전체 검사 내역 다운로드", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
+                
+                st.markdown("")
+                if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
+                    os.remove(F)
+                    st.success("Reset done!")
+                    st.rerun()
+            elif admin_input:
+                st.error("❌ 비밀번호가 틀렸습니다.")
     except Exception as e:
         st.error(f"Error: {e}")
 else:
