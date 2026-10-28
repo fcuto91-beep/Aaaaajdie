@@ -94,7 +94,7 @@ if os.path.exists(F):
             # 데이터 행들
             for idx, row in df_f.iterrows():
                 rc = st.columns(cols_w)
-                rc[0].markdown(f"<span style='font-size:12px;'>{str(row['검사일시'])</span>", unsafe_allow_html=True)
+                rc[0].markdown(f"<span style='font-size:12px;'>{str(row['검사일시'])}</span>", unsafe_allow_html=True)
                 rc[1].markdown(f"<span style='font-size:12px; font-weight:bold;'>{str(row['자재/LOT명'])}</span>", unsafe_allow_html=True)
                 rc[2].markdown(f"<span style='font-size:12px;'>{str(row['손톱박리'])}</span>", unsafe_allow_html=True)
                 rc[3].markdown(f"<span style='font-size:12px;'>{str(row['테이프박리'])}</span>", unsafe_allow_html=True)
@@ -102,35 +102,4 @@ if os.path.exists(F):
                 
                 fname = str(row["사진파일명"])
                 if fname != "none":
-                    ip = os.path.join(D, fname)
-                    if os.path.exists(ip):
-                        if rc[5].button("🔍", key=f"pop_{idx}", help="팝업으로 사진 보기"):
-                            show_image_popup(ip, str(row["자재/LOT명"]), str(row["검사일시"]))
-                    else:
-                        rc[5].write("-")
-                else:
-                    rc[5].write("-")
-                
-                if idx < len(df_f) - 1:
-                    st.markdown("<hr style='margin:2px 0; border:0.5px solid #eee;'>", unsafe_allow_html=True)
-
-        st.markdown("---")
-        zb = io.BytesIO()
-        with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.write(F, arcname="inspection_history.csv")
-            for root, dirs, files in os.walk(D):
-                for file in files:
-                    zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
-        zb.seek(0)
-        
-        st.download_button("📦 Download ZIP", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
-        
-        st.markdown("")
-        if st.button("🗑️ Reset", use_container_width=True):
-            os.remove(F)
-            st.success("Reset done!")
-            st.rerun()
-    except Exception as e:
-        st.error(f"Error: {e}")
-else:
-    st.info("아직 저장된 검사 이력이 없습니다.")
+                    ip
