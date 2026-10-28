@@ -61,6 +61,7 @@ if ok:
         st.success("✅ Saved!")
         st.rerun()
 
+# 💡 사진 팝업 모달 함수
 @st.dialog("📸 사진 팝업 미리보기")
 def show_image_popup(img_path, lot_name, date_str):
     st.markdown(f"📦 **LOT: {lot_name}**")
@@ -76,35 +77,17 @@ if os.path.exists(F):
         q = st.text_input("🔍 검색", placeholder="검색어...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        cols_w = [1.8, 1.2, 0.8, 0.8, 1.5, 0.8]
-        h = st.columns(cols_w)
-        h[0].markdown("**일시**")
-        h[1].markdown("**LOT**")
-        h[2].markdown("**손톱**")
-        h[3].markdown("**테이프**")
-        h[4].markdown("**특이사항**")
-        h[5].markdown("**미리보기**")
-        st.divider()
-
+        # 💡 모바일 가로 스크롤 표 구현 (st.columns 세로 깨짐 현상 원천 차단)
         for idx, row in df_f.iterrows():
-            rc = st.columns(cols_w)
-            rc[0].write(str(row["검사일시"]))
-            rc[1].write(str(row["자재/LOT명"]))
-            rc[2].write(str(row["손톱박리"]))
-            rc[3].write(str(row["테이프박리"]))
-            rc[4].write(str(row["특이사항"]) if pd.notna(row["특이사항"]) else "-")
-            
             fname = str(row["사진파일명"])
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    if rc[5].button("🔍", key=f"pop_{idx}", help="팝업으로 사진 보기"):
+                    if st.button(f"🔍 미리보기 | {row['자재/LOT명']} ({row['검사일시']})", key=f"pop_{idx}", use_container_width=True):
                         show_image_popup(ip, str(row["자재/LOT명"]), str(row["검사일시"]))
-                else:
-                    rc[5].write("-")
-            else:
-                rc[5].write("-")
-            st.divider()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.dataframe(df_f, use_container_width=True)
 
         st.markdown("---")
         zb = io.BytesIO()
