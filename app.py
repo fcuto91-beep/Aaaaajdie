@@ -17,18 +17,16 @@ if not os.path.exists(D):
 KST = timezone(timedelta(hours=9))
 st.info(f"⏰ 시각: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
-# 💡 모바일 터치 씹힘 및 상태 초기화 방지를 위한 폼(Form) 적용
-with st.form("input_form", clear_on_submit=True):
+with st.form("form_1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
-    lot = st.text_input("자재 / LOT명 입력")
+    lot = st.text_input("자재 / LOT명")
     nail = st.selectbox("1️⃣ 손톱박리", ["적합", "부적합"])
     tape = st.selectbox("2️⃣ 테이프박리", ["적합", "부적합"])
     up_file = st.file_uploader("현장 사진", type=["jpg", "jpeg", "png"])
-    rem = st.text_area("특이사항", placeholder="입력")
-    
-    submitted = st.form_submit_button("💾 Save", type="primary")
+    rem = st.text_area("특이사항")
+    ok = st.form_submit_button("💾 Save", type="primary")
 
-if submitted:
+if ok:
     if not lot.strip():
         st.warning("⚠️ LOT명을 입력해 주세요!")
     else:
@@ -38,8 +36,7 @@ if submitted:
             s_lot = "".join(c for c in lot if c.isalnum())
             t_str = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
             fn = f"{s_lot}_{t_str}_{up_file.name}"
-            path = os.path.join(D, fn)
-            with open(path, "wb") as f:
+            with open(os.path.join(D, fn), "wb") as f:
                 f.write(up_file.getbuffer())
 
         nd = pd.DataFrame([{
@@ -61,25 +58,21 @@ if submitted:
                 pass
 
         df_c.to_csv(F, index=False, encoding="utf-8-sig")
-        st.success("✅ Saved successfully!")
+        st.success("✅ Saved!")
         st.rerun()
 
 st.markdown("---")
-st.subheader("📋 전체 검사 내역 표")
+st.subheader("📋 전체 검사 내역")
 
 if os.path.exists(F):
     try:
         df = pd.read_csv(F)
         q = st.text_input("🔍 검색", placeholder="검색어...")
-        
-        if q:
-            df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True)
-        else:
-            df_f = df.reset_index(drop=True)
+        df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
         st.dataframe(df_f, use_container_width=True)
 
-        st.markdown("### 🔍 사진 확인 버튼")
+        st.markdown("### 🔍 사진 확인")
         has_img = False
         for idx, row in df_f.iterrows():
             fname = str(row["사진파일명"])
@@ -90,7 +83,7 @@ if os.path.exists(F):
                     with open(ip, "rb") as f:
                         ib = f.read()
                     st.download_button(
-                        f"📥 사진 열기 [{row['자재/LOT명']} / {row['검사일시']}]",
+                        f"📥 사진 보기 [{row['자재/LOT명']} / {row['검사일시']}]",
                         ib,
                         file_name=fname,
                         mime="image/jpeg",
@@ -112,6 +105,11 @@ if os.path.exists(F):
         st.download_button("📦 Download ZIP", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
         
         st.markdown("")
-        if st.button("🗑️ Reset Data", use_container_width=True):
+        if st.button("🗑️ Reset", use_container_width=True):
             os.remove(F)
-            st.success("Reset!")
+            st.success("Reset done!")
+            st.rerun()
+    except Exception as e:
+        st.error(f"Error: {e}")
+else:
+    st.info("저장된 이력이 없습니다.")
