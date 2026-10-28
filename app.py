@@ -87,11 +87,9 @@ if ok:
 
         df_c.to_csv(F, index=False, encoding="utf-8-sig")
         
-        # 💡 저장 직후 화면 정중앙 팝업 모달 호출 상태를 세션에 저장
         st.session_state["show_saved_modal"] = True
         st.rerun()
 
-# 💡 세션에 저장된 팝업 플래그가 있으면 정중앙 모달 띄우기
 if st.session_state.get("show_saved_modal", False):
     st.session_state["show_saved_modal"] = False
     show_save_success_popup()
@@ -223,58 +221,71 @@ if os.path.exists(F):
                 st.subheader("✏️ 검사 내역 수정 (번호 / 사진 변경)")
                 
                 if not df.empty:
-                    target_options = [f"[{i}] {row.get('검사일시','')} - 번호: {row.get('포장재번호','')}" for i, row in df.iterrows()]
-                    selected_target_str = st.selectbox("수정할 검사 내역을 선택하세요", target_options)
+                    # 💡 수정용 검색창 추가
+                    edit_q = st.text_input("🔎 수정할 항목 검색 (포장재 번호 또는 약호 입력)", placeholder="예: 5115558 또는 ANA")
                     
-                    if selected_target_str:
-                        sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
-                        curr_row = df.loc[sel_idx]
+                    # 검색어에 따라 대상 필터링
+                    if edit_q:
+                        mask = df.astype(str).apply(lambda r: r.str.contains(edit_q, case=False).any(), axis=1)
+                        filtered_df = df[mask]
+                    else:
+                        filtered_df = df
+                    
+                    if not filtered_df.empty:
+                        target_options = [f"[{i}] 번호: {row.get('포장재번호','')} | 약호: {row.get('포장재약호','')}" for i, row in filtered_df.iterrows()]
+                        selected_target_str = st.selectbox("수정할 검사 내역 선택", target_options)
                         
-                        with st.form("edit_form"):
-                            edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
-                            edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
+                        if selected_target_str:
+                            sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
+                            curr_row = df.loc[sel_idx]
                             
-                            nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"]
-                            curr_nail = str(curr_row.get("손톱박리", ""))
-                            nail_default = nail_opts.index(curr_nail) if curr_nail in nail_opts else 0
-                            edit_nail = st.selectbox("손톱 박리 결과 수정", nail_opts, index=nail_default)
-                            
-                            tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"]
-                            curr_tape = str(curr_row.get("테이프박리", ""))
-                            tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
-                            edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
-                            
-                            st.info(f"현재 등록된 사진 파일: {curr_row.get('사진파일명', 'none')}")
-                            edit_file = st.file_uploader("새로운 검사 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
-                            
-                            edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
-                            
-                            update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
-                            
-                            if update_btn:
-                                if not edit_mat_no.strip():
-                                    st.warning("⚠️ 포장재 번호를 입력해 주세요!")
-                                else:
-                                    new_fn = str(curr_row.get("사진파일명", "none"))
-                                    if edit_file:
-                                        s_lot = "".join(c for c in edit_mat_no if c.isalnum())
-                                        t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
-                                        new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
-                                        file_path = os.path.join(D, new_fn)
-                                        with open(file_path, "wb") as f:
-                                            f.write(edit_file.getbuffer())
-                                    
-                                    df.loc[sel_idx, "포장재번호"] = str(edit_mat_no)
-                                    df.loc[sel_idx, "포장재약호"] = str(edit_pack_name) if edit_pack_name.strip() else "-"
-                                    df.loc[sel_idx, "손톱박리"] = edit_nail
-                                    df.loc[sel_idx, "테이프박리"] = edit_tape
-                                    df.loc[sel_idx, "사진파일명"] = new_fn
-                                    df.loc[sel_idx, "특이사항"] = str(edit_rem) if edit_rem.strip() else "-"
-                                    
-                                    df.to_csv(F, index=False, encoding="utf-8-sig")
-                                    st.toast("🎉 검사 내역이 성공적으로 수정되었습니다!", icon="✅")
-                                    st.success("✅ 수정 완료!")
-                                    st.rerun()
+                            with st.form("edit_form"):
+                                edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
+                                edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
+                                
+                                nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"]
+                                curr_nail = str(curr_row.get("손톱박리", ""))
+                                nail_default = nail_opts.index(curr_nail) if curr_nail in nail_opts else 0
+                                edit_nail = st.selectbox("손톱 박리 결과 수정", nail_opts, index=nail_default)
+                                
+                                tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"]
+                                curr_tape = str(curr_row.get("테이프박리", ""))
+                                tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
+                                edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
+                                
+                                st.info(f"현재 등록된 사진 파일: {curr_row.get('사진파일명', 'none')}")
+                                edit_file = st.file_uploader("새로운 검사 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
+                                
+                                edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
+                                
+                                update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
+                                
+                                if update_btn:
+                                    if not edit_mat_no.strip():
+                                        st.warning("⚠️ 포장재 번호를 입력해 주세요!")
+                                    else:
+                                        new_fn = str(curr_row.get("사진파일명", "none"))
+                                        if edit_file:
+                                            s_lot = "".join(c for c in edit_mat_no if c.isalnum())
+                                            t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
+                                            new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
+                                            file_path = os.path.join(D, new_fn)
+                                            with open(file_path, "wb") as f:
+                                                f.write(edit_file.getbuffer())
+                                        
+                                        df.loc[sel_idx, "포장재번호"] = str(edit_mat_no)
+                                        df.loc[sel_idx, "포장재약호"] = str(edit_pack_name) if edit_pack_name.strip() else "-"
+                                        df.loc[sel_idx, "손톱박리"] = edit_nail
+                                        df.loc[sel_idx, "테이프박리"] = edit_tape
+                                        df.loc[sel_idx, "사진파일명"] = new_fn
+                                        df.loc[sel_idx, "특이사항"] = str(edit_rem) if edit_rem.strip() else "-"
+                                        
+                                        df.to_csv(F, index=False, encoding="utf-8-sig")
+                                        st.toast("🎉 검사 내역이 성공적으로 수정되었습니다!", icon="✅")
+                                        st.success("✅ 수정 완료!")
+                                        st.rerun()
+                    else:
+                        st.info("검색 결과가 없습니다.")
                 else:
                     st.info("수정할 내역이 없습니다.")
 
