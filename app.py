@@ -71,10 +71,11 @@ if ok:
         st.success("✅ Saved!")
         st.rerun()
 
-# 💡 사진 팝업 모달 함수
+# 💡 사진 팝업 모달 함수 (포장재 번호 아래에 포장재 약호 표기)
 @st.dialog("📸 사진 미리보기")
-def show_image_popup(img_path, m_name, date_str):
+def show_image_popup(img_path, m_name, p_name, date_str):
     st.markdown(f"📦 **포장재 번호: {m_name}**")
+    st.markdown(f"🏷️ **포장재 약호: {p_name}**")
     st.caption(f"📅 검사 일자: {date_str}")
     st.image(img_path, use_column_width=True)
 
@@ -94,7 +95,7 @@ if os.path.exists(F):
         q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        # 💡 URL 쿼리를 통한 팝업 모달 호출 연동
+        # 💡 URL 쿼리를 통한 팝업 모달 호출 연동 (번호와 약호 모두 전달)
         if "pop_idx" in st.query_params:
             try:
                 p_idx = int(st.query_params["pop_idx"])
@@ -104,12 +105,17 @@ if os.path.exists(F):
                     if p_fname != "none":
                         p_ip = os.path.join(D, p_fname)
                         if os.path.exists(p_ip):
-                            show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("검사일시", "-")))
+                            show_image_popup(
+                                p_ip, 
+                                str(p_row.get("포장재번호", "-")), 
+                                str(p_row.get("포장재약호", "-")), 
+                                str(p_row.get("검사일시", "-"))
+                            )
                 st.query_params.clear()
             except:
                 st.query_params.clear()
 
-        # 💡 HTML 표 기반 렌더링 (순서 변경: 포장재 번호 -> 포장재 약호)
+        # 💡 HTML 표 기반 렌더링
         rows_list = []
         for idx, row in df_f.iterrows():
             d_val = str(row.get("검사일시", "-"))
@@ -180,4 +186,4 @@ if os.path.exists(F):
     except Exception as e:
         st.error(f"Error: {e}")
 else:
-    st.info("아직 저장된 검사 이력이 없습니다.")
+    st.
