@@ -200,4 +200,10 @@ if os.path.exists(F):
                 if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
                     os.remove(F)
                     st.success("Reset done!")
-                    st.rerun
+                    st.rerun()
+            elif admin_input:
+                st.error("❌ 비밀번호가 틀렸습니다.")
+    except Exception as e:
+        st.error(f"Error: {e}")
+else:
+    st.info("아직 저장된 검사 이력이 없습니다.")
