@@ -15,8 +15,7 @@ if not os.path.exists(IMAGE_DIR):
     os.makedirs(IMAGE_DIR)
 
 KST = timezone(timedelta(hours=9))
-current_time_kst = datetime.now(KST)
-current_time_str = current_time_kst.strftime("%Y-%m-%d %H:%M:%S")
+current_time_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
 
 st.info(f"⏰ 현재 검사 시각 (한국 시간): **{current_time_str}**")
 
@@ -48,108 +47,4 @@ if submitted:
         if uploaded_file is not None:
             safe_lot_name = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
             timestamp = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
-            image_filename = f"{safe_lot_name}_{timestamp}_{uploaded_file.name}"
-            
-            image_path = os.path.join(IMAGE_DIR, image_filename)
-            with open(image_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-
-        new_data = pd.DataFrame([{
-            "검사일시": inspection_date,
-            "자재/LOT명": material_lot,
-            "손톱박리": nail_peel_result,
-            "테이프박리": tape_peel_result,
-            "사진파일명": image_filename,
-            "특이사항": remarks,
-        }])
-
-        if os.path.exists(DATA_FILE):
-            try:
-                df_existing = pd.read_csv(DATA_FILE)
-                df_combined = pd.concat([df_existing, new_data], ignore_index=True)
-            except Exception:
-                df_combined = new_data
-        else:
-            df_combined = new_data
-
-        df_combined.to_csv(DATA_FILE, index=False, encoding="utf-8-sig")
-        st.success("🎉 검사 이력이 성공적으로 저장되었습니다!")
-        st.rerun()
-
-st.markdown("---")
-st.subheader("📋 전체 검사 내역 리스트")
-
-if os.path.exists(DATA_FILE):
-    try:
-        df_load = pd.read_csv(DATA_FILE)
-        
-        search_query = st.text_input("🔍 이력 검색 (LOT명 또는 특이사항 입력)", placeholder="검색어를 입력하세요...")
-        if search_query:
-            df_filtered = df_load[
-                df_load.astype(str).apply(lambda row: row.str.contains(search_query, case=False).any(), axis=1)
-            ].reset_index(drop=True)
-        else:
-            df_filtered = df_load.reset_index(drop=True)
-
-        # 세션 상태 관리 (미리보기용)
-        if "preview_img" not in st.session_state:
-            st.session_state.preview_img = None
-        if "preview_title" not in st.session_state:
-            st.session_state.preview_title = ""
-
-        # 💡 표 헤더(제목 행) 생성
-        header_cols = st.columns([2.2, 1.5, 1.0, 1.0, 3.2, 0.8, 1.3])
-        header_cols[0].markdown("**검사일시**")
-        header_cols[1].markdown("**자재/LOT명**")
-        header_cols[2].markdown("**손톱**")
-        header_cols[3].markdown("**테이프**")
-        header_cols[4].markdown("**사진파일명**")
-        header_cols[5].markdown("**보기**")
-        header_cols[6].markdown("**특이사항**")
-        st.markdown("<hr style='margin: 0px 0 10px 0; border: 1px solid #ddd;'>", unsafe_allow_html=True)
-
-        # 💡 각 데이터 행마다 표 형식으로 출력하고 돋보기 버튼을 사진파일명 바로 옆에 배치
-        for idx, row in df_filtered.iterrows():
-            row_cols = st.columns([2.2, 1.5, 1.0, 1.0, 3.2, 0.8, 1.3])
-            
-            row_cols[0].write(row["검사일시"])
-            row_cols[1].write(row["자재/LOT명"])
-            row_cols[2].write(row["손톱박리"])
-            row_cols[3].write(row["테이프박리"])
-            row_cols[4].write(row["사진파일명"])
-            
-            with row_cols[5]:
-                if row["사진파일명"] != "없음":
-                    if st.button("🔍", key=f"zoom_{idx}", help="미리보기"):
-                        st.session_state.preview_img = row["사진파일명"]
-                        st.session_state.preview_title = f"LOT: {row['자재/LOT명']} ({row['검사일시']})"
-                else:
-                    st.write("-")
-                    
-            row_cols[6].write(row["특이사항"])
-            st.markdown("<hr style='margin: 5px 0; border: 0.5px solid #eee;'>", unsafe_allow_html=True)
-
-        # 돋보기 버튼을 눌렀을 때 나타나는 사진 미리보기 영역
-        if st.session_state.preview_img:
-            st.markdown("---")
-            st.markdown(f"🖼️ **현장 사진 미리보기 — {st.session_state.preview_title}**")
-            target_path = os.path.join(IMAGE_DIR, st.session_state.preview_img)
-            if os.path.exists(target_path):
-                st.image(target_path, width=400)
-                if st.button("❌ 미리보기 닫기"):
-                    st.session_state.preview_img = None
-                    st.rerun()
-            else:
-                st.warning("⚠️ 사진 파일을 찾을 수 없습니다.")
-
-        st.markdown("---")
-        
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            if os.path.exists(DATA_FILE):
-                zip_file.write(DATA_FILE, arcname="inspection_history.csv")
-            if os.path.exists(IMAGE_DIR):
-                for root, dirs, files in os.walk(IMAGE_DIR):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.join("inspection_images", file
+            image_filename = f"{safe_lot_name}_{timestamp}_{uploaded_file.
