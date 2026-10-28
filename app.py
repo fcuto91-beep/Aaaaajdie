@@ -17,14 +17,16 @@ if not os.path.exists(D):
 
 KST = timezone(timedelta(hours=9))
 
-# 💡 1단계: 맨 윗줄 우측 구석에 CI 로고 배치
-col_empty, col_logo = st.columns([3, 1.5])
-with col_logo:
+# 💡 1단계: 맨 윗줄 정중앙에 CI 로고 배치
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
     if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, width=160)
+        st.image(LOGO_PATH, use_column_width=True)
 
-# 💡 2단계: 그 아랫줄에 온전한 제목 배치
-st.markdown("### 📦🧴 포장재 착인 검사 이력 관리")
+st.markdown("")
+
+# 💡 2단계: 그 아랫줄에 글자 크기를 더 키운 메인 제목 배치
+st.markdown("<h1 style='text-align: center; font-size: 26px; margin-bottom: 10px;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
