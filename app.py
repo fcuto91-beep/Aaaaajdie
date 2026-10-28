@@ -77,7 +77,7 @@ if submitted:
 
 st.markdown("---")
 st.subheader("📋 전체 검사 내역 리스트")
-st.markdown("💡 **표에서 확인하고 싶은 행을 터치(선택)하시면 아래에 돋보기와 함께 사진이 미리보기로 표시됩니다.**")
+st.markdown("💡 **표에서 확인하고 싶은 행을 터치(선택)하시면 아래에 사진이 미리보기로 표시됩니다.**")
 
 if os.path.exists(DATA_FILE):
     df_load = pd.read_csv(DATA_FILE)
@@ -93,11 +93,17 @@ if os.path.exists(DATA_FILE):
     else:
         df_filtered = df_load.reset_index(drop=True)
 
-    # 💡 표 안에 돋보기 이모지 컬럼 추가
-    df_display = df_filtered.copy()
-    df_display["🔍 미리보기"] = df_display["사진파일명"].apply(lambda x: "🔍 있음" if str(x) != "none" else "-")
+    # 💡 특이사항 바로 왼쪽에 돋보기 미리보기 컬럼이 오도록 순서 재조정
+    df_display = pd.DataFrame()
+    df_display["검사일시"] = df_filtered["검사일시"]
+    df_display["자재/LOT명"] = df_filtered["자재/LOT명"]
+    df_display["손톱박리"] = df_filtered["손톱박리"]
+    df_display["테이프박리"] = df_filtered["테이프박리"]
+    df_display["사진파일명"] = df_filtered["사진파일명"]
+    df_display["🔍 미리보기"] = df_filtered["사진파일명"].apply(lambda x: "🔍 있음" if str(x) != "none" else "-")
+    df_display["특이사항"] = df_filtered["특이사항"]
 
-    # 네이티브 표 컴포넌트 (모바일 가로 스크롤 지원 및 행 선택 기능)
+    # 네이티브 표 컴포넌트 (행 선택 기능)
     event = st.dataframe(
         df_display,
         use_container_width=True,
@@ -115,7 +121,7 @@ if os.path.exists(DATA_FILE):
             fname = str(row["사진파일명"])
             if fname != "none":
                 st.markdown("---")
-                st.markdown(f"🖼️ **[🔍 미리보기] LOT: {row['자재/LOT명']} ({row['검사일시']})**")
+                st.markdown(f"🖼️ **[미리보기] LOT: {row['자재/LOT명']} ({row['검사일시']})**")
                 t_path = os.path.join(IMAGE_DIR, fname)
                 if os.path.exists(t_path):
                     st.image(t_path, width=400)
