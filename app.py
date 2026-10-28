@@ -38,56 +38,141 @@ remarks = st.text_area("특이사항 및 조치 내용", placeholder="특이사�
 submitted = st.button("💾 검사 이력 저장하기", type="primary")
 
 if submitted:
-    if not material_lot:
-        st.warning("Please enter LOT name.")
+    if not material_lot.strip():
+        st.warning("⚠️ 자재 / LOT명을 입력해 주세요!")
     else:
-        inspection_date = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
-        
-        image_filename = "none"
-        if uploaded_file is not None:
-            safe_lot = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
-            t_str = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
-            image_filename = f"{safe_lot}_{t_str}_{uploaded_file.name}"
+        try:
+            inspection_date = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
             
-            img_path = os.path.join(IMAGE_DIR, image_filename)
-            with open(img_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
+            image_filename = "none"
+            if uploaded_file is not None:
+                safe_lot = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
+                t_str = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
+                image_filename = f"{safe_lot}_{t_str}_{uploaded_file.name}"
+                
+                img_path = os.path.join(IMAGE_DIR, image_filename)
+                with open(img_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
 
-        new_data = pd.DataFrame([{
-            "검사일시": inspection_date,
-            "자재/LOT명": material_lot,
-            "손톱박리": nail_peel_result,
-            "테이프박리": tape_peel_result,
-            "사진파일명": image_filename,
-            "특이사항": remarks,
-        }])
+            new_data = pd.DataFrame([{
+                "검사일시": inspection_date,
+                "자재/LOT명": material_lot,
+                "손톱박리": nail_peel_result,
+                "테이프박리": tape_peel_result,
+                "사진파일명": image_filename,
+                "특이사항": remarks,
+            }])
 
-        if os.path.exists(DATA_FILE):
-            try:
-                df_ex = pd.read_csv(DATA_FILE)
-                df_combined = pd.concat([df_ex, new_data], ignore_index=True)
-            except:
+            if os.path.exists(DATA_FILE):
+                try:
+                    df_ex = pd.read_csv(DATA_FILE)
+                    df_combined = pd.concat([df_ex, new_data], ignore_index=True)
+                except:
+                    df_combined = new_data
+            else:
                 df_combined = new_data
-        else:
-            df_combined = new_data
 
-        df_combined.to_csv(DATA_FILE, index=False, encoding="utf-8-sig")
-        st.success("Saved successfully!")
-        st.rerun()
+            df_combined.to_csv(DATA_FILE, index=False, encoding="utf-8-sig")
+            st.success("✅ 검사 이력이 성공적으로 저장되었습니다!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"저장 중 오류 발생: {e}")
 
 st.markdown("---")
 st.subheader("📋 전체 검사 내역 리스트")
 
 if os.path.exists(DATA_FILE):
-    df_load = pd.read_csv(DATA_FILE)
-    
-    search_query = st.text_input("🔍 이력 검색", placeholder="검색어 입력...")
-    if search_query:
-        df_filtered = df_load[
-            df_load.astype(str).apply(
-                lambda r: r.str.contains(search_query, case=False).any(),
-                axis=1
-            )
-        ].reset_index(drop=True)
-    else:
-        df_filtered = df_load.reset_index
+    try:
+        df_load = pd.read_csv(DATA_FILE)
+        
+        search_query = st.text_input("🔍 이력 검색", placeholder="검색어 입력...")
+        if search_query:
+            df_filtered = df_load[
+                df_load.astype(str).apply(
+                    lambda r: r.str.contains(search_query, case=False).any(),
+                    axis=1
+                )
+            ].reset_index(drop=True)
+        else:
+            df_filtered = df_load.reset_index(drop=True)
+
+        if "preview_img" not in st.session_state:
+            st.session_state.preview_img = None
+        if "preview_title" not in st.session_state:
+            st.session_state.preview_title = ""
+
+        c_spec = [2.0, 1.4, 0.9, 0.9, 2.8, 1.1, 1.3]
+        h = st.columns(c_spec)
+        h[0].markdown("**검사일시**")
+        h[1].markdown("**자재/LOT명**")
+        h[2].markdown("**손톱**")
+        h[3].markdown("**테이프**")
+        h[4].markdown("**사진파일명**")
+        h[5].markdown("**미리보기**")
+        h[6].markdown("**특이사항**")
+        st.markdown("<hr style='margin: 0px 0 10px 0; border: 1px solid #ddd;'>", unsafe_allow_html=True)
+
+        for idx, row in df_filtered.iterrows():
+            rc = st.columns(c_spec)
+            rc[0].write(str(row["검사일시"]))
+            rc[1].write(str(row["자재/LOT명"]))
+            rc[2].write(str(row["손톱박리"]))
+            rc[3].write(str(row["테이프박리"]))
+            rc[4].write(str(row["사진파일명"]))
+            
+            fname = str(row["사진파일명"])
+            if fname != "none":
+                if rc[5].button("🔍 있음", key=f"zoom_{idx}", help="미리보기 실행"):
+                    st.session_state.preview_img = fname
+                    st.session_state.preview_title = f"LOT: {row['자재/LOT명']} ({row['검사일시']})"
+            else:
+                rc[5].write("-")
+                    
+            rc[6].write(str(row["특이사항"]))
+            st.markdown("<hr style='margin: 5px 0; border: 0.5px solid #eee;'>", unsafe_allow_html=True)
+
+        if st.session_state.preview_img:
+            st.markdown("---")
+            st.markdown(f"🖼️ **[미리보기] {st.session_state.preview_title}**")
+            t_path = os.path.join(IMAGE_DIR, st.session_state.preview_img)
+            if os.path.exists(t_path):
+                st.image(t_path, width=400)
+                if st.button("❌ 미리보기 닫기"):
+                    st.session_state.preview_img = None
+                    st.rerun()
+            else:
+                st.warning("Photo not found.")
+
+        st.markdown("---")
+        
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            if os.path.exists(DATA_FILE):
+                zf.write(DATA_FILE, arcname="inspection_history.csv")
+            if os.path.exists(IMAGE_DIR):
+                for root, dirs, files in os.walk(IMAGE_DIR):
+                    for file in files:
+                        f_path = os.path.join(root, file)
+                        arc = os.path.join("inspection_images", file)
+                        zf.write(f_path, arcname=arc)
+        
+        zip_buffer.seek(0)
+        
+        st.download_button(
+            label="📦 ZIP 다운로드",
+            data=zip_buffer,
+            file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip",
+            mime="application/zip",
+            type="primary",
+            use_container_width=True
+        )
+        
+        st.markdown("")
+        if st.button("🗑️ 데이터 파일 초기화하기", use_container_width=True):
+            os.remove(DATA_FILE)
+            st.success("Reset completed!")
+            st.rerun()
+    except Exception as e:
+        st.error(f"리스트 불러오기 오류: {e}")
+else:
+    st.info("아직 저장된 검사 이력이 없습니다.")
