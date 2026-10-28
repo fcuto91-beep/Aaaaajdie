@@ -61,15 +61,8 @@ if ok:
         st.success("✅ Saved!")
         st.rerun()
 
-# 💡 돋보기를 누르면 화면 중앙에 뜨는 사진 팝업 모달 함수
-@st.dialog("📸 사진 팝업 미리보기")
-def show_image_popup(img_path, lot_name, date_str):
-    st.markdown(f"📦 **LOT: {lot_name}**")
-    st.caption(f"📅 검사일시: {date_str}")
-    st.image(img_path, use_column_width=True)
-
 st.markdown("---")
-st.subheader("📋 전체 검사 내역")
+st.subheader("📋 전체 검사 내역 (스크롤 표)")
 
 if os.path.exists(F):
     try:
@@ -77,37 +70,34 @@ if os.path.exists(F):
         q = st.text_input("🔍 검색", placeholder="검색어...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        # 💡 표 형식 헤더 (컬럼 너비 최적화)
-        cols_w = [1.8, 1.2, 0.8, 0.8, 1.5, 0.8]
-        h = st.columns(cols_w)
-        h[0].markdown("**일시**")
-        h[1].markdown("**LOT**")
-        h[2].markdown("**손톱**")
-        h[3].markdown("**테이프**")
-        h[4].markdown("**특이사항**")
-        h[5].markdown("**미리보기**")
-        st.divider()
+        # 💡 모바일 가로/세로 스크롤이 완벽하게 지원되는 네이티브 표 + 행 선택 기능
+        event = st.dataframe(
+            df_f,
+            use_container_width=True,
+            on_select="rerun",
+            selection_mode="single-row",
+            key="inspection_table"
+        )
 
-        # 💡 각 행을 표의 한 줄로 배치하고 마지막 칸에 돋보기 버튼 쏙 배치
-        for idx, row in df_f.iterrows():
-            rc = st.columns(cols_w)
-            rc[0].write(str(row["검사일시"]))
-            rc[1].write(str(row["자재/LOT명"]))
-            rc[2].write(str(row["손톱박리"]))
-            rc[3].write(str(row["테이프박리"]))
-            rc[4].write(str(row["특이사항"]) if pd.notna(row["특이사항"]) else "-")
+        # 💡 표에서 행을 선택하면 해당 사진이 팝업(영역)으로 즉시 출력
+        selection_rows = event.selection.rows
+        if selection_rows:
+            sel_idx = selection_rows[0]
+            selected_row = df_f.iloc[sel_idx]
+            fname = str(selected_row["사진파일명"])
             
-            fname = str(row["사진파일명"])
+            st.markdown("---")
+            st.markdown(f"### 📸 선택한 검사 상세 & 사진 미리보기")
+            st.info(f"📦 **LOT: {selected_row['자재/LOT명']}** | 📅 **일시: {selected_row['검사일시']}**")
+            
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    if rc[5].button("🔍", key=f"pop_{idx}", help="팝업으로 사진 보기"):
-                        show_image_popup(ip, str(row["자재/LOT명"]), str(row["검사일시"]))
+                    st.image(ip, width=300, caption=f"{selected_row['자재/LOT명']} 현장 사진")
                 else:
-                    rc[5].write("-")
+                    st.warning("⚠️ 저장된 사진 파일이 존재하지 않습니다.")
             else:
-                rc[5].write("-")
-            st.divider()
+                st.caption("ℹ️ 이 검사 항목에는 첨부된 사진이 없습니다.")
 
         st.markdown("---")
         zb = io.BytesIO()
