@@ -39,4 +39,6 @@ submitted = st.button("💾 검사 이력 저장하기", type="primary")
 
 if submitted:
     if not material_lot:
-        st.warning("⚠️ 자재
+        st.warning("Please enter the material / LOT name.")
+    else:
+        inspection_date = datetime.now(KST).strftime("%Y
