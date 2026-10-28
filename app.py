@@ -35,7 +35,6 @@ with st.form("f1", clear_on_submit=True):
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
     pack_name = st.text_input("포장재 약호", placeholder="예: ANA-TBMBM(F)E 용기(공용)")
     
-    # 💡 선택창에 안내 문구 추가
     nail = st.selectbox("손톱 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
     tape = st.selectbox("테이프 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
     
@@ -79,7 +78,10 @@ if ok:
                 pass
 
         df_c.to_csv(F, index=False, encoding="utf-8-sig")
-        st.success("✅ Saved!")
+        
+        # 💡 저장 성공 시 강력한 알림(토스트 팝업 및 상단 성공 메시지) 표출
+        st.toast("🎉 검사 결과가 안전하게 저장되었습니다!", icon="✅")
+        st.success("✅ 저장 완료! 아래 전체 검사 내역에 반영되었습니다.")
         st.rerun()
 
 # 💡 사진 팝업 모달 함수
