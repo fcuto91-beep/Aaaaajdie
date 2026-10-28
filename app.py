@@ -4,7 +4,6 @@ from datetime import datetime, timezone, timedelta
 import os
 import io
 import zipfile
-import urllib.parse
 
 st.set_page_config(page_title="Inspection System", layout="centered")
 st.title("🛡️ 공정 검사 및 이력 관리")
@@ -42,50 +41,55 @@ if submitted:
     if not material_lot.strip():
         st.warning("⚠️ 자재 / LOT명을 입력해 주세요!")
     else:
-        try:
-            inspection_date = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+        inspection_date = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+        
+        image_filename = "none"
+        if uploaded_file is not None:
+            safe_lot = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
+            t_str = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
+            image_filename = f"{safe_lot}_{t_str}_{uploaded_file.name}"
             
-            image_filename = "none"
-            if uploaded_file is not None:
-                safe_lot = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
-                t_str = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
-                image_filename = f"{safe_lot}_{t_str}_{uploaded_file.name}"
-                
-                img_path = os.path.join(IMAGE_DIR, image_filename)
-                with open(img_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
+            img_path = os.path.join(IMAGE_DIR, image_filename)
+            with open(img_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
 
-            new_data = pd.DataFrame([{
-                "검사일시": inspection_date,
-                "자재/LOT명": material_lot,
-                "손톱박리": nail_peel_result,
-                "테이프박리": tape_peel_result,
-                "사진파일명": image_filename,
-                "특이사항": remarks,
-            }])
+        new_data = pd.DataFrame([{
+            "검사일시": inspection_date,
+            "자재/LOT명": material_lot,
+            "손톱박리": nail_peel_result,
+            "테이프박리": tape_peel_result,
+            "사진파일명": image_filename,
+            "특이사항": remarks,
+        }])
 
-            if os.path.exists(DATA_FILE):
-                try:
-                    df_ex = pd.read_csv(DATA_FILE)
-                    df_combined = pd.concat([df_ex, new_data], ignore_index=True)
-                except:
-                    df_combined = new_data
-            else:
-                df_combined = new_data
+        if os.path.exists(DATA_FILE):
+            df_ex = pd.read_csv(DATA_FILE)
+            df_combined = pd.concat([df_ex, new_data], ignore_index=True)
+        else:
+            df_combined = new_data
 
-            df_combined.to_csv(DATA_FILE, index=False, encoding="utf-8-sig")
-            st.success("✅ 검사 이력이 성공적으로 저장되었습니다!")
-            st.rerun()
-        except Exception as e:
-            st.error(f"저장 중 오류 발생: {e}")
+        df_combined.to_csv(DATA_FILE, index=False, encoding="utf-8-sig")
+        st.success("✅ 검사 이력이 성공적으로 저장되었습니다!")
+        st.rerun()
 
 st.markdown("---")
 st.subheader("📋 전체 검사 내역 리스트")
 
 if os.path.exists(DATA_FILE):
-    try:
-        df_load = pd.read_csv(DATA_FILE)
-        
-        search_query = st.text_input("🔍 이력 검색", placeholder="검색어 입력...")
-        if search_query:
-            df_filtered = df
+    df_load = pd.read_csv(DATA_FILE)
+    
+    search_query = st.text_input("🔍 이력 검색", placeholder="검색어 입력...")
+    if search_query:
+        df_filtered = df_load[
+            df_load.astype(str).apply(
+                lambda r: r.str.contains(search_query, case=False).any(),
+                axis=1
+            )
+        ].reset_index(drop=True)
+    else:
+        df_filtered = df_load.reset_index(drop=True)
+
+    c_spec = [2.0, 1.4, 0.9, 0.9, 2.8, 1.1, 1.3]
+    h = st.columns(c_spec)
+    h[0].markdown("**검사일시**")
+    h[1].markdown("**자재/LOT명**
