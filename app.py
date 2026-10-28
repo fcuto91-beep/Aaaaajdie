@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 import os
 import io
 import zipfile
+import base64
 
 st.set_page_config(page_title="Inspection", layout="centered")
 st.title("🛡️ 공정 검사 및 이력 관리")
@@ -70,7 +71,7 @@ if st.button("💾 Save", type="primary"):
         st.rerun()
 
 st.markdown("---")
-st.subheader("📋 전체 검사 내역")
+st.subheader("📋 전체 검사 내역 (표 형식)")
 
 if os.path.exists(F):
     try:
@@ -82,46 +83,58 @@ if os.path.exists(F):
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 표 형태의 헤더 구성
-        cs = [1.8, 1.2, 0.8, 0.8, 1.6, 0.8]
-        h = st.columns(cs)
-        h[0].markdown("**일시**")
-        h[1].markdown("**LOT**")
-        h[2].markdown("**손톱**")
-        h[3].markdown("**테이프**")
-        h[4].markdown("**특이사항**")
-        h[5].markdown("**미리보기**")
-        st.divider()
+        # 💡 가로 스크롤과 표 형식을 지원하는 HTML 테이블 생성
+        html = """
+        <div style="overflow-x: auto; max-height: 450px; border: 1px solid #ddd; border-radius: 5px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; background-color: white;">
+          <thead>
+            <tr style="background-color: #f8f9fa; border-bottom: 2px solid #ccc; text-align: left;">
+              <th style="padding: 8px; white-space: nowrap;">일시</th>
+              <th style="padding: 8px; white-space: nowrap;">LOT</th>
+              <th style="padding: 8px; white-space: nowrap;">손톱</th>
+              <th style="padding: 8px; white-space: nowrap;">테이프</th>
+              <th style="padding: 8px; white-space: nowrap;">특이사항</th>
+              <th style="padding: 8px; white-space: nowrap; text-align: center;">미리보기</th>
+            </tr>
+          </thead>
+          <tbody>
+        """
 
-        # 💡 각 행을 표 레이아웃으로 출력하며 파일명 자리에 돋보기 버튼 배치
         for idx, row in df_f.iterrows():
-            rc = st.columns(cs)
-            rc[0].write(str(row["검사일시"]))
-            rc[1].write(str(row["자재/LOT명"]))
-            rc[2].write(str(row["손톱박리"]))
-            rc[3].write(str(row["테이프박리"]))
-            rc[4].write(str(row["특이사항"]))
+            dt_val = str(row["검사일시"])
+            lot_val = str(row["자재/LOT명"])
+            nail_val = str(row["손톱박리"])
+            tape_val = str(row["테이프박리"])
+            rem_val = str(row["특이사항"]) if pd.notna(row["특이사항"]) else ""
             
+            # 사진 미리보기 링크 (새 창 띄우기)
+            img_td = "-"
             fname = str(row["사진파일명"])
             if fname != "none":
                 ip = D + "/" + fname
                 if os.path.exists(ip):
                     with open(ip, "rb") as f:
-                        ib = f.read()
-                    rc[5].download_button(
-                        "🔍",
-                        ib,
-                        file_name=fname,
-                        mime="image/jpeg",
-                        key=f"z_{idx}",
-                        help="새 창으로 사진 보기"
-                    )
-                else:
-                    rc[5].write("없음")
-            else:
-                rc[5].write("-")
-            
-            st.divider()
+                        encoded = base64.b64encode(f.read()).decode()
+                    img_td = f'<a href="data:image/jpeg;base64,{encoded}" target="_blank" style="text-decoration:none; font-size:1.2rem;" title="새 창으로 사진 보기">🔍</a>'
+
+            html += f"""
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px; white-space: nowrap;">{dt_val}</td>
+              <td style="padding: 8px; white-space: nowrap;">{lot_val}</td>
+              <td style="padding: 8px; white-space: nowrap;">{nail_val}</td>
+              <td style="padding: 8px; white-space: nowrap;">{tape_val}</td>
+              <td style="padding: 8px; min-width: 120px;">{rem_val}</td>
+              <td style="padding: 8px; text-align: center;">{img_td}</td>
+            </tr>
+            """
+
+        html += """
+          </tbody>
+        </table>
+        </div>
+        """
+        
+        st.markdown(html, unsafe_allow_html=True)
 
         st.markdown("---")
         zb = io.BytesIO()
