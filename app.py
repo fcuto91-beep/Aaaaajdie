@@ -15,23 +15,15 @@ ADMIN_PW = "1234"  # 💡 관리자 비밀번호
 if not os.path.exists(D):
     os.makedirs(D)
 
-# 💡 업로드된 CI 이미지를 logo.png로 자동 저장 (이미 저장되어 있다면 유지됨)
-if "CI 이미지" in locals() and CI 이미지:
-    with open(LOGO_PATH, "wb") as f:
-        f.write(CI 이미지.getbuffer())
-
 KST = timezone(timedelta(hours=9))
 
-# 💡 상단 타이틀과 CI 로고를 나란히 배치 (오직 우측 상단 구석에 알맞은 크기로)
-col_title, col_logo = st.colums([4, 1.2]) if hasattr(st, "colums") else st.columns([4, 1.2])
+# 💡 상단 타이틀과 CI 로고를 우측 상단에 나란히 배치
+col_title, col_logo = st.columns([4, 1.2])
 with col_title:
     st.title("📦🧴 포장재 착인 검사 이력 관리")
 with col_logo:
     if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, width=120)
-    else:
-        # 이미지가 아직 안 올라왔을 경우를 대비한 대체 공간
-        st.write("")
+        st.image(LOGO_PATH, width=110)
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
