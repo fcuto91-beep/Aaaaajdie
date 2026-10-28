@@ -71,7 +71,7 @@ if ok:
         st.success("✅ Saved!")
         st.rerun()
 
-# 💡 사진 팝업 모달 함수 (포장재 번호 아래에 포장재 약호 표기)
+# 💡 사진 팝업 모달 함수
 @st.dialog("📸 사진 미리보기")
 def show_image_popup(img_path, m_name, p_name, date_str):
     st.markdown(f"📦 **포장재 번호: {m_name}**")
@@ -116,7 +116,7 @@ if os.path.exists(F):
             except:
                 st.query_params.clear()
 
-        # 💡 HTML 표 기반 렌더링 (일자 칸 너비 82px 최적화)
+        # 💡 HTML 표 기반 렌더링 (특이사항만 왼쪽 정렬, 나머지는 가운데 정렬)
         rows_list = []
         for idx, row in df_f.iterrows():
             raw_d = str(row.get("검사일시", "-"))
@@ -138,29 +138,29 @@ if os.path.exists(F):
                 img_td = '-'
 
             row_str = f'''<tr>
-                <td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333;">{d_val}</td>
-                <td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px;">{m_val}</td>
-                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555;">{p_val}</td>
-                <td style="padding:8px 6px; white-space:nowrap; font-size:12px;">{n_val}</td>
-                <td style="padding:8px 6px; white-space:nowrap; font-size:12px;">{t_val}</td>
+                <td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center;">{d_val}</td>
+                <td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px; text-align:center;">{m_val}</td>
+                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center;">{p_val}</td>
+                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">{n_val}</td>
+                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">{t_val}</td>
                 <td style="padding:8px 6px; text-align:center; width:55px;">{img_td}</td>
-                <td style="padding:8px 6px; min-width:90px; font-size:12px; color:#555;">{r_val}</td>
+                <td style="padding:8px 6px; min-width:90px; font-size:12px; color:#555; text-align:left;">{r_val}</td>
             </tr>'''
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
 
         table_code = f'''<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">
-            <table style="width:100%; border-collapse:collapse; text-align:left;">
+            <table style="width:100%; border-collapse:collapse;">
                 <thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">
                     <tr>
-                        <th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px;">일자</th>
-                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재 번호</th>
-                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재 약호</th>
-                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px;">손톱</th>
-                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px;">테이프</th>
+                        <th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">일자</th>
+                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>
+                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>
+                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>
+                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>
                         <th style="padding:8px 6px; text-align:center; width:55px; font-size:12px;">미리보기</th>
-                        <th style="padding:8px 6px; white-space:nowrap; font-size:12px;">특이사항</th>
+                        <th style="padding:8px 6px; min-width:90px; font-size:12px; text-align:left;">특이사항</th>
                     </tr>
                 </thead>
                 <tbody>
