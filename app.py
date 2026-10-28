@@ -77,7 +77,6 @@ if submitted:
 
 st.markdown("---")
 st.subheader("📋 전체 검사 내역 리스트")
-st.markdown("💡 **표에서 확인하고 싶은 행을 터치(선택)하시면 아래에 사진이 미리보기로 표시됩니다.**")
 
 if os.path.exists(DATA_FILE):
     df_load = pd.read_csv(DATA_FILE)
@@ -93,69 +92,11 @@ if os.path.exists(DATA_FILE):
     else:
         df_filtered = df_load.reset_index(drop=True)
 
-    # 💡 특이사항 바로 왼쪽에 돋보기 미리보기 컬럼이 오도록 순서 재조정
-    df_display = pd.DataFrame()
-    df_display["검사일시"] = df_filtered["검사일시"]
-    df_display["자재/LOT명"] = df_filtered["자재/LOT명"]
-    df_display["손톱박리"] = df_filtered["손톱박리"]
-    df_display["테이프박리"] = df_filtered["테이프박리"]
-    df_display["사진파일명"] = df_filtered["사진파일명"]
-    df_display["🔍 미리보기"] = df_filtered["사진파일명"].apply(lambda x: "🔍 있음" if str(x) != "none" else "-")
-    df_display["특이사항"] = df_filtered["특이사항"]
+    if "preview_img" not in st.session_state:
+        st.session_state.preview_img = None
+    if "preview_title" not in st.session_state:
+        st.session_state.preview_title = ""
 
-    # 네이티브 표 컴포넌트 (행 선택 기능)
-    event = st.dataframe(
-        df_display,
-        use_container_width=True,
-        on_select="rerun",
-        selection_mode="single-row",
-        key="inspection_table"
-    )
-
-    # 선택된 행이 있다면 사진 미리보기 표시
-    selected_rows = event.get("selection", {}).get("rows", [])
-    if selected_rows:
-        idx = selected_rows[0]
-        if idx < len(df_filtered):
-            row = df_filtered.iloc[idx]
-            fname = str(row["사진파일명"])
-            if fname != "none":
-                st.markdown("---")
-                st.markdown(f"🖼️ **[미리보기] LOT: {row['자재/LOT명']} ({row['검사일시']})**")
-                t_path = os.path.join(IMAGE_DIR, fname)
-                if os.path.exists(t_path):
-                    st.image(t_path, width=400)
-                else:
-                    st.warning("Photo file not found.")
-
-    st.markdown("---")
-    
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        if os.path.exists(DATA_FILE):
-            zf.write(DATA_FILE, arcname="inspection_history.csv")
-        if os.path.exists(IMAGE_DIR):
-            for root, dirs, files in os.walk(IMAGE_DIR):
-                for file in files:
-                    f_path = os.path.join(root, file)
-                    arc = os.path.join("inspection_images", file)
-                    zf.write(f_path, arcname=arc)
-    
-    zip_buffer.seek(0)
-    
-    st.download_button(
-        label="📦 [전체 데이터 + 현장 사진] ZIP 다운로드",
-        data=zip_buffer,
-        file_name=f"inspection_backup_{datetime.now(KST).strftime('%Y%m%d')}.zip",
-        mime="application/zip",
-        type="primary",
-        use_container_width=True
-    )
-    
-    st.markdown("")
-    if st.button("🗑️ 데이터 파일 초기화하기", use_container_width=True):
-        os.remove(DATA_FILE)
-        st.success("Reset completed!")
-        st.rerun()
-else:
-  st.info("아직 저장된 검사 이력이 없습니다.")
+    # 💡 표 형식 헤더 (순서: 검사일시, LOT명, 손톱, 테이프, 사진명, 미리보기, 특이사항)
+    cols_spec = [2.0, 1.4, 0.9, 0.9, 2.8, 1.1, 1.3]
+    h_cols = st.columns(cols
