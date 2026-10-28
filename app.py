@@ -98,49 +98,8 @@ if os.path.exists(DATA_FILE):
         else:
             df_filtered = df_load.reset_index(drop=True)
 
-        # 💡 깔끔한 기본 표 형식 그대로 출력
+        # 💡 깔끔한 기본 표 페이지만 딱 출력하고 아래 불필요한 항목들은 전부 제거 완료!
         st.dataframe(df_filtered, use_container_width=True)
-
-        st.markdown("---")
-        st.markdown("### 🔍 현장 사진 미리보기")
-        st.markdown("저장된 이력의 사진을 확인하려면 아래에서 해당 돋보기 버튼을 눌러주세요.")
-
-        # 세션 상태 관리 (미리보기용)
-        if "preview_img" not in st.session_state:
-            st.session_state.preview_img = None
-        if "preview_title" not in st.session_state:
-            st.session_state.preview_title = ""
-
-        # 표 아래에 각 항목별로 파일명과 돋보기(미리보기) 버튼을 깔끔하게 행 형태로 배치
-        for idx, row in df_filtered.iterrows():
-            lot_val = row["자재/LOT명"]
-            file_val = row["사진파일명"]
-            date_val = row["검사일시"]
-
-            if file_val != "없음":
-                col1, col2, col3 = st.columns([2, 4, 1])
-                with col1:
-                    st.write(f"[{idx}] {lot_val}")
-                with col2:
-                    st.write(f"<small>{file_val}</small>", unsafe_allow_html=True)
-                with col3:
-                    # 💡 마우스를 올리면 "미리보기" 글자가 뜨는 돋보기 버튼
-                    if st.button("🔍", key=f"zoom_{idx}", help="미리보기"):
-                        st.session_state.preview_img = file_val
-                        st.session_state.preview_title = f"LOT: {lot_val} ({date_val})"
-
-        # 돋보기 버튼을 눌렀을 때 사진이 나타나는 영역
-        if st.session_state.preview_img:
-            st.markdown("---")
-            st.markdown(f"🖼️ **미리보기 — {st.session_state.preview_title}**")
-            target_path = os.path.join(IMAGE_DIR, st.session_state.preview_img)
-            if os.path.exists(target_path):
-                st.image(target_path, width=400)
-                if st.button("❌ 미리보기 닫기"):
-                    st.session_state.preview_img = None
-                    st.rerun()
-            else:
-                st.warning("⚠️ 사진 파일을 찾을 수 없습니다.")
 
         st.markdown("---")
         
@@ -160,22 +119,4 @@ if os.path.exists(DATA_FILE):
         st.download_button(
             label="📦 [전체 데이터 + 현장 사진] ZIP 다운로드",
             data=zip_buffer,
-            file_name=f"inspection_backup_{datetime.now(KST).strftime('%Y%m%d')}.zip",
-            mime="application/zip",
-            type="primary",
-            use_container_width=True
-        )
-        
-        st.markdown("")
-        if st.button("🗑️ 데이터 파일 초기화하기 (오류 복구용)", use_container_width=True):
-            os.remove(DATA_FILE)
-            st.success("초기화 완료! 페이지를 새로고침 해주세요.")
-            st.rerun()
-            
-    except Exception as e:
-        st.error(f"데이터 파일 읽기 오류: {e}")
-        if st.button("🗑️ 손상된 데이터 삭제하기"):
-            os.remove(DATA_FILE)
-            st.rerun()
-else:
-  st.info("아직 저장된 검사 이력이 없습니다.")
+            file_name
