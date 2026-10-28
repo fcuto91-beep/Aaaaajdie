@@ -19,7 +19,7 @@ st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 검사 결과 입력")
-    pack_name = st.text_input("자재 번호")
+    pack_name = st.text_input("포장재 번호")
     mat_no = st.text_input("포장재 약호")
     nail = st.selectbox("손톱 박리", ["적합", "부적합"])
     tape = st.selectbox("테이프 박리", ["적합", "부적합"])
@@ -110,8 +110,8 @@ if os.path.exists(F):
         # 💡 HTML 표 기반 렌더링
         rows_list = []
         for idx, row in df_f.iterrows():
-            d_val = str(row["검사일시"])
-            p_val = str(row["포장재명"])
+            d_val = str(row["일자"])
+            p_val = str(row["포장재 약호"])
             m_val = str(row["자재번호"]) if pd.notna(row["자재번호"]) else "-"
             n_val = str(row["손톱박리"])
             t_val = str(row["테이프박리"])
@@ -144,8 +144,8 @@ if os.path.exists(F):
                      '<table style="width:100%; border-collapse:collapse; text-align:left;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
-                     '<th style="padding:8px 6px; width:110px; white-space:nowrap; font-size:11px;">일시</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재 명</th>' \
+                     '<th style="padding:8px 6px; width:110px; white-space:nowrap; font-size:11px;">검사일시</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">포장재명</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">자재번호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px;">테이프</th>' \
