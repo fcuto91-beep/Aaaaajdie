@@ -116,7 +116,7 @@ if os.path.exists(F):
             except:
                 st.query_params.clear()
 
-        # 💡 HTML 표 기반 렌더링 (특이사항만 왼쪽 정렬, 나머지는 가운데 정렬)
+        # 💡 HTML 표 기반 렌더링 (미리보기 칸 너비 확장 및 특이사항 셀 세로 가운데 정렬)
         rows_list = []
         for idx, row in df_f.iterrows():
             raw_d = str(row.get("검사일시", "-"))
@@ -138,13 +138,13 @@ if os.path.exists(F):
                 img_td = '-'
 
             row_str = f'''<tr>
-                <td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center;">{d_val}</td>
-                <td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px; text-align:center;">{m_val}</td>
-                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center;">{p_val}</td>
-                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">{n_val}</td>
-                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">{t_val}</td>
-                <td style="padding:8px 6px; text-align:center; width:55px;">{img_td}</td>
-                <td style="padding:8px 6px; min-width:90px; font-size:12px; color:#555; text-align:left;">{r_val}</td>
+                <td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">{d_val}</td>
+                <td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px; text-align:center; vertical-align:middle;">{m_val}</td>
+                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle;">{p_val}</td>
+                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle;">{n_val}</td>
+                <td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle;">{t_val}</td>
+                <td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; vertical-align:middle;">{img_td}</td>
+                <td style="padding:8px 6px; min-width:90px; font-size:12px; color:#555; text-align:left; vertical-align:middle;">{r_val}</td>
             </tr>'''
             rows_list.append(row_str)
 
@@ -159,7 +159,7 @@ if os.path.exists(F):
                         <th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>
                         <th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>
                         <th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>
-                        <th style="padding:8px 6px; text-align:center; width:55px; font-size:12px;">미리보기</th>
+                        <th style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">미리보기</th>
                         <th style="padding:8px 6px; min-width:90px; font-size:12px; text-align:left;">특이사항</th>
                     </tr>
                 </thead>
