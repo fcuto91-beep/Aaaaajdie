@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 import os
 import io
 import zipfile
+import base64
 
 st.set_page_config(page_title="Inspection", layout="centered")
 st.title("🛡️ 공정 검사 및 이력 관리")
@@ -61,13 +62,6 @@ if ok:
         st.success("✅ Saved!")
         st.rerun()
 
-# 💡 돋보기를 누르면 화면 중앙에 뜨는 사진 팝업 모달 함수 (st.dialog)
-@st.dialog("📸 사진 팝업 미리보기")
-def show_image_popup(img_path, lot_name, date_str):
-    st.markdown(f"📦 **LOT: {lot_name}**")
-    st.caption(f"📅 검사일시: {date_str}")
-    st.image(img_path, use_column_width=True)
-
 st.markdown("---")
 st.subheader("📋 전체 검사 내역")
 
@@ -77,40 +71,81 @@ if os.path.exists(F):
         q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        cols_w = [1.8, 1.2, 0.8, 0.8, 1.5, 0.8]
+        # 💡 URL 쿼리스트링을 통한 돋보기 팝업 사진 연동 처리
+        selected_view_idx = st.query_params.get("view_idx", None)
+        if selected_view_idx is not None:
+            try:
+                v_idx = int(selected_view_idx)
+                if 0 <= v_idx < len(df_f):
+                    v_row = df_f.iloc[v_idx]
+                    st.markdown("---")
+                    st.markdown(f"### 📸 팝업 사진 미리보기")
+                    st.info(f"📦 **LOT: {v_row['자재/LOT명']}** | 📅 **일시: {v_row['검사일시']}**")
+                    
+                    v_fname = str(v_row["사진파일명"])
+                    if v_fname != "none":
+                        v_ip = os.path.join(D, v_fname)
+                        if os.path.exists(v_ip):
+                            st.image(v_ip, use_container_width=True, caption=f"{v_row['자재/LOT명']} 현장 사진")
+                        else:
+                            st.warning("⚠️ 사진 파일이 존재하지 않습니다.")
+                    
+                    if st.button("❌ 닫기", use_container_width=True):
+                        st.query_params.clear()
+                        st.rerun()
+                    st.markdown("---")
+            except:
+                st.query_params.clear()
 
-        # 💡 테두리와 고정 높이(스크롤)가 적용된 표 형식 컨테이너 박스
-        with st.container(height=420, border=True):
-            h = st.columns(cols_w)
-            h[0].markdown("**일시**")
-            h[1].markdown("**LOT**")
-            h[2].markdown("**손톱**")
-            h[3].markdown("**테이프**")
-            h[4].markdown("**특이사항**")
-            h[5].markdown("**미리보기**")
-            st.markdown("<hr style='margin:4px 0; border:1px solid #ddd;'>", unsafe_allow_html=True)
+        # 💡 모바일/PC에서 절대 세로로 깨지지 않고 가로/세로 스크롤을 유지하는 완벽한 HTML 표 그리드
+        rows_html = ""
+        for idx, row in df_f.iterrows():
+            d_val = str(row["검사일시"])
+            l_val = str(row["자재/LOT명"])
+            n_val = str(row["손톱박리"])
+            t_val = str(row["테이프박리"])
+            r_val = str(row["특이사항"]) if pd.notna(row["특이사항"]) else "-"
+            
+            img_td = "-"
+            fname = str(row["사진파일명"])
+            if fname != "none":
+                ip = os.path.join(D, fname)
+                if os.path.exists(ip):
+                    # 돋보기를 누르면 해당 행의 사진이 팝업으로 연동되도록 쿼리스트링 링크 연결
+                    img_td = f'<a href="?view_idx={idx}" style="text-decoration:none; font-size:1.4rem;" title="사진 보기">🔍</a>'
 
-            for idx, row in df_f.iterrows():
-                rc = st.columns(cols_w)
-                rc[0].markdown(f"<span style='font-size:12px;'>{str(row['검사일시'])}</span>", unsafe_allow_html=True)
-                rc[1].markdown(f"<span style='font-size:12px; font-weight:bold;'>{str(row['자재/LOT명'])}</span>", unsafe_allow_html=True)
-                rc[2].markdown(f"<span style='font-size:12px;'>{str(row['손톱박리'])}</span>", unsafe_allow_html=True)
-                rc[3].markdown(f"<span style='font-size:12px;'>{str(row['테이프박리'])}</span>", unsafe_allow_html=True)
-                rc[4].markdown(f"<span style='font-size:12px;'>{str(row['특이사항']) if pd.notna(row['특이사항']) else '-'}</span>", unsafe_allow_html=True)
-                
-                fname = str(row["사진파일명"])
-                if fname != "none":
-                    ip = os.path.join(D, fname)
-                    if os.path.exists(ip):
-                        if rc[5].button("🔍", key=f"pop_{idx}", help="팝업으로 사진 보기"):
-                            show_image_popup(ip, str(row["자재/LOT명"]), str(row["검사일시"]))
-                    else:
-                        rc[5].write("-")
-                else:
-                    rc[5].write("-")
-                
-                if idx < len(df_f) - 1:
-                    st.markdown("<hr style='margin:2px 0; border:0.5px solid #eee;'>", unsafe_allow_html=True)
+            rows_html += f'''
+            <tr style="border-bottom: 1px solid #e0e0e0; background-color: #fff;">
+                <td style="padding:10px 8px; white-space:nowrap; color:#333; font-size:12px;">{d_val}</td>
+                <td style="padding:10px 8px; white-space:nowrap; font-weight:bold; color:#111; font-size:12px;">{l_val}</td>
+                <td style="padding:10px 8px; white-space:nowrap; color:#333; font-size:12px;">{n_val}</td>
+                <td style="padding:10px 8px; white-space:nowrap; color:#333; font-size:12px;">{t_val}</td>
+                <td style="padding:10px 8px; min-width:120px; color:#555; font-size:12px;">{r_val}</td>
+                <td style="padding:10px 8px; text-align:center;">{img_td}</td>
+            </tr>
+            '''
+
+        table_html = f'''
+        <div style="overflow-x: auto; max-height: 420px; border: 1px solid #dcdcdc; border-radius: 8px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead style="position: sticky; top: 0; background-color: #f1f3f5; z-index: 10; border-bottom: 2px solid #ccc;">
+                    <tr>
+                        <th style="padding:10px 8px; white-space:nowrap; font-size:12px;">일시</th>
+                        <th style="padding:10px 8px; white-space:nowrap; font-size:12px;">LOT</th>
+                        <th style="padding:10px 8px; white-space:nowrap; font-size:12px;">손톱</th>
+                        <th style="padding:10px 8px; white-space:nowrap; font-size:12px;">테이프</th>
+                        <th style="padding:10px 8px; white-space:nowrap; font-size:12px;">특이사항</th>
+                        <th style="padding:10px 8px; white-space:nowrap; text-align:center; font-size:12px;">미리보기</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows_html}
+                </tbody>
+            </table>
+        </div>
+        '''
+        
+        st.markdown(table_html, unsafe_allow_html=True)
 
         st.markdown("---")
         zb = io.BytesIO()
