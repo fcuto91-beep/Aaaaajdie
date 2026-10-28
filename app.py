@@ -32,11 +32,13 @@ st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
-    # 💡 입력창 예시(Placeholder) 적용
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
     pack_name = st.text_input("포장재 약호", placeholder="예: ANA-TBMBM(F)E 용기(공용)")
-    nail = st.selectbox("손톱 박리 결과", ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
-    tape = st.selectbox("테이프 박리 결과", ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
+    
+    # 💡 선택창에 안내 문구 추가
+    nail = st.selectbox("손톱 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
+    tape = st.selectbox("테이프 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
+    
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
     rem = st.text_area("특이사항")
     ok = st.form_submit_button("💾 Save", type="primary")
@@ -44,6 +46,8 @@ with st.form("f1", clear_on_submit=True):
 if ok:
     if not mat_no.strip():
         st.warning("⚠️ 포장재 번호를 입력해 주세요!")
+    elif nail == "선택해주세요" or tape == "선택해주세요":
+        st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
         dt_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         fn = "none"
