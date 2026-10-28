@@ -25,8 +25,8 @@ with col2:
 
 st.markdown("")
 
-# 💡 2단계: 모바일 화면에서 한 줄로 깔끔하게 꽉 차게 출력되도록 스타일 조정
-st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; white-space: nowrap;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
+# 💡 2단계: 모바일/PC 반응형 제목 (모바일에서는 자연스럽게 줄바꿈되고 잘림 방지)
+st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
