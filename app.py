@@ -17,14 +17,15 @@ if not os.path.exists(D):
 
 KST = timezone(timedelta(hours=9))
 
-# 💡 상단 타이틀과 CI 로고를 우측 상단에 나란히 배치
-col_title, col_logo = st.columns([4, 1.2])
+# 💡 CI 로고 크기를 키우고, 타이틀과 간격 및 비율 최적화
+col_title, col_logo = st.columns([3.2, 1.8])
 with col_title:
-    st.title("📦🧴 포장재 착인 검사 이력 관리")
+    st.markdown("<h2 style='padding-top: 10px; margin-bottom: 0px;'>📦🧴 포장재 착인 검사 이력 관리</h2>", unsafe_allow_html=True)
 with col_logo:
     if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, width=110)
+        st.image(LOGO_PATH, width=170)
 
+st.markdown("")
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
 with st.form("f1", clear_on_submit=True):
@@ -199,10 +200,4 @@ if os.path.exists(F):
                 if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
                     os.remove(F)
                     st.success("Reset done!")
-                    st.rerun()
-            elif admin_input:
-                st.error("❌ 비밀번호가 틀렸습니다.")
-    except Exception as e:
-        st.error(f"Error: {e}")
-else:
-    st.info("아직 저장된 검사 이력이 없습니다.")
+                    st.rerun
