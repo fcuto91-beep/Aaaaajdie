@@ -25,8 +25,8 @@ with col2:
 
 st.markdown("")
 
-# 💡 2단계: 모바일에서 딱 두 줄로 깔끔하게 떨어지도록 크기와 줄바꿈 최적화
-st.markdown("<h1 style='text-align: center; font-size: 30px !important; font-weight: bold; margin-bottom: 10px; line-height: 1.3;'>포장재 착인 검사<br>이력 관리 📦🧴</h1>", unsafe_allow_html=True)
+# 💡 2단계: 모바일 화면에 꽉 차게 한 줄로 떨어지도록 글자 크기와 스타일 조정
+st.markdown("<h1 style='text-align: center; font-size: 27px !important; font-weight: bold; margin-bottom: 10px; white-space: nowrap;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
@@ -196,16 +196,4 @@ if os.path.exists(F):
                             zf.write(os.path.join(root, file), arcname=os.path.join("inspection_images", file))
                 zb.seek(0)
                 
-                st.download_button("💾 전체 검사 내역 다운로드", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container_width=True)
-                
-                st.markdown("")
-                if st.button("🗑️ 전체 검사 내역 초기화", use_container_width=True):
-                    os.remove(F)
-                    st.success("Reset done!")
-                    st.rerun()
-            elif admin_input:
-                st.error("❌ 비밀번호가 틀렸습니다.")
-    except Exception as e:
-        st.error(f"Error: {e}")
-else:
-    st.info("아직 저장된 검사 이력이 없습니다.")
+                st.download_button("💾 전체 검사 내역 다운로드", data=zb, file_name=f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip", mime="application/zip", type="primary", use_container
