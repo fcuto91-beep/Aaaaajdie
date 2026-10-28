@@ -77,7 +77,6 @@ if submitted:
 
 st.markdown("---")
 st.subheader("📋 전체 검사 내역 리스트")
-st.markdown("💡 **표의 행을 터치(클릭)하시면 해당 사진을 바로 미리보실 수 있습니다.**")
 
 if os.path.exists(DATA_FILE):
     df_load = pd.read_csv(DATA_FILE)
@@ -93,30 +92,55 @@ if os.path.exists(DATA_FILE):
     else:
         df_filtered = df_load.reset_index(drop=True)
 
-    # 💡 모바일 친화적인 네이티브 표 컴포넌트 (행 선택 기능 포함)
-    event = st.dataframe(
-        df_filtered,
-        use_container_width=True,
-        on_select="rerun",
-        selection_mode="single-row",
-        key="inspection_table"
-    )
+    if "preview_img" not in st.session_state:
+        st.session_state.preview_img = None
+    if "preview_title" not in st.session_state:
+        st.session_state.preview_title = ""
 
-    # 선택된 행이 있다면 사진 미리보기 표시
-    selected_rows = event.get("selection", {}).get("rows", [])
-    if selected_rows:
-        idx = selected_rows[0]
-        if idx < len(df_filtered):
-            row = df_filtered.iloc[idx]
-            fname = str(row["사진파일명"])
-            if fname != "none":
-                st.markdown("---")
-                st.markdown(f"🖼️ **미리보기 — LOT: {row['자재/LOT명']} ({row['검사일시']})**")
-                t_path = os.path.join(IMAGE_DIR, fname)
-                if os.path.exists(t_path):
-                    st.image(t_path, width=400)
-                else:
-                    st.warning("Photo file not found.")
+    # 💡 형님 요청하신 대로 표 형식 컬럼 헤더 정렬
+    cols_spec = [2.2, 1.5, 1.0, 1.0, 3.2, 0.8, 1.3]
+    h_cols = st.columns(cols_spec)
+    h_cols[0].markdown("**검사일시**")
+    h_cols[1].markdown("**자재/LOT명**")
+    h_cols[2].markdown("**손톱**")
+    h_cols[3].markdown("**테이프**")
+    h_cols[4].markdown("**사진파일명**")
+    h_cols[5].markdown("**보기**")
+    h_cols[6].markdown("**특이사항**")
+    st.markdown("<hr style='margin: 0px 0 10px 0; border: 1px solid #ddd;'>", unsafe_allow_html=True)
+
+    # 💡 각 행마다 사진파일명 바로 옆에 돋보기 버튼 컬럼 배치
+    for idx, row in df_filtered.iterrows():
+        r_cols = st.columns(cols_spec)
+        r_cols[0].write(str(row["검사일시"]))
+        r_cols[1].write(str(row["자재/LOT명"]))
+        r_cols[2].write(str(row["손톱박리"]))
+        r_cols[3].write(str(row["테이프박리"]))
+        r_cols[4].write(str(row["사진파일명"]))
+        
+        fname = str(row["사진파일명"])
+        if fname != "none":
+            if r_cols[5].button("🔍", key=f"zoom_{idx}", help="미리보기"):
+                st.session_state.preview_img = fname
+                st.session_state.preview_title = f"LOT: {row['자재/LOT명']} ({row['검사일시']})"
+        else:
+            r_cols[5].write("-")
+                
+        r_cols[6].write(str(row["특이사항"]))
+        st.markdown("<hr style='margin: 5px 0; border: 0.5px solid #eee;'>", unsafe_allow_html=True)
+
+    # 돋보기 버튼을 눌렀을 때 나타나는 사진 미리보기 영역
+    if st.session_state.preview_img:
+        st.markdown("---")
+        st.markdown(f"🖼️ **미리보기 — {st.session_state.preview_title}**")
+        t_path = os.path.join(IMAGE_DIR, st.session_state.preview_img)
+        if os.path.exists(t_path):
+            st.image(t_path, width=400)
+            if st.button("❌ 미리보기 닫기"):
+                st.session_state.preview_img = None
+                st.rerun()
+        else:
+            st.warning("Photo not found.")
 
     st.markdown("---")
     
