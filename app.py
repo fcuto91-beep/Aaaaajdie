@@ -43,8 +43,4 @@ if submitted:
     else:
         inspection_date = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         
-        image_filename = "없음"
-        if uploaded_file is not None:
-            safe_lot_name = "".join(c for c in material_lot if c.isalnum() or c in ('_', '-'))
-            timestamp = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
-            image_filename = f"{safe_lot_name}_{timestamp}_{uploaded_file.
+        image_filename = "없
