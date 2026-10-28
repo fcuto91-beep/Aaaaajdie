@@ -15,7 +15,7 @@ if not os.path.exists(D):
     os.makedirs(D)
 
 KST = timezone(timedelta(hours=9))
-st.info(f"⏰ 시각: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
+st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
