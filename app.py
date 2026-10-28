@@ -36,4 +36,4 @@ if ok:
             s_lot = "".join(c for c in lot if c.isalnum())
             t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
             fn = f"{s_lot}_{t_str}_{up_file.name}"
-            with open(os
+            file_
