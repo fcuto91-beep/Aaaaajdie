@@ -59,7 +59,6 @@ with col2:
 st.markdown("")
 st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
-# 💡 문자열 분리로 에러 원천 차단
 current_time_str = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
 st.info("⏰ 일자: **" + current_time_str + "**")
 
@@ -181,6 +180,7 @@ try:
             else:
                 img_td = '-'
 
+            # 💡 특이사항 칸에 white-space: nowrap 적용하여 아래로 떨어지지 않고 옆으로 스크롤되도록 수정
             row_str = '<tr>' \
                       '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px; text-align:center; vertical-align:middle;">' + m_val + '</td>' \
@@ -188,7 +188,7 @@ try:
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle;">' + t_val + '</td>' \
                       '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; vertical-align:middle;">' + img_td + '</td>' \
-                      '<td style="padding:8px 6px; min-width:90px; font-size:12px; color:#555; text-align:center; vertical-align:middle;">' + r_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>' \
                       '</tr>'
             rows_list.append(row_str)
 
@@ -203,7 +203,7 @@ try:
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
                      '<th style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">미리보기</th>' \
-                     '<th style="padding:8px 6px; min-width:90px; font-size:12px; text-align:center;">특이사항</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">특이사항</th>' \
                      '</tr>' \
                      '</thead>' \
                      '<tbody>' + all_rows + '</tbody>' \
@@ -315,7 +315,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.5.1 (Safe String Build)" \
+    "Author : 김태현 책임기사<br>Version : v1.5.2 (Horizontal Scroll Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
