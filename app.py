@@ -153,9 +153,9 @@ try:
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
-                return '<span style="background-color:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🔴 부적합 (FAIL)</span>'
+                return '<span style="background-color:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px;">🔴 부적합 (FAIL)</span>'
             elif "적합" in v_str or "PASS" in v_str:
-                return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟢 적합 (PASS)</span>'
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px;">🟢 적합 (PASS)</span>'
             else:
                 return f'<span>{val}</span>'
 
@@ -180,15 +180,15 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 특이사항 칸에 white-space: nowrap 적용하여 아래로 떨어지지 않고 옆으로 스크롤되도록 수정
+            # 💡 모든 텍스트 필드의 폰트 굵기를 통일감 있게 정돈 (font-weight: normal)
             row_str = '<tr>' \
-                      '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-weight:bold; font-size:12px; text-align:center; vertical-align:middle;">' + m_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle;">' + p_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle;">' + n_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle;">' + t_val + '</td>' \
-                      '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; vertical-align:middle;">' + img_td + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>' \
+                      '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
+                      '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; vertical-align:middle; font-weight:normal;">' + img_td + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
                       '</tr>'
             rows_list.append(row_str)
 
@@ -315,7 +315,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.5.2 (Horizontal Scroll Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.5.3 (Font Weight Uniformed)" \
     "</div>", 
     unsafe_allow_html=True
 )
