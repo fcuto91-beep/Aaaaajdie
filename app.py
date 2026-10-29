@@ -64,7 +64,7 @@ st.info("⏰ 일자: **" + current_time_str + "**")
 
 @st.dialog("🎉 저장 완료")
 def show_save_success_popup():
-    st.success("검사 결과가 구글 시트에 실시간으로 안전하게 저장되었습니다!")
+    st.success("검사 결과가 실시간으로 안전하게 저장되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
@@ -108,7 +108,7 @@ if ok:
             st.session_state["show_saved_modal"] = True
             st.rerun()
         else:
-            st.error("❌ 구글 시트 저장 중 오류가 발생했습니다.")
+            st.error("❌ 저장 중 오류가 발생했습니다.")
 
 if st.session_state.get("show_saved_modal", False):
     st.session_state["show_saved_modal"] = False
@@ -308,7 +308,7 @@ try:
             elif admin_input:
                 st.error("❌ 비밀번호가 틀렸습니다.")
     else:
-        st.info("아직 구글 시트에 저장된 검사 이력이 없습니다.")
+        st.info("아직 저장된 검사 이력이 없습니다.")
 except Exception as e:
     st.error(f"오류 발생: {e}")
 
