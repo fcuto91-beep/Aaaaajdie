@@ -59,7 +59,6 @@ with col2:
 st.markdown("")
 st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
-# 💡 텍스트 분리형으로 문법 오류 원천 차단
 current_time_str = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
 st.info(f"⏰ 일자: **{current_time_str}**")
 
@@ -95,8 +94,4 @@ if ok:
     else:
         dt_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         fn = "none"
-        if up_file:
-            s_lot = "".join(c for c in mat_no if c.isalnum())
-            t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
-            fn = f"{s_lot}_{t_str}_{up_file.name}"
-            file_path = os.path.join(D, fn
+        if up_
