@@ -12,7 +12,6 @@ st.set_page_config(page_title="Inspection", layout="centered")
 D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"  # 💡 관리자 비밀번호
-# 💡 아까 복사하신 구글 앱스 스크립트 웹 앱 URL
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxZFR3sBQRIMZxBiZfamJiIvPwTI4UGrVaHkfQnMQJqFm8ZFnUJyScN-fShF2ZoyLHBw/exec"
 
 if not os.path.exists(D):
@@ -32,7 +31,6 @@ def load_data():
     except Exception as e:
         st.error(f"데이터 로드 오류: {e}")
     
-    # 비어있거나 오류 시 기본 틀 반환
     return pd.DataFrame(columns=["검사일시", "포장재번호", "포장재약호", "손톱박리", "테이프박리", "사진파일명", "특이사항"])
 
 # 💡 구글 시트에 데이터 추가하기 함수
@@ -69,20 +67,17 @@ with col2:
 
 st.markdown("")
 
-# 💡 2단계: 모바일/PC 반응형 제목 (잘림 방지)
+# 💡 2단계: 모바일/PC 반응형 제목
 st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
 st.info(f"⏰ 일자: **{datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')}**")
 
-# 💡 화면 정중앙에 뜨는 저장 완료 팝업 모달 함수
 @st.dialog("🎉 저장 완료")
 def show_save_success_popup():
     st.success("검사 결과가 구글 시트에 실시간으로 안전하게 저장되었습니다!")
-    st.info("전체 검사 내역에 정상적으로 반영되었습니다.")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 화면 정중앙에 뜨는 수정 완료 팝업 모달 함수
 @st.dialog("✏️ 수정 완료")
 def show_edit_success_popup():
     st.success("검사 내역이 구글 시트에 성공적으로 수정 반영되었습니다!")
@@ -127,12 +122,11 @@ if ok:
             str(rem) if rem.strip() else "-"
         ]
         
-        # 구글 시트에 전송
         if append_to_sheet(row_data):
             st.session_state["show_saved_modal"] = True
             st.rerun()
         else:
-            st.error("❌ 구글 시트 저장 중 오류가 발생했습니다. 다시 시도해 주세요.")
+            st.error("❌ 구글 시트 저장 중 오류가 발생했습니다.")
 
 if st.session_state.get("show_saved_modal", False):
     st.session_state["show_saved_modal"] = False
@@ -142,7 +136,6 @@ if st.session_state.get("show_edited_modal", False):
     st.session_state["show_edited_modal"] = False
     show_edit_success_popup()
 
-# 💡 사진 팝업 모달 함수
 @st.dialog("📸 사진 미리보기")
 def show_image_popup(img_path, m_name, p_name, date_str):
     st.markdown(f"📦 **포장재 번호: {m_name}**")
@@ -160,7 +153,6 @@ try:
         q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        # 💡 URL 쿼리를 통한 팝업 모달 호출 연동
         if "pop_idx" in st.query_params:
             try:
                 p_idx = int(st.query_params["pop_idx"])
@@ -181,7 +173,6 @@ try:
             except:
                 st.query_params.clear()
 
-        # 💡 결과 배지 함수
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
@@ -191,7 +182,6 @@ try:
             else:
                 return f'<span>{val}</span>'
 
-        # 💡 HTML 표 기반 렌더링
         rows_list = []
         for idx, row in df_f.iterrows():
             raw_d = str(row.get("검사일시", "-"))
@@ -201,7 +191,6 @@ try:
             
             n_val = get_badge(row.get("손톱박리", "-"))
             t_val = get_badge(row.get("테이프박리", "-"))
-            
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
             fname = str(row.get("사진파일명", "none"))
@@ -246,13 +235,28 @@ try:
 
         st.markdown(table_code, unsafe_allow_html=True)
 
-        # 🔒 관리자 인증 구역
+        # 🔒 관리자 인증 구역 (백업 / 수정 / 초기화 복구 완료)
         st.markdown("---")
-        with st.expander("🔐 관리자 메뉴 (수정)"):
+        with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
             admin_input = st.text_input("관리자 비밀번호를 입력하세요", type="password")
             
             if admin_input == ADMIN_PW:
                 st.success("✅ 관리자 인증이 완료되었습니다.")
+                
+                # 1. 백업 다운로드 버튼 (시트 CSV + 사진 폴더 ZIP)
+                zb = io.BytesIO()
+                with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
+                    csv_bytes = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+                    zf.writestr("inspection_history.csv", csv_bytes)
+                    if os.path.exists(D):
+                        for file in os.listdir(D):
+                            zf.write(os.path.join(D, file), arcname=os.path.join("inspection_images", file))
+                zb.seek(0)
+                
+                backup_filename = f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip"
+                st.download_button("💾 전체 검사 내역 및 사진 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
+                
+                st.markdown("---")
                 st.subheader("✏️ 검사 내역 수정")
                 edit_q = st.text_input("🔎 수정할 항목 검색 (포장재 번호)", placeholder="예: 5115558")
                 
@@ -316,6 +320,16 @@ try:
                                     st.error("❌ 시트 수정 중 오류가 발생했습니다.")
                 else:
                     st.info("검색 결과가 없습니다.")
+
+                st.markdown("---")
+                if st.button("🗑️ 로컬 사진 폴더 비우기", use_container_width=True):
+                    if os.path.exists(D):
+                        for f_name in os.listdir(D):
+                            f_path = os.path.join(D, f_name)
+                            if os.path.isfile(f_path):
+                                os.remove(f_path)
+                    st.success("사진 폴더가 초기화되었습니다!")
+                    st.rerun()
             elif admin_input:
                 st.error("❌ 비밀번호가 틀렸습니다.")
     else:
@@ -326,7 +340,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.2.0 (Google Sheets Live)" \
+    "Author : 김태현 책임기사<br>Version : v1.3.0 (Google Sheets + Admin Backup)" \
     "</div>", 
     unsafe_allow_html=True
 )
