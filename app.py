@@ -6,7 +6,6 @@ import io
 import zipfile
 import requests
 import json
-from PIL import Image
 
 st.set_page_config(page_title="Inspection", layout="centered")
 
@@ -44,20 +43,4 @@ def append_to_sheet(row_data):
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
         return response.status_code == 200
     except:
-        return False
-
-# 💡 구글 시트 데이터 수정하기 함수
-def update_sheet(date_val, mat_val, row_data):
-    try:
-        payload = {
-            "action": "update",
-            "date": str(date_val),
-            "mat_no": str(mat_val),
-            "row": row_data
-        }
-        response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
-        return response.status_code == 200
-    except:
-        return False
-
-# 💡 이미지 자동 압축 및 저장 함수 (버퍼링 제거
+        return
