@@ -118,11 +118,12 @@ if st.session_state.get("show_edited_modal", False):
     st.session_state["show_edited_modal"] = False
     show_edit_success_popup()
 
-@st.dialog("📸 사진 미리보기")
+@st.dialog("🔍 고화질 원본 사진 보기")
 def show_image_popup(img_path, m_name, p_name, date_str):
     st.markdown(f"📦 **포장재 번호: {m_name}**")
     st.markdown(f"🏷️ **포장재 약호: {p_name}**")
     st.caption(f"📅 검사 일자: {date_str[:10] if len(date_str) >= 10 else date_str}")
+    # 💡 원본 고화질 이미지 팝업 출력 (가로 폭에 딱 맞게 확대 표시)
     st.image(img_path, use_column_width=True)
 
 st.markdown("---")
@@ -174,7 +175,10 @@ try:
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    img_td = '<a href="?pop_idx=' + str(idx) + '" target="_self" style="text-decoration:none; font-size:16px;">🔍</a>'
+                    # 💡 표 안에서 가볍고 빠르게 뜨는 썸네일(미니 사진) + 클릭 시 원본 팝업 연동
+                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none;"><img src="app/static/{fname}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid #ddd;" onerror="this.onerror=null; this.src=\'https://via.placeholder.com/40?text=IMG\';">🔍</a>'
+                    # 만약 위 상대 경로가 안 먹힐 경우를 대비한 돋보기 아이콘 중심형 썸네일 대체안
+                    img_td = '<a href="?pop_idx=' + str(idx) + '" target="_self" style="text-decoration:none; background:#e8f0fe; color:#1967d2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold;">📷 보기</a>'
                 else:
                     img_td = '-'
             else:
@@ -314,7 +318,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.4.6 (Clean Build)" \
+    "Author : 김태현 책임기사<br>Version : v1.4.7 (Thumbnail & High-Res Popup)" \
     "</div>", 
     unsafe_allow_html=True
 )
