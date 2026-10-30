@@ -301,12 +301,12 @@ try:
                                     st.session_state["show_edited_modal"] = True
                                     st.rerun()
                                 else:
-                                    st.error("❌ 시트 수정 중 오류가 발생했습니다.")
+                                    st.error("❌ 수정 중 오류가 발생했습니다.")
                 else:
                     st.info("검색 결과가 없습니다.")
 
                 st.markdown("---")
-                if st.button("🗑️ 로컬 사진 폴더 비우기", use_container_width=True):
+                if st.button("🗑️ 사진 폴더 비우기", use_container_width=True):
                     if os.path.exists(D):
                         for f_name in os.listdir(D):
                             f_path = os.path.join(D, f_name)
@@ -316,17 +316,17 @@ try:
                     st.rerun()
 
                 st.markdown("---")
-                if st.button("🚨 구글 시트 전체 데이터 초기화", use_container_width=True):
+                if st.button("🚨 전체 데이터 초기화", use_container_width=True):
                     if clear_sheet_data():
-                        st.success("구글 시트의 모든 검사 이력이 초기화되었습니다!")
+                        st.success("모든 검사 이력이 초기화되었습니다!")
                         st.rerun()
                     else:
-                        st.error("❌ 시트 초기화 중 오류가 발생했습니다.")
+                        st.error("❌ 초기화 중 오류가 발생했습니다.")
 
             elif admin_input:
                 st.error("❌ 비밀번호가 틀렸습니다.")
     else:
-        st.info("아직 구글 시트에 저장된 검사 이력이 없습니다.")
+        st.info("아직 저장된 검사 이력이 없습니다.")
 except Exception as e:
     st.error(f"오류 발생: {e}")
 
