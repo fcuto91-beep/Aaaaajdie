@@ -326,7 +326,7 @@ try:
             elif admin_input:
                 st.error("❌ 비밀번호가 틀렸습니다.")
     else:
-        st.info("아직 저장된 검사 이력이 없습니다.")
+        st.info("저장된 검사 이력이 없습니다.")
 except Exception as e:
     st.error(f"오류 발생: {e}")
 
