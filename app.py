@@ -50,6 +50,15 @@ def update_sheet(date_val, mat_val, row_data):
         print(f"Update error: {e}")
         return False
 
+def clear_sheet_data():
+    try:
+        payload = {"action": "clear_sheet"}
+        response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"Clear error: {e}")
+        return False
+
 # UI 레이아웃
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -64,7 +73,7 @@ st.info("⏰ 일자: **" + current_time_str + "**")
 
 @st.dialog("🎉 저장 완료")
 def show_save_success_popup():
-    st.success("검사 결과가 실시간으로 안전하게 저장되었습니다!")
+    st.success("검사 결과가 구글 시트에 실시간으로 안전하게 저장되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
@@ -108,7 +117,7 @@ if ok:
             st.session_state["show_saved_modal"] = True
             st.rerun()
         else:
-            st.error("❌ 저장 중 오류가 발생했습니다.")
+            st.error("❌ 구글 시트 저장 중 오류가 발생했습니다.")
 
 if st.session_state.get("show_saved_modal", False):
     st.session_state["show_saved_modal"] = False
@@ -180,13 +189,12 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 모든 텍스트 필드의 폰트 굵기를 통일감 있게 정돈 (font-weight: normal)
             row_str = '<tr>' \
                       '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
                       '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; vertical-align:middle; font-weight:normal;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
                       '</tr>'
@@ -305,17 +313,27 @@ try:
                                 os.remove(f_path)
                     st.success("사진 폴더가 초기화되었습니다!")
                     st.rerun()
+
+                st.markdown("---")
+                # 💡 구글 시트 데이터 전체 초기화 버튼 추가
+                if st.button("🚨 구글 시트 전체 데이터 초기화", use_container_width=True):
+                    if clear_sheet_data():
+                        st.success("구글 시트의 모든 검사 이력이 초기화되었습니다!")
+                        st.rerun()
+                    else:
+                        st.error("❌ 시트 초기화 중 오류가 발생했습니다.")
+
             elif admin_input:
                 st.error("❌ 비밀번호가 틀렸습니다.")
     else:
-        st.info("아직 저장된 검사 이력이 없습니다.")
+        st.info("아직 구글 시트에 저장된 검사 이력이 없습니다.")
 except Exception as e:
     st.error(f"오류 발생: {e}")
 
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.5.3 (Font Weight Uniformed)" \
+    "Author : 김태현 책임기사<br>Version : v1.6.0 (Sheet Clear Feature Added)" \
     "</div>", 
     unsafe_allow_html=True
 )
