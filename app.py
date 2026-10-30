@@ -88,12 +88,13 @@ with st.form("f1", clear_on_submit=True):
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
     pack_name = st.text_input("포장재 약호", placeholder="예: ANA-TBMBM(F)E 용기(공용)")
     
-    nail = st.selectbox("손톱 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
-    tape = st.selectbox("테이프 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
+    # 💡 손톱, 테이프 양쪽에 '시험 대기 (사양 확인 중)' 추가
+    result_options = ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
     
-    # 💡 기존 깔끔한 파일 업로더로 원상복구
+    nail = st.selectbox("손톱 박리 결과", result_options)
+    tape = st.selectbox("테이프 박리 결과", result_options)
+    
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
-    
     rem = st.text_area("특이사항")
     ok = st.form_submit_button("💾 Save", type="primary")
 
@@ -167,6 +168,8 @@ try:
                 return '<span style="background-color:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px;">🔴 부적합 (FAIL)</span>'
             elif "적합" in v_str or "PASS" in v_str:
                 return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px;">🟢 적합 (PASS)</span>'
+            elif "시험 대기" in v_str or "사양 확인" in v_str:
+                return '<span style="background-color:#fef7e0; color:#b06000; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px;">🟡 시험 대기 (사양 확인 중)</span>'
             else:
                 return f'<span>{val}</span>'
 
@@ -263,12 +266,12 @@ try:
                             edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
                             edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
                             
-                            nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"]
+                            nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
                             curr_nail = str(curr_row.get("손톱박리", ""))
                             nail_default = nail_opts.index(curr_nail) if curr_nail in nail_opts else 0
                             edit_nail = st.selectbox("손톱 박리 결과 수정", nail_opts, index=nail_default)
                             
-                            tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)"]
+                            tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
                             curr_tape = str(curr_row.get("테이프박리", ""))
                             tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
                             edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
@@ -334,7 +337,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.6.3 (File Uploader Restored)" \
+    "Author : 김태현 책임기사<br>Version : v1.6.4 (Pending Status Added)" \
     "</div>", 
     unsafe_allow_html=True
 )
