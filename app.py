@@ -91,8 +91,8 @@ with st.form("f1", clear_on_submit=True):
     nail = st.selectbox("손톱 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
     tape = st.selectbox("테이프 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
     
-    # 💡 파일 업로더 대신 스마트폰 카메라 전용 입력 기능 적용
-    cam_file = st.camera_input("📸 현장 검사 사진 촬영")
+    # 💡 기존 깔끔한 파일 업로더로 원상복구
+    up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
     
     rem = st.text_area("특이사항")
     ok = st.form_submit_button("💾 Save", type="primary")
@@ -105,13 +105,13 @@ if ok:
     else:
         dt_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         fn = "none"
-        if cam_file:
+        if up_file:
             s_lot = "".join(c for c in mat_no if c.isalnum())
             t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
-            fn = f"{s_lot}_{t_str}_cam.jpg"
+            fn = f"{s_lot}_{t_str}_{up_file.name}"
             file_path = os.path.join(D, fn)
             with open(file_path, "wb") as f:
-                f.write(cam_file.getbuffer())
+                f.write(up_file.getbuffer())
 
         row_data = [dt_str, str(mat_no), str(pack_name) if pack_name.strip() else "-", nail, tape, fn, str(rem) if rem.strip() else "-"]
         
@@ -334,7 +334,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.6.2 (Camera Input Applied)" \
+    "Author : 김태현 책임기사<br>Version : v1.6.3 (File Uploader Restored)" \
     "</div>", 
     unsafe_allow_html=True
 )
