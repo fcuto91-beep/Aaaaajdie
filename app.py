@@ -12,7 +12,8 @@ st.set_page_config(page_title="Inspection", layout="centered")
 D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxZFR3sBQRIMZxBiZfamJiIvPwTI4UGrVaHkfQnMQJqFm8ZFnUJyScN-fShF2ZoyLHBw/exec"
+# 💡 형님께서 새로 발급받으신 웹 앱 URL 적용 완료
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdKZ6DM75Uhxa_BBb7EzePmIngwzJSBzc6qkip-YFuSTW6THJhbYktbZf_bmePBF18Xg/exec"
 
 if not os.path.exists(D):
     os.makedirs(D)
@@ -195,7 +196,7 @@ try:
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
-                      '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; vertical-align:middle; font-weight:normal;">' + img_td + '</td>' \
+                      '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-weight:normal; vertical-align:middle;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
                       '</tr>'
             rows_list.append(row_str)
@@ -315,7 +316,6 @@ try:
                     st.rerun()
 
                 st.markdown("---")
-                # 💡 구글 시트 데이터 전체 초기화 버튼 추가
                 if st.button("🚨 구글 시트 전체 데이터 초기화", use_container_width=True):
                     if clear_sheet_data():
                         st.success("구글 시트의 모든 검사 이력이 초기화되었습니다!")
@@ -333,7 +333,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.6.0 (Sheet Clear Feature Added)" \
+    "Author : 김태현 책임기사<br>Version : v1.6.1 (New WebApp URL Applied)" \
     "</div>", 
     unsafe_allow_html=True
 )
