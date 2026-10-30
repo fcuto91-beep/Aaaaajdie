@@ -12,7 +12,6 @@ st.set_page_config(page_title="Inspection", layout="centered")
 D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 형님께서 새로 발급받으신 웹 앱 URL 적용 완료
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdKZ6DM75Uhxa_BBb7EzePmIngwzJSBzc6qkip-YFuSTW6THJhbYktbZf_bmePBF18Xg/exec"
 
 if not os.path.exists(D):
@@ -92,7 +91,9 @@ with st.form("f1", clear_on_submit=True):
     nail = st.selectbox("손톱 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
     tape = st.selectbox("테이프 박리 결과", ["선택해주세요", "🟢 적합 (PASS)", "🔴 부적합 (FAIL)"])
     
-    up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
+    # 💡 파일 업로더 대신 스마트폰 카메라 전용 입력 기능 적용
+    cam_file = st.camera_input("📸 현장 검사 사진 촬영")
+    
     rem = st.text_area("특이사항")
     ok = st.form_submit_button("💾 Save", type="primary")
 
@@ -104,13 +105,13 @@ if ok:
     else:
         dt_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         fn = "none"
-        if up_file:
+        if cam_file:
             s_lot = "".join(c for c in mat_no if c.isalnum())
             t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
-            fn = f"{s_lot}_{t_str}_{up_file.name}"
+            fn = f"{s_lot}_{t_str}_cam.jpg"
             file_path = os.path.join(D, fn)
             with open(file_path, "wb") as f:
-                f.write(up_file.getbuffer())
+                f.write(cam_file.getbuffer())
 
         row_data = [dt_str, str(mat_no), str(pack_name) if pack_name.strip() else "-", nail, tape, fn, str(rem) if rem.strip() else "-"]
         
@@ -196,7 +197,7 @@ try:
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
-                      '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-weight:normal; vertical-align:middle;">' + img_td + '</td>' \
+                      '<td style="padding:8px 6px; text-align:center; width:70px; font-weight:normal; vertical-align:middle;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
                       '</tr>'
             rows_list.append(row_str)
@@ -333,7 +334,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.6.1 (New WebApp URL Applied)" \
+    "Author : 김태현 책임기사<br>Version : v1.6.2 (Camera Input Applied)" \
     "</div>", 
     unsafe_allow_html=True
 )
