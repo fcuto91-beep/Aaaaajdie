@@ -30,7 +30,7 @@ def load_data():
     except Exception as e:
         print(f"Load error: {e}")
     
-    return pd.DataFrame(columns=["입고일자", "검사일자", "포장재번호", "포장재약호", "손톱박리", "테이프박리", "사진파일명", "특이사항"])
+    return pd.DataFrame(columns=["입고일자", "검사일자", "포장재번호", "포장재약호", "사진파일명", "손톱박리", "테이프박리", "특이사항"])
 
 def append_to_sheet(row_data):
     try:
@@ -116,15 +116,15 @@ if ok:
             with open(file_path, "wb") as f:
                 f.write(up_file.getbuffer())
 
-        # 💡 데이터 저장 순서 정돈: [입고일자, 검사일자, 포장재번호, 약호, 손톱, 테이프, 파일명, 특이사항]
+        # 💡 데이터 저장 순서: [입고일자, 검사일자, 포장재번호, 약호, 사진명, 손톱, 테이프, 특이사항]
         row_data = [
             in_date_str, 
             dt_str, 
             str(mat_no), 
             str(pack_name) if pack_name.strip() else "-", 
+            fn,
             nail, 
             tape, 
-            fn, 
             str(rem) if rem.strip() else "-"
         ]
         
@@ -187,7 +187,6 @@ try:
 
         rows_list = []
         for idx, row in df_f.iterrows():
-            # 💡 시트 컬럼명과 정확하게 연동
             raw_in = str(row.get("입고일자", "-"))
             in_val = raw_in[:10] if len(raw_in) >= 10 else raw_in
             if in_val == "nan" or not in_val.strip():
@@ -215,9 +214,10 @@ try:
             else:
                 img_td = '-'
 
+            # 💡 폰트 사이즈 통일 (12px로 맞춤)
             row_str = '<tr>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>' \
-                      '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
+                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
                       '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">' + img_td + '</td>' \
@@ -233,7 +233,7 @@ try:
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">입고 일자</th>' \
-                     '<th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">검사 일자</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
                      '<th style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">미리보기</th>' \
@@ -327,9 +327,9 @@ try:
                                     str(curr_row.get("검사일자", datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S"))),
                                     str(edit_mat_no),
                                     str(edit_pack_name) if edit_pack_name.strip() else "-",
+                                    new_fn,
                                     edit_nail,
                                     edit_tape,
-                                    new_fn,
                                     str(edit_rem) if edit_rem.strip() else "-"
                                 ]
                                 
@@ -369,7 +369,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.6.9 (Inspection Date Fixed)" \
+    "Author : 김태현 책임기사<br>Version : v1.7.0 (Columns & Font Fixed)" \
     "</div>", 
     unsafe_allow_html=True
 )
