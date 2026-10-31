@@ -203,7 +203,6 @@ try:
             t_val = get_badge(row.get("테이프박리", "-"))
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
-            # 💡 표 안의 항목은 돋보기 이모지(🔍)로 렌더링
             fname = str(row.get("사진파일명", "none"))
             if fname != "none":
                 ip = os.path.join(D, fname)
@@ -227,7 +226,6 @@ try:
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
-        # 💡 헤더 타이틀은 '보기'로 유지
         table_code = '<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
                      '<table style="width:100%; border-collapse:collapse;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
@@ -278,7 +276,8 @@ try:
                     filtered_df = df
                 
                 if not filtered_df.empty:
-                    target_options = [f"[{i}] 입고일: {row.get('입고일자','')} | 번호: {row.get('포장재번호','')}" for i, row in filtered_df.iterrows()]
+                    # 💡 수정 선택 항목 표시를 [포장재 번호]와 [포장재 약호] 위주로 깔끔하게 변경
+                    target_options = [f"[{i}] 번호: {row.get('포장재번호','')} | 약호: {row.get('포장재약호','')}" for i, row in filtered_df.iterrows()]
                     selected_target_str = st.selectbox("수정할 검사 내역 선택", target_options)
                     
                     if selected_target_str:
@@ -369,7 +368,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.7.7 (Table Cells Changed to Magnifier Emoji)" \
+    "Author : 김태현 책임기사<br>Version : v1.7.8 (Clean Edit Selectbox)" \
     "</div>", 
     unsafe_allow_html=True
 )
