@@ -127,7 +127,7 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 사진 크게 보기 독립 모달 다이얼로그 함수
+# 💡 사진 크게 보기 독립 모달 다이얼로그 함수 (st.stop으로 뒤 화면 렌더링 완전 차단)
 @st.dialog("🔍 검사 사진 크게 보기")
 def show_image_popup(img_path, m_name, p_name, date_str):
     st.markdown(f"📦 **포장재 번호:** {m_name}")
@@ -137,6 +137,7 @@ def show_image_popup(img_path, m_name, p_name, date_str):
     if st.button("닫기", type="primary", use_container_width=True):
         st.query_params.clear()
         st.rerun()
+    st.stop()  # 팝업 외의 뒷 배경 내용은 아예 그리지 않고 중단
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
@@ -213,7 +214,7 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 돋보기 클릭 시 독립 모달창 호출
+        # 💡 돋보기 클릭 시 독립 모달창 호출 (뒤의 표 렌더링 전에 가로챔)
         if "pop_idx" in st.query_params:
             try:
                 p_idx = int(st.query_params["pop_idx"])
@@ -453,7 +454,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.36 (Syntax Error Resolved & Clean Dialog Popup)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.37 (Isolated Dialog Popup Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
