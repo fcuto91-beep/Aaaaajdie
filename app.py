@@ -227,11 +227,11 @@ try:
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
-                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🔴 부적합 (FAIL)</span>'
+                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 6px; border-radius:10px; font-size:10px; white-space:nowrap;">🔴 부적합 (FAIL)</span>'
             elif "적합" in v_str or "PASS" in v_str:
-                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🟢 적합 (PASS)</span>'
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 6px; border-radius:10px; font-size:10px; white-space:nowrap;">🟢 적합 (PASS)</span>'
             elif "시험 대기" in v_str or "사양 확인" in v_str:
-                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🟡 시험 대기 (사양 확인 중)</span>'
+                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 6px; border-radius:10px; font-size:10px; white-space:nowrap;">🟡 시험 대기 (사양 확인 중)</span>'
             else:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
@@ -262,20 +262,19 @@ try:
                 img_td = '-'
 
             row_str = f"""
-                <tr>
-                    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
-                    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
-                    <td style="padding:8px 10px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
-                    <td style="padding:8px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
-                    <td style="padding:8px 8px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
-                    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
-                    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
-                    <td style="padding:8px 12px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
-                </tr>
-            """
+<tr>
+    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
+    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
+    <td style="padding:8px 10px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
+    <td style="padding:8px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
+    <td style="padding:8px 8px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
+    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
+    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
+    <td style="padding:8px 12px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
+</tr>"""
             rows_list.append(row_str)
 
-        all_rows = "".join(rows_list)
+        all_rows = "\n".join(rows_list)
         
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -303,13 +302,14 @@ try:
             </tr>
         </thead>
         <tbody>
-            {all_rows}
+{all_rows}
         </tbody>
     </table>
 </div>
-        """.strip()
+"""
 
-        st.markdown(table_code, unsafe_allow_html=True)
+        # 💡 st.components.v1.html을 사용하여 코드 노출을 원천 방지하고 돋보기 링크 및 표 양식을 완벽히 구현
+        st.components.v1.html(table_code, height=490, scrolling=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -450,7 +450,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.32 (Direct Magnifier Click Link Restored)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.33 (HTML Component Fix & Direct Magnifier Pop)" \
     "</div>", 
     unsafe_allow_html=True
 )
