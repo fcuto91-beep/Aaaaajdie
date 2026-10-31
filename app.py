@@ -90,10 +90,10 @@ def show_edit_success_popup():
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     
-    # 💡 입고 일자 달력 선택 위젯 복구
     kst_today = get_kst_now().date()
     in_date_val = st.date_input("포장재 입고 일자", value=kst_today)
-    in_date_str = in_date_val.strftime("%Y-%m-%d")
+    # 💡 ISO 형식의 문자열로 안전하게 변환하여 타임존 역산 원천 차단
+    in_date_str = in_date_val.isoformat()
     
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
     pack_name = st.text_input("포장재 약호", placeholder="예: ANA-TBMBM(F)E 용기(공용)")
@@ -113,8 +113,8 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
-        # 💡 검사 일자는 KST 오늘 날짜로 정확히 생성
-        dt_str = get_kst_now().strftime("%Y-%m-%d")
+        # 💡 검사 일자도 KST 기준 오늘 날짜를 ISO 문자열로 안전하게 생성
+        dt_str = get_kst_now().date().isoformat()
         fn = "none"
         if up_file:
             s_lot = "".join(c for c in mat_no if c.isalnum())
@@ -227,9 +227,9 @@ try:
                        '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>'
                        '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>'
                        '<td style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">' + img_td + '</td>'
-                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>'
-                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>'
-                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>'
+                       '<td style="padding:8px 6px; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>'
+                       '<td style="padding:8px 6px; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>'
+                       '<td style="padding:8px 6px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>'
                        '</tr>')
             rows_list.append(row_str)
 
@@ -297,14 +297,14 @@ try:
                             except:
                                 default_in_date = kst_today
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
-                            edit_in_date_str = edit_in_date_val.strftime("%Y-%m-%d")
+                            edit_in_date_str = edit_in_date_val.isoformat()
                             
                             try:
                                 default_inspect_date = datetime.strptime(str(curr_row.get("검사일자", ""))[:10], "%Y-%m-%d").date()
                             except:
                                 default_inspect_date = kst_today
                             edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
-                            edit_inspect_date_str = edit_inspect_date_val.strftime("%Y-%m-%d")
+                            edit_inspect_date_str = edit_inspect_date_val.isoformat()
                             
                             edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
                             edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
@@ -381,7 +381,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.9.1 (Date Input Restored & Flexible)" \
+    "Author : 김태현 책임기사<br>Version : v1.9.2 (ISO Date Format Timezone Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
