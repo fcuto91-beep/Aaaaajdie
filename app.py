@@ -8,7 +8,7 @@ import requests
 import json
 import html
 
-st.set_page_config(page_title="Inspection", layout="centered")
+st.set_page_config(page_title="Inspection", layout="wide")
 
 D = "inspection_images"
 LOGO_PATH = "logo.png"
@@ -236,7 +236,6 @@ try:
 
             m_val = html.escape(str(row.get("포장재번호", "-")))
             
-            # 💡 구글 시트의 원본 문자열을 온전히 가져와 HTML 이스케이프 후 공백이 끊기지 않도록 처리
             raw_p_name = str(row.get("포장재약호", "-"))
             if pd.isna(row.get("포장재약호")) or raw_p_name.lower() in ["nan", "none", ""]:
                 raw_p_name = "-"
@@ -256,33 +255,43 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 약호 셀의 min-width를 350px로 넉넉히 주어 한 줄로 길게 출력 보장
+            # 💡 약호 셀에 명확한 너비와 white-space 지정
             row_str = ('<tr>'
-                       '<td style="padding:6px 4px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
-                       '<td style="padding:6px 4px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
-                       '<td style="padding:6px 6px; width:85px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
-                       '<td style="padding:6px 10px; min-width:350px; white-space:nowrap; font-size:11px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
-                       '<td style="padding:6px 4px; text-align:center; width:35px; white-space:nowrap; font-size:11px;">' + img_td + '</td>'
-                       '<td style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
-                       '<td style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
-                       '<td style="padding:6px 8px; min-width:160px; white-space:nowrap; font-size:11px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>'
+                       '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
+                       '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
+                       '<td style="padding:6px 8px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
+                       '<td style="padding:6px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; overflow:hidden; text-overflow:ellipsis;">' + p_val + '</td>'
+                       '<td style="padding:6px 6px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px;">' + img_td + '</td>'
+                       '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
+                       '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
+                       '<td style="padding:6px 10px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>'
                        '</tr>')
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
-        # 💡 테이블 전체 최소 너비를 950px로 넓혀서 가로 스크롤로 전체 내용 확인 가능하게 조치
-        table_code = '<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
-                     '<table style="width:100%; min-width:950px; border-collapse:collapse;">' \
+        # 💡 table-layout: fixed를 적용하여 각 컬럼의 width 속성이 절대 찌그러지지 않고 그대로 유지되도록 강제 고정
+        table_code = '<div style="overflow-x:auto; max-height:450px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
+                     '<table style="width:1150px; table-layout:fixed; border-collapse:collapse;">' \
+                     '<colgroup>' \
+                     '<col style="width:90px;">' \
+                     '<col style="width:90px;">' \
+                     '<col style="width:100px;">' \
+                     '<col style="width:450px;">' \
+                     '<col style="width:45px;">' \
+                     '<col style="width:110px;">' \
+                     '<col style="width:110px;">' \
+                     '<col style="width:200px;">' \
+                     '</colgroup>' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
-                     '<th style="padding:6px 4px; width:75px; white-space:nowrap; font-size:11px; text-align:center;">입고 일자</th>' \
-                     '<th style="padding:6px 4px; width:75px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
-                     '<th style="padding:6px 6px; width:85px; white-space:nowrap; font-size:11px; text-align:center;">포장재 번호</th>' \
-                     '<th style="padding:6px 10px; min-width:350px; white-space:nowrap; font-size:11px; text-align:center;">포장재 약호</th>' \
-                     '<th style="padding:6px 4px; text-align:center; width:35px; white-space:nowrap; font-size:11px;">보기</th>' \
-                     '<th style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">손톱</th>' \
-                     '<th style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">테이프</th>' \
-                     '<th style="padding:6px 8px; min-width:160px; white-space:nowrap; font-size:11px; text-align:center;">특이사항</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">입고 일자</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">검사 일자</th>' \
+                     '<th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 번호</th>' \
+                     '<th style="padding:8px 12px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 약호</th>' \
+                     '<th style="padding:8px 6px; text-align:center; white-space:nowrap; font-size:11.5px;">보기</th>' \
+                     '<th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">손톱</th>' \
+                     '<th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">테이프</th>' \
+                     '<th style="padding:8px 10px; white-space:nowrap; font-size:11.5px; text-align:center;">특이사항</th>' \
                      '</tr>' \
                      '</thead>' \
                      '<tbody>' + all_rows + '</tbody>' \
@@ -430,7 +439,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.13 (Sheet Data Direct Sync & Full Display)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.15 (Table Layout Fixed & Colgroup Force)" \
     "</div>", 
     unsafe_allow_html=True
 )
