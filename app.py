@@ -30,6 +30,10 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 df = pd.DataFrame(data)
+                # 💡 날짜 데이터가 타임존 변환으로 인해 하루 전으로 밀리는 현상을 방지하기 위해 강제 문자열 변환
+                for col in ["입고일자", "검사일자"]:
+                    if col in df.columns:
+                        df[col] = df[col].astype(str).apply(lambda x: x[:10] if len(x) >= 10 else x)
                 return df
     except Exception as e:
         print(f"Load error: {e}")
@@ -92,7 +96,6 @@ with st.form("f1", clear_on_submit=True):
     
     kst_today = get_kst_now().date()
     in_date_val = st.date_input("포장재 입고 일자", value=kst_today)
-    # 💡 ISO 형식의 문자열로 안전하게 변환하여 타임존 역산 원천 차단
     in_date_str = in_date_val.isoformat()
     
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
@@ -113,7 +116,6 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
-        # 💡 검사 일자도 KST 기준 오늘 날짜를 ISO 문자열로 안전하게 생성
         dt_str = get_kst_now().date().isoformat()
         fn = "none"
         if up_file:
@@ -194,14 +196,12 @@ try:
 
         rows_list = []
         for idx, row in df_f.iterrows():
-            raw_in = str(row.get("입고일자", "-"))
-            in_val = raw_in[:10] if len(raw_in) >= 10 else raw_in
-            if in_val == "nan" or not in_val.strip():
+            in_val = str(row.get("입고일자", "-"))[:10]
+            if not in_val or in_val == "nan":
                 in_val = "-"
 
-            raw_d = str(row.get("검사일자", "-"))
-            d_val = raw_d[:10] if len(raw_d) >= 10 else raw_d
-            if d_val == "nan" or not d_val.strip():
+            d_val = str(row.get("검사일자", "-"))[:10]
+            if not d_val or d_val == "nan":
                 d_val = "-"
 
             m_val = str(row.get("포장재번호", "-"))
@@ -381,7 +381,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.9.2 (ISO Date Format Timezone Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.9.3 (Pandas Date Parsing Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
