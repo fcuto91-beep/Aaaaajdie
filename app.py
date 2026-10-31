@@ -26,13 +26,11 @@ def get_kst_now():
         return target_min
     return actual_kst
 
-# 💡 영문 날짜(Sat Oct 31 등)를 완벽하게 감지하여 YYYY-MM-DD로 바꿔주는 초강력 함수
 def format_date_str(val):
     if not val or str(val).lower() in ["nan", "nat", "none", "", "-"]:
         return "-"
     v_str = str(val).strip()
     
-    # 영문 월 이름이 포함된 경우 (예: Sat Oct 31) 직접 파싱
     months = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", 
               "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
     
@@ -385,7 +383,8 @@ try:
                     st.info("검색 결과가 없습니다.")
 
                 st.markdown("---")
-                if st.button("🗑️ 사진 폴더 비우기", use_container_width=True):
+                # 💡 사진 폴더 비우기 버튼 빨간색(Danger) 적용
+                if st.button("🗑️ 사진 폴더 비우기", type="secondary", use_container_width=True):
                     if os.path.exists(D):
                         for f_name in os.listdir(D):
                             f_path = os.path.join(D, f_name)
@@ -395,6 +394,20 @@ try:
                     st.rerun()
 
                 st.markdown("---")
+                # 💡 전체 데이터 초기화 버튼 빨간색(Danger) 적용 위해 HTML 스타일 강제 주입
+                st.markdown("""
+                    <style>
+                    div.stButton > button[kind="secondary"] {
+                        background-color: #ff4b4b;
+                        color: white;
+                    }
+                    div.stButton > button[kind="secondary"]:hover {
+                        background-color: #ff2121;
+                        color: white;
+                    }
+                    </style>
+                """, unsafe_allow_html=True)
+
                 if st.button("🚨 전체 데이터 초기화", use_container_width=True):
                     if clear_sheet_data():
                         st.success("모든 검사 이력이 초기화되었습니다!")
@@ -412,7 +425,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.1 (English Date String Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.2 (Danger Buttons Styled)" \
     "</div>", 
     unsafe_allow_html=True
 )
