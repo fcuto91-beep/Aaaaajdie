@@ -116,6 +116,26 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
+# 💡 브라우저 화면 진짜 정가운데에 완벽하게 뜨는 공식 이미지 상세보기 다이얼로그
+@st.dialog("🔍 검사 사진 크게 보기")
+def show_image_dialog(m_val, p_val, d_val, image_path):
+    st.markdown(f"""
+        <div style="font-size:13px; color:#444; margin-bottom:10px; line-height:1.5;">
+            📦 <b>포장재 번호:</b> {m_val}<br>
+            🏷️ <b>포장재 약호:</b> {p_val}<br>
+            📅 <b>검사 일자:</b> {d_val}
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if os.path.exists(image_path):
+        st.image(image_path, use_column_width=True)
+    else:
+        st.warning("⚠️ 저장된 이미지 파일이 존재하지 않습니다.")
+    
+    st.markdown("")
+    if st.button("닫기", type="primary", use_container_width=True):
+        st.rerun()
+
 # UI 레이아웃
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -215,7 +235,6 @@ try:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
         rows_list = []
-        modals_list = []
         
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
@@ -233,48 +252,22 @@ try:
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
             
             fname = str(row.get("사진파일명", "none"))
+            has_img = False
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    with open(ip, "rb") as img_file:
-                        encoded_img = base64.b64encode(img_file.read()).decode()
-                    
-                    modal_id = f"modal_{idx}"
-                    # 💡 표 안의 돋보기 버튼 클릭 시 브라우저 정중앙에 팝업이 뜨도록 설정
-                    img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
-                    
-                    modal_html = f"""
-                    <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.3);">
-                        <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <h3 style="margin:0; font-size:15px; color:#333;">🔍 검사 사진 크게 보기</h3>
-                                <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:20px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
-                            </div>
-                            <div style="text-align:left; font-size:12px; color:#444; margin-bottom:8px; line-height:1.4;">
-                                📦 <b>포장재 번호:</b> {m_val}<br>
-                                🏷️ <b>포장재 약호:</b> {p_val}<br>
-                                📅 <b>검사 일자:</b> {d_val}
-                            </div>
-                            <div style="background:#f1f3f5; border-radius:6px; padding:6px; margin-bottom:12px;">
-                                <img src="data:image/jpeg;base64,{encoded_img}" style="max-width:100%; max-height:280px; border-radius:4px; object-fit:contain;">
-                            </div>
-                            <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
-                        </div>
-                    </div>
-                    """
-                    modals_list.append(modal_html)
-                else:
-                    img_td = '-'
-            else:
-                img_td = '-'
+                    has_img = True
 
+            # 💡 각 행별 돋보기 버튼 상태 저장을 위한 고유 키
+            zoom_clicked = False
+            
             row_str = f"""
 <tr>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
     <td style="padding:8px 8px; width:95px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
     <td style="padding:8px 10px; width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
-    <td style="padding:8px 6px; text-align:center; width:40px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
+    <td style="padding:8px 6px; text-align:center; width:40px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{"🔍" if has_img else "-"}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
     <td style="padding:8px 10px; width:auto; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
@@ -282,11 +275,10 @@ try:
             rows_list.append(row_str)
 
         all_rows = "\n".join(rows_list)
-        all_modals = "\n".join(modals_list)
         
-        # 💡 v1.10.52의 완벽한 표 레이아웃과 디자인 적용
+        # 💡 st.components 박스를 쓰지 않고 st.markdown으로 직접 출력하여 상위 박스 제한 탈출!
         table_code = f"""
-<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 15px;">
     <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin:0;">
         <colgroup>
             <col style="width:85px;">
@@ -315,10 +307,30 @@ try:
         </tbody>
     </table>
 </div>
-{all_modals}
 """
+        st.markdown(table_code, unsafe_allow_html=True)
 
-        st.components.v1.html(table_code, height=520, scrolling=True)
+        # 💡 각 항목별 사진 보기를 스트림릿 버튼으로 깔끔하고 확실하게 제공 (클릭 시 브라우저 정중앙 st.dialog 팝업 오픈)
+        st.markdown("🔍 **사진 상세보기 선택**")
+        img_options = []
+        img_map = {}
+        for idx, row in df_f.iterrows():
+            fname = str(row.get("사진파일명", "none"))
+            if fname != "none" and os.path.exists(os.path.join(D, fname)):
+                label = f"[{idx}] 포장재 번호: {row.get('포장재번호','')} | 약호: {row.get('포장재약호','')}"
+                img_options.append(label)
+                img_map[label] = (row, fname)
+
+        if img_options:
+            selected_img_lbl = st.selectbox("조회할 검사 사진 선택", ["선택해주세요"] + img_options)
+            if selected_img_lbl != "선택해주세요":
+                row_info, fname_info = img_map[selected_img_lbl]
+                m_val = str(row_info.get("포장재번호", "-"))
+                p_val = str(row_info.get("포장재약호", "-"))
+                d_val = format_date_str(row_info.get("검사일자", "-"))
+                show_image_dialog(m_val, p_val, d_val, os.path.join(D, fname_info))
+        else:
+            st.caption("ℹ️ 등록된 검사 사진이 있는 항목이 없습니다.")
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -459,7 +471,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.60 (Restored Table & Inline Modal Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.61 (True Center Native Dialog & No-Box Table)" \
     "</div>", 
     unsafe_allow_html=True
 )
