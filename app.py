@@ -103,7 +103,7 @@ def clear_sheet_data():
         print(f"Clear error: {e}")
         return False
 
-# 💡 새 탭에서 사진만 단독으로 띄워주는 라우터 파트
+# 💡 독립 팝업창 전용 라우터 파트
 if "view_img" in st.query_params:
     try:
         img_name = st.query_params["view_img"]
@@ -113,11 +113,13 @@ if "view_img" in st.query_params:
         
         img_full_path = os.path.join(D, img_name)
         if os.path.exists(img_full_path):
-            st.markdown(f"## 🔍 검사 사진 단독 보기")
+            st.markdown(f"## 🔍 검사 사진 크게 보기")
             st.markdown(f"📦 **포장재 번호:** {m_no}")
             st.markdown(f"🏷️ **포장재 약호:** {p_name}")
             st.caption(f"📅 검사 일자: {d_str}")
             st.image(img_full_path, use_column_width=True)
+            if st.button("창 닫기", type="primary", use_container_width=True):
+                st.markdown("<script>window.close();</script>", unsafe_allow_html=True)
             st.stop()
     except Exception as e:
         st.error(f"이미지 로드 오류: {e}")
@@ -253,10 +255,11 @@ try:
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    # 💡 target="_blank"를 사용하여 클릭 시 새 탭에서 사진만 단독으로 열림
-                    safe_m = urllib_quote = str(row.get("포장재번호", "-"))
+                    safe_m = str(row.get("포장재번호", "-"))
                     safe_p = str(row.get("포장재약호", "-"))
-                    img_td = f'<a href="?view_img={fname}&m_no={safe_m}&p_name={safe_p}&d_str={d_val}" target="_blank" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
+                    target_url = f"/?view_img={fname}&m_no={safe_m}&p_name={safe_p}&d_str={d_val}"
+                    # 💡 자바스크립트 window.open을 사용하여 주소창 없는 깔끔한 독립 팝업창으로 띄움
+                    img_td = f'''<a href="#" onclick="window.open('{target_url}', 'popupWindow', 'width=650,height=800,scrollbars=yes'); return false;" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'''
                 else:
                     img_td = '-'
             else:
@@ -450,7 +453,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.38 (New Tab Image Viewer Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.39 (JavaScript Popup Window Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
