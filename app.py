@@ -251,7 +251,6 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 약호 칸에 min-width를 주어 테이블이 가로로 늘어나며 한 줄로 다 표현되도록 설정
             row_str = ('<tr>'
                        '<td style="padding:6px 4px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
                        '<td style="padding:6px 4px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
@@ -265,7 +264,6 @@ try:
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
-        # 💡 테이블 전체에 min-width: 900px를 주어 가로 스크롤과 함께 셀 공간 확보
         table_code = '<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
                      '<table style="width:100%; min-width:900px; border-collapse:collapse;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
@@ -339,6 +337,7 @@ try:
                             edit_inspect_date_str = edit_inspect_date_val.isoformat()
                             
                             edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
+                            # 💡 기존에 짤려서 들어간 데이터 대신 전체 풀네임을 입력할 수 있도록 기본값 제공 및 수정 칸 확장
                             edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
                             
                             nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
@@ -425,7 +424,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.10 (Table Min-Width & Single Line Packed Name)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.11 (Edit Form Full Name Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
