@@ -203,11 +203,11 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 날짜순 정렬 후 최신 날짜가 무조건 맨 위로 오도록 강제 오름차순 정렬 후 역순 뒤집기 적용
+        # 💡 입고일자 기준 최신순 정렬 완벽 적용 (오름차순 정렬 후 물리적 역순 뒤집기)
         try:
             df_f["_temp_date"] = pd.to_datetime(df_f["입고일자"], errors='coerce')
             df_f = df_f.sort_values(by="_temp_date", ascending=True).drop(columns=["_temp_date"]).reset_index(drop=True)
-            df_f = df_f.iloc[::-1].reset_index(drop=True) # 물리적 역순 뒤집기
+            df_f = df_f.iloc[::-1].reset_index(drop=True)
         except Exception:
             pass
 
@@ -275,6 +275,7 @@ try:
             else:
                 img_td = '-'
 
+            # 💡 v1.10.52 원본 HTML 표 서식 완벽 적용
             row_str = f"""
 <tr>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
@@ -291,6 +292,7 @@ try:
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
+        # 💡 깔끔한 테두리와 고정 헤더가 적용된 HTML 테이블 구조
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin:0;">
@@ -465,7 +467,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.70 (Physical Reverse Sort Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.71 (Restored Table CSS & Correct Descending Sort)" \
     "</div>", 
     unsafe_allow_html=True
 )
