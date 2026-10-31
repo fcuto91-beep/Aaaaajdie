@@ -250,16 +250,16 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 포장재 약호 칸에 white-space: normal 및 word-break 적용하여 풀네임이 길어도 잘리지 않고 줄바꿈되도록 수정
+            # 💡 포장재 약호 칸에 white-space: normal 적용 완료
             row_str = ('<tr>'
                        '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>'
                        '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>'
                        '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>'
-                       '<td style="padding:8px 10px; min-width:210px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; word-break:break-all; white-space:normal;">' + p_val + '</td>'
+                       '<td style="padding:8px 10px; min-width:250px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; word-break:break-all; white-space:normal;">' + p_val + '</td>'
                        '<td style="padding:8px 4px; text-align:center; width:40px; white-space:nowrap; font-size:12px;">' + img_td + '</td>'
                        '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>'
                        '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>'
-                       '<td style="padding:8px 8px; min-width:130px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; word-break:break-all; white-space:normal;">' + r_val + '</td>'
+                       '<td style="padding:8px 8px; min-width:150px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; word-break:break-all; white-space:normal;">' + r_val + '</td>'
                        '</tr>')
             rows_list.append(row_str)
 
@@ -271,11 +271,11 @@ try:
                      '<th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">입고 일자</th>' \
                      '<th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
-                     '<th style="padding:8px 10px; min-width:210px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
+                     '<th style="padding:8px 10px; min-width:250px; white-space:normal; font-size:12px; text-align:center;">포장재 약호</th>' \
                      '<th style="padding:8px 4px; text-align:center; width:40px; white-space:nowrap; font-size:12px;">보기</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
-                     '<th style="padding:8px 8px; min-width:130px; white-space:nowrap; font-size:12px; text-align:center;">특이사항</th>' \
+                     '<th style="padding:8px 8px; min-width:150px; white-space:normal; font-size:12px; text-align:center;">특이사항</th>' \
                      '</tr>' \
                      '</thead>' \
                      '<tbody>' + all_rows + '</tbody>' \
@@ -423,7 +423,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.4 (Table Column Width & Wrap Fixed)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.5 (Packing Name Wrap Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
