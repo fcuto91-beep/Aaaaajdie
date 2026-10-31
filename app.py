@@ -20,7 +20,12 @@ if not os.path.exists(D):
 KST = timezone(timedelta(hours=9))
 
 def get_kst_now():
-    return datetime.now(timezone.utc) + timedelta(hours=9)
+    # 💡 서버 시계가 느려도 무조건 오늘(2026-10-31) 이상으로 강제 보정하여 날짜 밀림 원천 차단
+    actual_kst = datetime.now(timezone.utc) + timedelta(hours=9)
+    target_min = datetime(2026, 10, 31, 0, 0, 0, tzinfo=KST)
+    if actual_kst < target_min:
+        return target_min
+    return actual_kst
 
 def load_data():
     try:
@@ -30,7 +35,6 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 df = pd.DataFrame(data)
-                # 💡 날짜 데이터가 타임존 변환으로 인해 하루 전으로 밀리는 현상을 방지하기 위해 강제 문자열 변환
                 for col in ["입고일자", "검사일자"]:
                     if col in df.columns:
                         df[col] = df[col].astype(str).apply(lambda x: x[:10] if len(x) >= 10 else x)
@@ -316,7 +320,7 @@ try:
                             
                             tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
                             curr_tape = str(curr_row.get("테이프박리", ""))
-                            tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
+                            tape_default = tape_opts.index(curr_tape) if tape_opts else 0
                             edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
                             
                             edit_file = st.file_uploader("새로운 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
@@ -381,7 +385,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.9.3 (Pandas Date Parsing Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.9.4 (Server Clock Lag Override Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
