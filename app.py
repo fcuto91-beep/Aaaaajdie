@@ -26,17 +26,39 @@ def get_kst_now():
         return target_min
     return actual_kst
 
-# 💡 영문 날짜(Sat Oct 31 등)나 어떤 형태의 날짜든 무조건 YYYY-MM-DD로 완벽 변환하는 초강력 함수
+# 💡 영문 날짜(Sat Oct 31 등)를 완벽하게 감지하여 YYYY-MM-DD로 바꿔주는 초강력 함수
 def format_date_str(val):
     if not val or str(val).lower() in ["nan", "nat", "none", "", "-"]:
         return "-"
     v_str = str(val).strip()
+    
+    # 영문 월 이름이 포함된 경우 (예: Sat Oct 31) 직접 파싱
+    months = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", 
+              "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
+    
+    try:
+        parts = v_str.replace(",", "").split()
+        m_num, d_num, y_num = None, None, "2026"
+        for p in parts:
+            if p in months:
+                m_num = months[p]
+            elif p.isdigit():
+                if len(p) <= 2:
+                    d_num = p.zfill(2)
+                elif len(p) == 4:
+                    y_num = p
+        if m_num and d_num:
+            return f"{y_num}-{m_num}-{d_num}"
+    except:
+        pass
+
     try:
         parsed_dt = pd.to_datetime(v_str, errors='coerce')
         if pd.notna(parsed_dt):
             return parsed_dt.strftime("%Y-%m-%d")
     except:
         pass
+        
     return v_str[:10] if len(v_str) >= 10 else v_str
 
 def load_data():
@@ -341,7 +363,7 @@ try:
                                     new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
                                     file_path = os.path.join(D, new_fn)
                                     with open(file_path, "wb") as f:
-                                        f.write(edit_file.getbuffer())
+                                        f.write(up_file.getbuffer())
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
@@ -390,7 +412,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.0 (Robust Date Formatting Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.1 (English Date String Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
