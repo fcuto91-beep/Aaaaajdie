@@ -115,39 +115,45 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 팝업 모드 체크 및 처리 (뒤에 메인 화면이 절대 보이지 않게 단독 렌더링)
-if "pop_idx" in st.query_params:
+# 💡 순수 팝업 창 모드 (별도 창으로 사진과 정보만 깔끔하게 출력)
+if "view_img" in st.query_params:
     try:
-        temp_df = load_data()
-        p_idx = int(st.query_params["pop_idx"])
-        if 0 <= p_idx < len(temp_df):
-            p_row = temp_df.iloc[p_idx]
-            p_fname = str(p_row.get("사진파일명", "none"))
-            if p_fname != "none":
-                p_ip = os.path.join(D, p_fname)
-                if os.path.exists(p_ip):
-                    raw_dt = str(p_row.get("검사일자", "-"))
-                    
-                    # 팝업 전용 깔끔한 중앙 카드 컨테이너
-                    _, center_col, _ = st.columns([1, 2, 1])
-                    with center_col:
-                        st.markdown("<div style='background-color:white; padding:25px; border-radius:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border:1px solid #ddd;'>", unsafe_allow_html=True)
-                        st.markdown("### 🔍 검사 사진 크게 보기")
-                        st.markdown(f"📦 **포장재 번호:** {str(p_row.get('포장재번호', '-'))}")
-                        st.markdown(f"🏷️ **포장재 약호:** {str(p_row.get('포장재약호', '-'))}")
-                        st.caption(f"📅 검사 일자: {raw_dt[:10] if len(raw_dt) >= 10 else raw_dt}")
-                        st.image(p_ip, use_column_width=True)
-                        
-                        if st.button("❌ 닫기", type="primary", use_container_width=True):
-                            st.query_params.clear()
-                            st.rerun()
-                        st.markdown("</div>", unsafe_allow_html=True)
-                    st.stop()  # 뒤에 있는 메인 화면 코드가 절대 실행되지 않도록 여기서 완전 차단!
-    except:
-        st.query_params.clear()
-        st.rerun()
+        img_name = st.query_params["view_img"]
+        m_no = st.query_params.get("m_no", "-")
+        p_name = st.query_params.get("p_name", "-")
+        d_str = st.query_params.get("d_str", "-")
+        
+        st.markdown("""
+            <style>
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
+            .block-container {
+                padding-top: 1rem !important;
+                padding-bottom: 1rem !important;
+                max-width: 600px !important;
+            }
+            body { background-color: #f8f9fa; }
+            </style>
+        """, unsafe_allow_html=True)
 
-# 평소 메인 화면 레이아웃
+        img_full_path = os.path.join(D, img_name)
+        if os.path.exists(img_full_path):
+            st.markdown(f"### 🔍 검사 사진 크게 보기")
+            st.markdown(f"📦 **포장재 번호:** {m_no}")
+            st.markdown(f"🏷️ **포장재 약호:** {p_name}")
+            st.caption(f"📅 검사 일자: {d_str}")
+            st.image(img_full_path, use_column_width=True)
+            
+            st.markdown("")
+            if st.button("❌ 창 닫기", type="primary", use_container_width=True):
+                st.markdown("<script>window.close();</script>", unsafe_allow_html=True)
+            st.stop()
+    except Exception as e:
+        st.error(f"이미지 로드 오류: {e}")
+        st.stop()
+
+# 💡 평소 메인 화면 (전체 내역 및 입력 폼)
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if os.path.exists(LOGO_PATH):
@@ -265,7 +271,11 @@ try:
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
+                    safe_m = str(row.get("포장재번호", "-"))
+                    safe_p = str(row.get("포장재약호", "-"))
+                    target_url = f"/?view_img={fname}&m_no={safe_m}&p_name={safe_p}&d_str={d_val}"
+                    # 💡 자바스크립트 window.open을 사용하여 메인 화면은 그대로 두고 별도 팝업 창으로만 단독 띄움
+                    img_td = f'''<a href="#" onclick="window.open('{target_url}', 'popupWindow', 'width=600,height=750,scrollbars=yes'); return false;" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'''
                 else:
                     img_td = '-'
             else:
@@ -459,7 +469,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.43 (Isolated Single Card View Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.44 (Pure JS Window Open Popup Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
