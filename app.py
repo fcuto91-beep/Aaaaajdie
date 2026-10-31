@@ -103,6 +103,26 @@ def clear_sheet_data():
         print(f"Clear error: {e}")
         return False
 
+# 💡 새 탭에서 사진만 단독으로 띄워주는 라우터 파트
+if "view_img" in st.query_params:
+    try:
+        img_name = st.query_params["view_img"]
+        m_no = st.query_params.get("m_no", "-")
+        p_name = st.query_params.get("p_name", "-")
+        d_str = st.query_params.get("d_str", "-")
+        
+        img_full_path = os.path.join(D, img_name)
+        if os.path.exists(img_full_path):
+            st.markdown(f"## 🔍 검사 사진 단독 보기")
+            st.markdown(f"📦 **포장재 번호:** {m_no}")
+            st.markdown(f"🏷️ **포장재 약호:** {p_name}")
+            st.caption(f"📅 검사 일자: {d_str}")
+            st.image(img_full_path, use_column_width=True)
+            st.stop()
+    except Exception as e:
+        st.error(f"이미지 로드 오류: {e}")
+        st.stop()
+
 # UI 레이아웃
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -126,18 +146,6 @@ def show_edit_success_popup():
     st.success("검사 내역이 구글 시트에 성공적으로 수정 반영되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
-
-# 💡 사진 크게 보기 독립 모달 다이얼로그 함수 (st.stop으로 뒤 화면 렌더링 완전 차단)
-@st.dialog("🔍 검사 사진 크게 보기")
-def show_image_popup(img_path, m_name, p_name, date_str):
-    st.markdown(f"📦 **포장재 번호:** {m_name}")
-    st.markdown(f"🏷️ **포장재 약호:** {p_name}")
-    st.caption(f"📅 검사 일자: {date_str[:10] if len(date_str) >= 10 else date_str}")
-    st.image(img_path, use_column_width=True)
-    if st.button("닫기", type="primary", use_container_width=True):
-        st.query_params.clear()
-        st.rerun()
-    st.stop()  # 팝업 외의 뒷 배경 내용은 아예 그리지 않고 중단
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
@@ -214,21 +222,6 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 돋보기 클릭 시 독립 모달창 호출 (뒤의 표 렌더링 전에 가로챔)
-        if "pop_idx" in st.query_params:
-            try:
-                p_idx = int(st.query_params["pop_idx"])
-                if 0 <= p_idx < len(df_f):
-                    p_row = df_f.iloc[p_idx]
-                    p_fname = str(p_row.get("사진파일명", "none"))
-                    if p_fname != "none":
-                        p_ip = os.path.join(D, p_fname)
-                        if os.path.exists(p_ip):
-                            raw_dt = str(p_row.get("검사일자", "-"))
-                            show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
-            except:
-                pass
-
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
@@ -260,7 +253,10 @@ try:
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
+                    # 💡 target="_blank"를 사용하여 클릭 시 새 탭에서 사진만 단독으로 열림
+                    safe_m = urllib_quote = str(row.get("포장재번호", "-"))
+                    safe_p = str(row.get("포장재약호", "-"))
+                    img_td = f'<a href="?view_img={fname}&m_no={safe_m}&p_name={safe_p}&d_str={d_val}" target="_blank" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                 else:
                     img_td = '-'
             else:
@@ -454,7 +450,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.37 (Isolated Dialog Popup Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.38 (New Tab Image Viewer Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
