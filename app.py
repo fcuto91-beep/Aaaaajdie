@@ -30,7 +30,7 @@ def load_data():
     except Exception as e:
         print(f"Load error: {e}")
     
-    return pd.DataFrame(columns=["검사일시", "입고일자", "포장재번호", "포장재약호", "손톱박리", "테이프박리", "사진파일명", "특이사항"])
+    return pd.DataFrame(columns=["입고일자", "검사일자", "포장재번호", "포장재약호", "손톱박리", "테이프박리", "사진파일명", "특이사항"])
 
 def append_to_sheet(row_data):
     try:
@@ -116,9 +116,10 @@ if ok:
             with open(file_path, "wb") as f:
                 f.write(up_file.getbuffer())
 
+        # 💡 데이터 저장 순서 정돈: [입고일자, 검사일자, 포장재번호, 약호, 손톱, 테이프, 파일명, 특이사항]
         row_data = [
-            dt_str, 
             in_date_str, 
+            dt_str, 
             str(mat_no), 
             str(pack_name) if pack_name.strip() else "-", 
             nail, 
@@ -167,7 +168,7 @@ try:
                     if p_fname != "none":
                         p_ip = os.path.join(D, p_fname)
                         if os.path.exists(p_ip):
-                            raw_dt = str(p_row.get("검사일시", "-"))
+                            raw_dt = str(p_row.get("검사일자", "-"))
                             show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
                 st.query_params.clear()
             except:
@@ -186,13 +187,16 @@ try:
 
         rows_list = []
         for idx, row in df_f.iterrows():
-            raw_d = str(row.get("검사일시", "-"))
-            d_val = raw_d[:10] if len(raw_d) >= 10 else raw_d
-            
+            # 💡 시트 컬럼명과 정확하게 연동
             raw_in = str(row.get("입고일자", "-"))
             in_val = raw_in[:10] if len(raw_in) >= 10 else raw_in
             if in_val == "nan" or not in_val.strip():
                 in_val = "-"
+
+            raw_d = str(row.get("검사일자", "-"))
+            d_val = raw_d[:10] if len(raw_d) >= 10 else raw_d
+            if d_val == "nan" or not d_val.strip():
+                d_val = "-"
 
             m_val = str(row.get("포장재번호", "-"))
             p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
@@ -211,13 +215,12 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 컬럼 순서: 입고일자 | 검사일자 | 포장재번호 | 포장재약호 | 미리보기 | 손톱 | 테이프 | 특이사항
             row_str = '<tr>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>' \
                       '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
-                      '<td style="padding:8px 6px; text-align:center; width:70px; font-weight:normal; vertical-align:middle;">' + img_td + '</td>' \
+                      '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
@@ -275,7 +278,7 @@ try:
                     filtered_df = df
                 
                 if not filtered_df.empty:
-                    target_options = [f"[{i}] 검사일시: {row.get('검사일시','')} | 번호: {row.get('포장재번호','')}" for i, row in filtered_df.iterrows()]
+                    target_options = [f"[{i}] 입고일: {row.get('입고일자','')} | 번호: {row.get('포장재번호','')}" for i, row in filtered_df.iterrows()]
                     selected_target_str = st.selectbox("수정할 검사 내역 선택", target_options)
                     
                     if selected_target_str:
@@ -320,8 +323,8 @@ try:
                                         f.write(edit_file.getbuffer())
                                 
                                 updated_row_data = [
-                                    str(curr_row.get("검사일시", "")),
                                     edit_in_date_str,
+                                    str(curr_row.get("검사일자", datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S"))),
                                     str(edit_mat_no),
                                     str(edit_pack_name) if edit_pack_name.strip() else "-",
                                     edit_nail,
@@ -330,7 +333,7 @@ try:
                                     str(edit_rem) if edit_rem.strip() else "-"
                                 ]
                                 
-                                if update_sheet(curr_row.get("검사일시"), curr_row.get("포장재번호"), updated_row_data):
+                                if update_sheet(curr_row.get("검사일자"), curr_row.get("포장재번호"), updated_row_data):
                                     st.session_state["show_edited_modal"] = True
                                     st.rerun()
                                 else:
@@ -366,7 +369,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.6.8 (Inbound & Inspection Date Swapped)" \
+    "Author : 김태현 책임기사<br>Version : v1.6.9 (Inspection Date Fixed)" \
     "</div>", 
     unsafe_allow_html=True
 )
