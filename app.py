@@ -6,6 +6,7 @@ import io
 import zipfile
 import requests
 import json
+import html
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
@@ -208,49 +209,107 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        display_df = pd.DataFrame()
-        display_df["입고 일자"] = df_f["입고일자"].apply(format_date_str)
-        display_df["검사 일자"] = df_f["검사일자"].apply(format_date_str)
-        display_df["포장재 번호"] = df_f["포장재번호"]
-        display_df["포장재 약호"] = df_f["포장재약호"]
-        
-        view_icons = []
-        for idx, row in df_f.iterrows():
-            fname = str(row.get("사진파일명", "none"))
-            if fname != "none" and os.path.exists(os.path.join(D, fname)):
-                view_icons.append("🔍")
+        if "pop_idx" in st.query_params:
+            try:
+                p_idx = int(st.query_params["pop_idx"])
+                if 0 <= p_idx < len(df_f):
+                    p_row = df_f.iloc[p_idx]
+                    p_fname = str(p_row.get("사진파일명", "none"))
+                    if p_fname != "none":
+                        p_ip = os.path.join(D, p_fname)
+                        if os.path.exists(p_ip):
+                            raw_dt = str(p_row.get("검사일자", "-"))
+                            show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
+                st.query_params.clear()
+            except:
+                st.query_params.clear()
+
+        def get_badge(val):
+            v_str = str(val).strip()
+            if "부적합" in v_str or "FAIL" in v_str:
+                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🔴 부적합 (FAIL)</span>'
+            elif "적합" in v_str or "PASS" in v_str:
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🟢 적합 (PASS)</span>'
+            elif "시험 대기" in v_str or "사양 확인" in v_str:
+                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🟡 시험 대기 (사양 확인 중)</span>'
             else:
-                view_icons.append("-")
-        display_df["보기"] = view_icons
+                return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
-        display_df["손톱 박리"] = df_f["손톱박리"]
-        display_df["테이프 박리"] = df_f["테이프박리"]
-        display_df["특이사항"] = df_f["특이사항"]
+        rows_list = []
+        for idx, row in df_f.iterrows():
+            in_val = format_date_str(row.get("입고일자", "-"))
+            d_val = format_date_str(row.get("검사일자", "-"))
 
-        event = st.dataframe(
-            display_df,
-            use_container_width=True,
-            hide_index=True,
-            selection_mode="single-row",
-            on_select="rerun",
-            column_config={
-                "포장재 약호": st.column_config.TextColumn("포장재 약호", width="large"),
-                "보기": st.column_config.TextColumn("보기", width="small"),
-                "특이사항": st.column_config.TextColumn("특이사항", width="medium"),
-            }
-        )
+            m_val = html.escape(str(row.get("포장재번호", "-")))
+            
+            raw_p_name = str(row.get("포장재약호", "-"))
+            if pd.isna(row.get("포장재약호")) or raw_p_name.lower() in ["nan", "none", ""]:
+                raw_p_name = "-"
+            p_val = html.escape(raw_p_name)
+            
+            n_val = get_badge(row.get("손톱박리", "-"))
+            t_val = get_badge(row.get("테이프박리", "-"))
+            r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
+            
+            fname = str(row.get("사진파일명", "none"))
+            if fname != "none":
+                ip = os.path.join(D, fname)
+                if os.path.exists(ip):
+                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
+                else:
+                    img_td = '-'
+            else:
+                img_td = '-'
 
-        selected_rows = event.selection.rows if event and hasattr(event, "selection") else []
-        if selected_rows:
-            sel_idx = selected_rows[0]
-            if 0 <= sel_idx < len(df_f):
-                p_row = df_f.iloc[sel_idx]
-                p_fname = str(p_row.get("사진파일명", "none"))
-                if p_fname != "none":
-                    p_ip = os.path.join(D, p_fname)
-                    if os.path.exists(p_ip):
-                        raw_dt = str(p_row.get("검사일자", "-"))
-                        show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
+            row_str = f"""
+                <tr>
+                    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
+                    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
+                    <td style="padding:8px 10px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
+                    <td style="padding:8px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
+                    <td style="padding:8px 8px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
+                    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
+                    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
+                    <td style="padding:8px 12px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
+                </tr>
+            """
+            rows_list.append(row_str)
+
+        all_rows = "".join(rows_list)
+        
+        table_code = f"""
+<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <table style="width:1295px; table-layout:fixed; border-collapse:collapse; margin:0;">
+        <colgroup>
+            <col style="width:90px;">
+            <col style="width:90px;">
+            <col style="width:100px;">
+            <col style="width:450px;">
+            <col style="width:45px;">
+            <col style="width:110px;">
+            <col style="width:110px;">
+            <col style="width:200px;">
+        </colgroup>
+        <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
+            <tr>
+                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
+                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">검사 일자</th>
+                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
+                <th style="padding:10px 12px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
+                <th style="padding:10px 8px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
+                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
+                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
+                <th style="padding:10px 12px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center;">특이사항</th>
+            </tr>
+        </thead>
+        <tbody>
+            {all_rows}
+        </tbody>
+    </table>
+</div>
+        """.strip()
+
+        st.markdown(table_code, unsafe_allow_html=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -391,7 +450,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.29 (Native Streamlit Grid Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.32 (Direct Magnifier Click Link Restored)" \
     "</div>", 
     unsafe_allow_html=True
 )
