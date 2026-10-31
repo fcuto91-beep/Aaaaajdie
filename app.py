@@ -240,13 +240,13 @@ try:
                         encoded_img = base64.b64encode(img_file.read()).decode()
                     
                     modal_id = f"modal_{idx}"
-                    # 💡 돋보기 버튼 클릭 시 페이지 이동 없이 자바스크립트로 해당 모달만 띄움
+                    # 돋보기 클릭 시 자바스크립트로 해당 팝업만 띄움
                     img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                     
-                    # 💡 기존 웹 화면 위에 반투명 배경과 함께 띄워질 순수 HTML 모달 팝업 구성
+                    # 💡 배경을 어둡게 하는 회색막(backdrop)을 완전히 제거하고, 팝업 카드 자체에만 강력한 그림자를 주어 기존 웹 화면 위에 독립된 창처럼 보이게 함
                     modal_html = f"""
-                    <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
-                        <div style="background:white; padding:25px; border-radius:12px; width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.3); position:relative;">
+                    <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:99999; justify-content:center; align-items:center;">
+                        <div style="background:white; padding:25px; border-radius:12px; width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; pointer-events:auto;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                                 <h3 style="margin:0; font-size:18px; color:#333;">🔍 검사 사진 크게 보기</h3>
                                 <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#888; font-weight:bold; cursor:pointer; padding:0 5px;">&times;</a>
@@ -459,7 +459,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.48 (Seamless JavaScript Modal Popup Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.49 (Transparent Backdrop Floating Popup Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
