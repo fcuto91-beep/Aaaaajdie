@@ -126,7 +126,7 @@ def show_image_popup(img_path, m_name, p_name, date_str):
         st.query_params.clear()
         st.rerun()
 
-# 💡 핵심: 돋보기 버튼을 눌러 팝업을 띄울 때는 메인 화면 코드를 아예 실행하지 않음 (뒤에 잔상 남음 방지)
+# 💡 핵심: 팝업 파라미터가 있을 때 다이얼로그를 띄우고 즉시 st.stop()으로 뒤의 메인 화면 실행을 완벽 차단!
 if "pop_idx" in st.query_params:
     try:
         temp_df = load_data()
@@ -139,11 +139,12 @@ if "pop_idx" in st.query_params:
                 if os.path.exists(p_ip):
                     raw_dt = str(p_row.get("검사일자", "-"))
                     show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
+                    st.stop()  # 뒤에 있는 메인 화면 내용이 절대 밑으로 따라 나오지 않게 여기서 실행 중단!
     except:
         st.query_params.clear()
         st.rerun()
 
-# UI 레이아웃 (평소 메인 화면)
+# 평소 메인 화면 레이아웃
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if os.path.exists(LOGO_PATH):
@@ -455,7 +456,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.41 (Pure Dialog Modal Overlay Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.42 (Strict Stop Dialog Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
