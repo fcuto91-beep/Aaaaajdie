@@ -134,6 +134,7 @@ def show_image_dialog(m_val, p_val, d_val, image_path):
     
     st.markdown("")
     if st.button("닫기", type="primary", use_container_width=True):
+        st.session_state["popup_img_path"] = None
         st.rerun()
 
 # UI 레이아웃
@@ -234,22 +235,20 @@ try:
             else:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
-        rows_list = []
-        
+        # 💡 각 행을 스트림릿 컬럼으로 직접 렌더링하여 돋보기 버튼 클릭 시 정중앙 다이얼로그 즉시 호출
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
             d_val = format_date_str(row.get("검사일자", "-"))
-
-            m_val = html.escape(str(row.get("포장재번호", "-")))
+            m_val = str(row.get("포장재번호", "-"))
             
             raw_p_name = str(row.get("포장재약호", "-"))
             if pd.isna(row.get("포장재약호")) or raw_p_name.lower() in ["nan", "none", ""]:
                 raw_p_name = "-"
-            p_val = html.escape(raw_p_name)
+            p_val = raw_p_name
             
-            n_val = get_badge(row.get("손톱박리", "-"))
-            t_val = get_badge(row.get("테이프박리", "-"))
-            r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
+            n_val_html = get_badge(row.get("손톱박리", "-"))
+            t_val_html = get_badge(row.get("테이프박리", "-"))
+            r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
             fname = str(row.get("사진파일명", "none"))
             has_img = False
@@ -258,79 +257,35 @@ try:
                 if os.path.exists(ip):
                     has_img = True
 
-            # 💡 각 행별 돋보기 버튼 상태 저장을 위한 고유 키
-            zoom_clicked = False
+            c_in, c_d, c_m, c_p, c_img, c_n, c_t, c_r = st.columns([0.8, 0.8, 0.9, 2.2, 0.4, 0.9, 0.9, 1.8])
+            with c_in:
+                st.markdown(f"<div style='font-size:11.5px; text-align:center; padding-top:6px;'>{in_val}</div>", unsafe_allow_html=True)
+            with c_d:
+                st.markdown(f"<div style='font-size:11.5px; text-align:center; padding-top:6px;'>{d_val}</div>", unsafe_allow_html=True)
+            with c_m:
+                st.markdown(f"<div style='font-size:11.5px; text-align:center; padding-top:6px;'>{m_val}</div>", unsafe_allow_html=True)
+            with c_p:
+                st.markdown(f"<div style='font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-top:6px;' title='{p_val}'>{p_val}</div>", unsafe_allow_html=True)
+            with c_img:
+                if has_img:
+                    if st.button("🔍", key=f"zoom_btn_{idx}", help="사진 크게 보기"):
+                        st.session_state["popup_target"] = (m_val, p_val, d_val, os.path.join(D, fname))
+                        st.rerun()
+                else:
+                    st.markdown("<div style='text-align:center; padding-top:6px;'>-</div>", unsafe_allow_html=True)
+            with c_n:
+                st.markdown(f"<div style='text-align:center; padding-top:4px;'>{n_val_html}</div>", unsafe_allow_html=True)
+            with c_t:
+                st.markdown(f"<div style='text-align:center; padding-top:4px;'>{t_val_html}</div>", unsafe_allow_html=True)
+            with c_r:
+                st.markdown(f"<div style='font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-top:6px;' title='{r_val}'>{r_val}</div>", unsafe_allow_html=True)
             
-            row_str = f"""
-<tr>
-    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
-    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
-    <td style="padding:8px 8px; width:95px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
-    <td style="padding:8px 10px; width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
-    <td style="padding:8px 6px; text-align:center; width:40px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{"🔍" if has_img else "-"}</td>
-    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
-    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
-    <td style="padding:8px 10px; width:auto; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
-</tr>"""
-            rows_list.append(row_str)
+            st.markdown("<hr style='margin:4px 0; border:0; border-top:1px solid #f0f2f6;'>", unsafe_allow_html=True)
 
-        all_rows = "\n".join(rows_list)
-        
-        # 💡 st.components 박스를 쓰지 않고 st.markdown으로 직접 출력하여 상위 박스 제한 탈출!
-        table_code = f"""
-<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 15px;">
-    <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin:0;">
-        <colgroup>
-            <col style="width:85px;">
-            <col style="width:85px;">
-            <col style="width:95px;">
-            <col style="width:220px;">
-            <col style="width:40px;">
-            <col style="width:100px;">
-            <col style="width:100px;">
-            <col style="width:auto;">
-        </colgroup>
-        <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
-            <tr>
-                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
-                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">검사 일자</th>
-                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
-                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
-                <th style="padding:10px 6px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
-                <th style="padding:10px 6px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
-                <th style="padding:10px 6px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
-                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center;">특이사항</th>
-            </tr>
-        </thead>
-        <tbody>
-{all_rows}
-        </tbody>
-    </table>
-</div>
-"""
-        st.markdown(table_code, unsafe_allow_html=True)
-
-        # 💡 각 항목별 사진 보기를 스트림릿 버튼으로 깔끔하고 확실하게 제공 (클릭 시 브라우저 정중앙 st.dialog 팝업 오픈)
-        st.markdown("🔍 **사진 상세보기 선택**")
-        img_options = []
-        img_map = {}
-        for idx, row in df_f.iterrows():
-            fname = str(row.get("사진파일명", "none"))
-            if fname != "none" and os.path.exists(os.path.join(D, fname)):
-                label = f"[{idx}] 포장재 번호: {row.get('포장재번호','')} | 약호: {row.get('포장재약호','')}"
-                img_options.append(label)
-                img_map[label] = (row, fname)
-
-        if img_options:
-            selected_img_lbl = st.selectbox("조회할 검사 사진 선택", ["선택해주세요"] + img_options)
-            if selected_img_lbl != "선택해주세요":
-                row_info, fname_info = img_map[selected_img_lbl]
-                m_val = str(row_info.get("포장재번호", "-"))
-                p_val = str(row_info.get("포장재약호", "-"))
-                d_val = format_date_str(row_info.get("검사일자", "-"))
-                show_image_dialog(m_val, p_val, d_val, os.path.join(D, fname_info))
-        else:
-            st.caption("ℹ️ 등록된 검사 사진이 있는 항목이 없습니다.")
+        # 💡 세션 상태에 대상이 있으면 정중앙 다이얼로그 호출
+        if "popup_target" in st.session_state and st.session_state["popup_target"]:
+            t_m, t_p, t_d, t_path = st.session_state["popup_target"]
+            show_image_dialog(t_m, t_p, t_d, t_path)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -471,7 +426,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.61 (True Center Native Dialog & No-Box Table)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.62 (Native Table Zoom & Center Dialog)" \
     "</div>", 
     unsafe_allow_html=True
 )
