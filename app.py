@@ -41,9 +41,9 @@ def append_to_sheet(row_data):
         print(f"Append error: {e}")
         return False
 
-def update_sheet(old_date, old_mat, row_data):
+def update_sheet(old_mat, row_data):
     try:
-        payload = {"action": "update", "date": str(old_date), "mat_no": str(old_mat), "row": row_data}
+        payload = {"action": "update", "mat_no": str(old_mat), "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
         return response.status_code == 200
     except Exception as e:
@@ -85,6 +85,7 @@ def show_edit_success_popup():
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
+    # 💡 항상 한국 시간(KST) 기준으로 오늘 날짜를 기본 세팅
     in_date_val = st.date_input("포장재 입고 일자", value=datetime.now(KST).date())
     in_date_str = in_date_val.strftime("%Y-%m-%d")
     
@@ -106,6 +107,7 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
+        # 💡 한국 시간(KST) 기준으로 검사일자(YYYY-MM-DD)를 정확하게 생성
         dt_str = datetime.now(KST).strftime("%Y-%m-%d")
         fn = "none"
         if up_file:
@@ -337,8 +339,7 @@ try:
                                     str(edit_rem) if edit_rem.strip() else "-"
                                 ]
                                 
-                                # 💡 수정 시 타겟을 찾는 기준을 기존 검사일자와 포장재번호 조합으로 확실하게 전달
-                                if update_sheet(curr_row.get("검사일자"), curr_row.get("포장재번호"), updated_row_data):
+                                if update_sheet(curr_row.get("포장재번호"), updated_row_data):
                                     st.session_state["show_edited_modal"] = True
                                     st.rerun()
                                 else:
@@ -374,7 +375,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.8.0 (Edit Identification Fixed)" \
+    "Author : 김태현 책임기사<br>Version : v1.8.2 (KST Timezone Date Sync)" \
     "</div>", 
     unsafe_allow_html=True
 )
