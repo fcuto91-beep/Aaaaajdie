@@ -13,7 +13,6 @@ st.set_page_config(page_title="Inspection", layout="wide")
 D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 형님이 알려주신 원본 데이터가 들어있는 올바른 Apps Script URL 적용
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywD2brYz6Iory_KKDyh5pckjGqYvsf2ws1bY6EN6-NzGEslhyOF65Q9DKngsju5FWmlw/exec"
 
 if not os.path.exists(D):
@@ -264,24 +263,24 @@ try:
 
             row_str = f"""
                 <tr>
-                    <td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">{in_val}</td>
-                    <td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">{d_val}</td>
-                    <td style="padding:6px 8px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle;">{m_val}</td>
-                    <td style="padding:6px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">{p_val}</td>
-                    <td style="padding:6px 6px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px;">{img_td}</td>
-                    <td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">{n_val}</td>
-                    <td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">{t_val}</td>
-                    <td style="padding:6px 10px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">{r_val}</td>
+                    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
+                    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
+                    <td style="padding:8px 10px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
+                    <td style="padding:8px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
+                    <td style="padding:8px 8px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
+                    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
+                    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
+                    <td style="padding:8px 12px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
                 </tr>
             """
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
         
-        # 💡 HTML 컴포넌트를 이용해 돋보기 링크가 즉시 작동하도록 구현
+        # 💡 깔끔한 표 테두리와 배경 스타일 적용
         table_code = f"""
-        <div style="overflow-x:auto; max-height:450px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">
-            <table style="width:1250px; table-layout:fixed; border-collapse:collapse;">
+        <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <table style="width:1295px; table-layout:fixed; border-collapse:collapse; margin:0;">
                 <colgroup>
                     <col style="width:90px;">
                     <col style="width:90px;">
@@ -292,16 +291,16 @@ try:
                     <col style="width:110px;">
                     <col style="width:200px;">
                 </colgroup>
-                <thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">
+                <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
                     <tr>
-                        <th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">입고 일자</th>
-                        <th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">검사 일자</th>
-                        <th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 번호</th>
-                        <th style="padding:8px 12px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 약호</th>
-                        <th style="padding:8px 6px; text-align:center; white-space:nowrap; font-size:11.5px;">보기</th>
-                        <th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">손톱</th>
-                        <th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">테이프</th>
-                        <th style="padding:8px 10px; white-space:nowrap; font-size:11.5px; text-align:center;">특이사항</th>
+                        <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
+                        <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">검사 일자</th>
+                        <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
+                        <th style="padding:10px 12px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
+                        <th style="padding:10px 8px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
+                        <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
+                        <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
+                        <th style="padding:10px 12px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center;">특이사항</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -311,7 +310,7 @@ try:
         </div>
         """
 
-        st.components.v1.html(table_code, height=470, scrolling=True)
+        st.markdown(table_code, unsafe_allow_html=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -452,7 +451,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.27 (HTML Table Component & Direct Magnifier Link)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.28 (Table Grid & Border Style Restored)" \
     "</div>", 
     unsafe_allow_html=True
 )
