@@ -6,7 +6,6 @@ import io
 import zipfile
 import requests
 import json
-import html
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
@@ -60,6 +59,7 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
+# 💡 구글 시트 데이터 로딩 시 문자열 손실 및 잘림 현상 원천 차단 파서 적용
 def load_data():
     try:
         no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
@@ -68,7 +68,9 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 df = pd.DataFrame(data)
-                df = df.astype(str)
+                # 모든 컬럼을 명시적 문자열로 변환하고 양쪽 공백 정리 (특수문자 잘림 방지)
+                for col in df.columns:
+                    df[col] = df[col].astype(str).str.strip()
                 return df
     except Exception as e:
         print(f"Load error: {e}")
@@ -218,87 +220,24 @@ try:
             except:
                 st.query_params.clear()
 
-        def get_badge(val):
-            v_str = str(val).strip()
-            if "부적합" in v_str or "FAIL" in v_str:
-                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🔴 부적합 (FAIL)</span>'
-            elif "적합" in v_str or "PASS" in v_str:
-                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🟢 적합 (PASS)</span>'
-            elif "시험 대기" in v_str or "사양 확인" in v_str:
-                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🟡 시험 대기 (사양 확인 중)</span>'
-            else:
-                return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
+        display_df = pd.DataFrame()
+        display_df["입고 일자"] = df_f["입고일자"].apply(format_date_str)
+        display_df["검사 일자"] = df_f["검사일자"].apply(format_date_str)
+        display_df["포장재 번호"] = df_f["포장재번호"]
+        display_df["포장재 약호"] = df_f["포장재약호"]
+        display_df["손톱 박리"] = df_f["손톱박리"]
+        display_df["테이프 박리"] = df_f["테이프박리"]
+        display_df["특이사항"] = df_f["특이사항"]
 
-        rows_list = []
-        for idx, row in df_f.iterrows():
-            in_val = format_date_str(row.get("입고일자", "-"))
-            d_val = format_date_str(row.get("검사일자", "-"))
-
-            m_val = html.escape(str(row.get("포장재번호", "-")))
-            
-            raw_p_name = str(row.get("포장재약호", "-"))
-            if pd.isna(row.get("포장재약호")) or raw_p_name.lower() in ["nan", "none", ""]:
-                raw_p_name = "-"
-            p_val = html.escape(raw_p_name)
-            
-            n_val = get_badge(row.get("손톱박리", "-"))
-            t_val = get_badge(row.get("테이프박리", "-"))
-            r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
-            
-            fname = str(row.get("사진파일명", "none"))
-            if fname != "none":
-                ip = os.path.join(D, fname)
-                if os.path.exists(ip):
-                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:15px;">🔍</a>'
-                else:
-                    img_td = '-'
-            else:
-                img_td = '-'
-
-            # 💡 절삭(overflow:hidden) 속성을 완전히 제거하고 width를 600px로 대폭 확장
-            row_str = ('<tr>'
-                       '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
-                       '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
-                       '<td style="padding:6px 8px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
-                       '<td style="padding:6px 12px; width:600px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
-                       '<td style="padding:6px 6px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px;">' + img_td + '</td>'
-                       '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
-                       '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
-                       '<td style="padding:6px 10px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>'
-                       '</tr>')
-            rows_list.append(row_str)
-
-        all_rows = "".join(rows_list)
-        # 💡 테이블 전체 너비를 1450px로 넉넉하게 확장하여 모든 내용이 잘림 없이 쫙 펼쳐지도록 조치
-        table_code = '<div style="overflow-x:auto; max-height:450px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
-                     '<table style="width:1450px; table-layout:fixed; border-collapse:collapse;">' \
-                     '<colgroup>' \
-                     '<col style="width:90px;">' \
-                     '<col style="width:90px;">' \
-                     '<col style="width:100px;">' \
-                     '<col style="width:600px;">' \
-                     '<col style="width:45px;">' \
-                     '<col style="width:110px;">' \
-                     '<col style="width:110px;">' \
-                     '<col style="width:200px;">' \
-                     '</colgroup>' \
-                     '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
-                     '<tr>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">입고 일자</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">검사 일자</th>' \
-                     '<th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 번호</th>' \
-                     '<th style="padding:8px 12px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 약호</th>' \
-                     '<th style="padding:8px 6px; text-align:center; white-space:nowrap; font-size:11.5px;">보기</th>' \
-                     '<th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">손톱</th>' \
-                     '<th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">테이프</th>' \
-                     '<th style="padding:8px 10px; white-space:nowrap; font-size:11.5px; text-align:center;">특이사항</th>' \
-                     '</tr>' \
-                     '</thead>' \
-                     '<tbody>' + all_rows + '</tbody>' \
-                     '</table>' \
-                     '</div>'
-
-        st.markdown(table_code, unsafe_allow_html=True)
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "포장재 약호": st.column_config.TextColumn("포장재 약호", width="large"),
+                "특이사항": st.column_config.TextColumn("특이사항", width="medium"),
+            }
+        )
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -439,7 +378,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.16 (Overflow Ellipsis Removed & Width Expanded)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.18 (Load Data String Safety Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
