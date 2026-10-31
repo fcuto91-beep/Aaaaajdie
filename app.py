@@ -201,7 +201,6 @@ try:
             t_val = get_badge(row.get("테이프박리", "-"))
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
-            # 미리보기 버튼 처리 (약호와 손톱 사이로 배치)
             fname = str(row.get("사진파일명", "none"))
             if fname != "none":
                 ip = os.path.join(D, fname)
@@ -212,10 +211,10 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 컬럼 순서: 일자 | 입고일자 | 포장재번호 | 포장재약호 | 미리보기 | 손톱 | 테이프 | 특이사항
+            # 💡 컬럼 순서: 입고일자 | 검사일자 | 포장재번호 | 포장재약호 | 미리보기 | 손톱 | 테이프 | 특이사항
             row_str = '<tr>' \
-                      '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>' \
+                      '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
                       '<td style="padding:8px 6px; text-align:center; width:70px; font-weight:normal; vertical-align:middle;">' + img_td + '</td>' \
@@ -230,8 +229,8 @@ try:
                      '<table style="width:100%; border-collapse:collapse;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
-                     '<th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">일자</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">입고 일자</th>' \
+                     '<th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
                      '<th style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">미리보기</th>' \
@@ -276,7 +275,7 @@ try:
                     filtered_df = df
                 
                 if not filtered_df.empty:
-                    target_options = [f"[{i}] 일시: {row.get('검사일시','')} | 번호: {row.get('포장재번호','')}" for i, row in filtered_df.iterrows()]
+                    target_options = [f"[{i}] 검사일시: {row.get('검사일시','')} | 번호: {row.get('포장재번호','')}" for i, row in filtered_df.iterrows()]
                     selected_target_str = st.selectbox("수정할 검사 내역 선택", target_options)
                     
                     if selected_target_str:
@@ -367,7 +366,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.6.7 (Preview Column Moved)" \
+    "Author : 김태현 책임기사<br>Version : v1.6.8 (Inbound & Inspection Date Swapped)" \
     "</div>", 
     unsafe_allow_html=True
 )
