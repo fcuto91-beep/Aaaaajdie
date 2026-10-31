@@ -240,9 +240,10 @@ try:
                         encoded_img = base64.b64encode(img_file.read()).decode()
                     
                     modal_id = f"modal_{idx}"
+                    # 💡 테이블 안의 돋보기 버튼
                     img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                     
-                    # 💡 브라우저 화면 전체 기준의 뷰포트 절대 정중앙에 위치하도록 수정
+                    # 💡 팝업창 HTML 코드를 테이블 밖(독립 컴포넌트)으로 분리하기 위해 따로 수집
                     modal_html = f"""
                     <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.15);">
                         <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
@@ -284,7 +285,7 @@ try:
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
-        # 💡 테이블 전체 너비를 100%로 설정하고 특이사항 칸이 남는 공간을 모두 채우도록 유연하게 설정
+        # 💡 오직 테이블 내용만 담는 컴포넌트 (높이 제한 안에서 스크롤 작동)
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin:0;">
@@ -315,10 +316,13 @@ try:
         </tbody>
     </table>
 </div>
-{all_modals}
 """
 
         st.components.v1.html(table_code, height=520, scrolling=True)
+
+        # 💡 팝업창 모달들을 테이블 박스 바깥에 완전히 독립된 별도 컴포넌트로 렌더링하여 브라우저 화면 진짜 정중앙에 띄움!
+        if all_modals:
+            st.components.v1.html(f"<div>{all_modals}</div>", height=0, scrolling=False)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -459,7 +463,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.52 (Absolute Center Popup & Expanded Remarks Fill)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.55 (Isolated Global Center Modal Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
