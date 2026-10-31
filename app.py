@@ -26,23 +26,13 @@ def get_kst_now():
         return target_min
     return actual_kst
 
-# 💡 날짜 문자열을 무조건 YYYY-MM-DD 형식으로 예쁘게 파싱해 주는 안전 함수
 def format_date_str(val):
-    if not val or val == "nan" or val == "NaT":
+    if not val or val == "nan" or val == "NaT" or val == "None":
         return "-"
     v_str = str(val).strip()
-    # 만약 Sat Oct 31 형태이거나 날짜 객체 형태일 경우 안전하게 YYYY-MM-DD로 변환 시도
-    try:
-        # ISO 형식이나 일반 문자열 앞 10자리 추출 시도
-        if len(v_str) >= 10 and v_str[:4].isdigit():
-            return v_str[:10]
-        # 그 외 판다스/자바스크립트 변환 날짜 문자열 처리
-        parsed = pd.to_datetime(v_str)
-        if pd.notna(parsed):
-            return parsed.strftime("%Y-%m-%d")
-    except:
-        pass
-    return v_str[:10] if len(v_str) >= 10 else v_str
+    if len(v_str) >= 10:
+        return v_str[:10]
+    return v_str
 
 def load_data():
     try:
@@ -52,6 +42,8 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 df = pd.DataFrame(data)
+                # 💡 핵심: 판다스가 날짜를 제멋대로 변환하지 못하도록 전체 데이터를 순수 문자열로 강제 고정
+                df = df.astype(str)
                 return df
     except Exception as e:
         print(f"Load error: {e}")
@@ -214,7 +206,6 @@ try:
 
         rows_list = []
         for idx, row in df_f.iterrows():
-            # 💡 날짜를 깔끔한 YYYY-MM-DD 형식으로 변환
             in_val = format_date_str(row.get("입고일자", "-"))
             d_val = format_date_str(row.get("검사일자", "-"))
 
@@ -395,7 +386,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.9.8 (Date Formatting Normalization)" \
+    "Author : 김태현 책임기사<br>Version : v1.9.9 (DataFrame Force String Cast)" \
     "</div>", 
     unsafe_allow_html=True
 )
