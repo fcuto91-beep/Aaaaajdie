@@ -115,7 +115,7 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 순수 팝업 창 모드 (별도 창으로 사진과 정보만 깔끔하게 출력)
+# 💡 순수 팝업 창 전용 뷰어 모드 (주소창/툴바 없는 깔끔한 팝업 내부 화면)
 if "view_img" in st.query_params:
     try:
         img_name = st.query_params["view_img"]
@@ -131,7 +131,7 @@ if "view_img" in st.query_params:
             .block-container {
                 padding-top: 1rem !important;
                 padding-bottom: 1rem !important;
-                max-width: 600px !important;
+                max-width: 550px !important;
             }
             body { background-color: #f8f9fa; }
             </style>
@@ -146,14 +146,14 @@ if "view_img" in st.query_params:
             st.image(img_full_path, use_column_width=True)
             
             st.markdown("")
-            if st.button("❌ 창 닫기", type="primary", use_container_width=True):
+            if st.button("❌ 닫기", type="primary", use_container_width=True):
                 st.markdown("<script>window.close();</script>", unsafe_allow_html=True)
             st.stop()
     except Exception as e:
         st.error(f"이미지 로드 오류: {e}")
         st.stop()
 
-# 💡 평소 메인 화면 (전체 내역 및 입력 폼)
+# 💡 평소 메인 화면
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if os.path.exists(LOGO_PATH):
@@ -274,8 +274,8 @@ try:
                     safe_m = str(row.get("포장재번호", "-"))
                     safe_p = str(row.get("포장재약호", "-"))
                     target_url = f"/?view_img={fname}&m_no={safe_m}&p_name={safe_p}&d_str={d_val}"
-                    # 💡 자바스크립트 window.open을 사용하여 메인 화면은 그대로 두고 별도 팝업 창으로만 단독 띄움
-                    img_td = f'''<a href="#" onclick="window.open('{target_url}', 'popupWindow', 'width=600,height=750,scrollbars=yes'); return false;" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'''
+                    # 💡 주소창, 툴바, 메뉴바를 전부 없애고 순수 팝업창(location=no, toolbar=no 등)으로 띄우는 자바스크립트
+                    img_td = f'''<a href="#" onclick="window.open('{target_url}', 'popupWindow', 'width=580,height=750,location=no,toolbar=no,menubar=no,status=no,scrollbars=yes,resizable=yes'); return false;" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'''
                 else:
                     img_td = '-'
             else:
@@ -469,7 +469,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.44 (Pure JS Window Open Popup Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.45 (Toolbar-less Pure Popup Window)" \
     "</div>", 
     unsafe_allow_html=True
 )
