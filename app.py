@@ -251,32 +251,33 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 포장재 약호 글씨 크기를 11px로 미세하게 줄이고 white-space: nowrap을 주어 한 줄로 길게 표기
+            # 💡 약호 칸에 min-width를 주어 테이블이 가로로 늘어나며 한 줄로 다 표현되도록 설정
             row_str = ('<tr>'
-                       '<td style="padding:6px 3px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
-                       '<td style="padding:6px 3px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
-                       '<td style="padding:6px 5px; width:80px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
-                       '<td style="padding:6px 8px; white-space:nowrap; font-size:11px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
-                       '<td style="padding:6px 3px; text-align:center; width:35px; white-space:nowrap; font-size:11px;">' + img_td + '</td>'
-                       '<td style="padding:6px 5px; width:95px; white-space:nowrap; font-size:11px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
-                       '<td style="padding:6px 5px; width:95px; white-space:nowrap; font-size:11px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
-                       '<td style="padding:6px 6px; width:140px; white-space:nowrap; font-size:11px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>'
+                       '<td style="padding:6px 4px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
+                       '<td style="padding:6px 4px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
+                       '<td style="padding:6px 6px; width:85px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
+                       '<td style="padding:6px 10px; min-width:320px; white-space:nowrap; font-size:11px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
+                       '<td style="padding:6px 4px; text-align:center; width:35px; white-space:nowrap; font-size:11px;">' + img_td + '</td>'
+                       '<td style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
+                       '<td style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
+                       '<td style="padding:6px 8px; min-width:160px; white-space:nowrap; font-size:11px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>'
                        '</tr>')
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
+        # 💡 테이블 전체에 min-width: 900px를 주어 가로 스크롤과 함께 셀 공간 확보
         table_code = '<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
-                     '<table style="width:100%; border-collapse:collapse;">' \
+                     '<table style="width:100%; min-width:900px; border-collapse:collapse;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
-                     '<th style="padding:6px 3px; width:75px; white-space:nowrap; font-size:11px; text-align:center;">입고 일자</th>' \
-                     '<th style="padding:6px 3px; width:75px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
-                     '<th style="padding:6px 5px; width:80px; white-space:nowrap; font-size:11px; text-align:center;">포장재 번호</th>' \
-                     '<th style="padding:6px 8px; white-space:nowrap; font-size:11px; text-align:center;">포장재 약호</th>' \
-                     '<th style="padding:6px 3px; text-align:center; width:35px; white-space:nowrap; font-size:11px;">보기</th>' \
-                     '<th style="padding:6px 5px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">손톱</th>' \
-                     '<th style="padding:6px 5px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">테이프</th>' \
-                     '<th style="padding:6px 6px; width:140px; white-space:nowrap; font-size:11px; text-align:center;">특이사항</th>' \
+                     '<th style="padding:6px 4px; width:75px; white-space:nowrap; font-size:11px; text-align:center;">입고 일자</th>' \
+                     '<th style="padding:6px 4px; width:75px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
+                     '<th style="padding:6px 6px; width:85px; white-space:nowrap; font-size:11px; text-align:center;">포장재 번호</th>' \
+                     '<th style="padding:6px 10px; min-width:320px; white-space:nowrap; font-size:11px; text-align:center;">포장재 약호</th>' \
+                     '<th style="padding:6px 4px; text-align:center; width:35px; white-space:nowrap; font-size:11px;">보기</th>' \
+                     '<th style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">손톱</th>' \
+                     '<th style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">테이프</th>' \
+                     '<th style="padding:6px 8px; min-width:160px; white-space:nowrap; font-size:11px; text-align:center;">특이사항</th>' \
                      '</tr>' \
                      '</thead>' \
                      '<tbody>' + all_rows + '</tbody>' \
@@ -424,7 +425,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.9 (Packing Name Single Line & Scroll)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.10 (Table Min-Width & Single Line Packed Name)" \
     "</div>", 
     unsafe_allow_html=True
 )
