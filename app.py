@@ -6,6 +6,7 @@ import io
 import zipfile
 import requests
 import json
+import html
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
@@ -203,193 +204,87 @@ try:
         q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        # 💡 개별 행 선택을 위한 인터랙티브 데이터프레임 구성 (선택 시 사진 팝업 호출)
-        display_df = pd.DataFrame()
-        display_df["입고 일자"] = df_f["입고일자"].apply(format_date_str)
-        display_df["검사 일자"] = df_f["검사일자"].apply(format_date_str)
-        display_df["포장재 번호"] = df_f["포장재번호"]
-        display_df["포장재 약호"] = df_f["포장재약호"]
-        
-        # 사진 유무 표시 컬럼
-        img_status_list = []
-        for idx, row in df_f.iterrows():
-            fname = str(row.get("사진파일명", "none"))
-            if fname != "none" and os.path.exists(os.path.join(D, fname)):
-                img_status_list.append("🔍 [보기]")
+        if "pop_idx" in st.query_params:
+            try:
+                p_idx = int(st.query_params["pop_idx"])
+                if 0 <= p_idx < len(df_f):
+                    p_row = df_f.iloc[p_idx]
+                    p_fname = str(p_row.get("사진파일명", "none"))
+                    if p_fname != "none":
+                        p_ip = os.path.join(D, p_fname)
+                        if os.path.exists(p_ip):
+                            raw_dt = str(p_row.get("검사일자", "-"))
+                            show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
+                st.query_params.clear()
+            except:
+                st.query_params.clear()
+
+        def get_badge(val):
+            v_str = str(val).strip()
+            if "부적합" in v_str or "FAIL" in v_str:
+                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🔴 부적합 (FAIL)</span>'
+            elif "적합" in v_str or "PASS" in v_str:
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🟢 적합 (PASS)</span>'
+            elif "시험 대기" in v_str or "사양 확인" in v_str:
+                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 6px; border-radius:10px; font-weight:normal; font-size:10px; white-space:nowrap;">🟡 시험 대기 (사양 확인 중)</span>'
             else:
-                img_status_list.append("-")
-        display_df["사진 보기"] = img_status_list
+                return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
-        display_df["손톱 박리"] = df_f["손톱박리"]
-        display_df["테이프 박리"] = df_f["테이프박리"]
-        display_df["특이사항"] = df_f["특이사항"]
+        rows_list = []
+        for idx, row in df_f.iterrows():
+            in_val = format_date_str(row.get("입고일자", "-"))
+            d_val = format_date_str(row.get("검사일자", "-"))
 
-        event = st.dataframe(
-            display_df,
-            use_container_width=True,
-            hide_index=True,
-            selection_mode="single-row",
-            on_select="rerun",
-            column_config={
-                "포장재 약호": st.column_config.TextColumn("포장재 약호", width="large"),
-                "사진 보기": st.column_config.TextColumn("사진 보기", width="small"),
-                "특이사항": st.column_config.TextColumn("특이사항", width="medium"),
-            }
-        )
-
-        # 행 선택 시 해당 사진 팝업 띄우기
-        selected_rows = event.selection.rows if event and hasattr(event, "selection") else []
-        if selected_rows:
-            sel_idx = selected_rows[0]
-            if 0 <= sel_idx < len(df_f):
-                p_row = df_f.iloc[sel_idx]
-                p_fname = str(p_row.get("사진파일명", "none"))
-                if p_fname != "none":
-                    p_ip = os.path.join(D, p_fname)
-                    if os.path.exists(p_ip):
-                        raw_dt = str(p_row.get("검사일자", "-"))
-                        show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
-
-        st.markdown("---")
-        with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
-            admin_input = st.text_input("관리자 비밀번호를 입력하세요", type="password")
+            m_val = html.escape(str(row.get("포장재번호", "-")))
             
-            if admin_input == ADMIN_PW:
-                st.success("✅ 관리자 인증이 완료되었습니다.")
-                
-                zb = io.BytesIO()
-                with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
-                    csv_bytes = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
-                    zf.writestr("inspection_history.csv", csv_bytes)
-                    if os.path.exists(D):
-                        for file in os.listdir(D):
-                            zf.write(os.path.join(D, file), arcname=os.path.join("inspection_images", file))
-                zb.seek(0)
-                
-                backup_filename = f"backup_{get_kst_now().strftime('%Y%m%d')}.zip"
-                st.download_button("💾 전체 검사 내역 및 사진 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
-                
-                st.markdown("---")
-                st.subheader("✏️ 검사 내역 수정")
-                edit_q = st.text_input("🔎 수정할 항목 검색 (포장재 번호)", placeholder="예: 5115558")
-                
-                if edit_q:
-                    mask = df.astype(str).apply(lambda r: r.str.contains(q if 'q' in locals() else edit_q, case=False).any(), axis=1)
-                    filtered_df = df[mask]
+            raw_p_name = str(row.get("포장재약호", "-"))
+            if pd.isna(row.get("포장재약호")) or raw_p_name.lower() in ["nan", "none", ""]:
+                raw_p_name = "-"
+            p_val = html.escape(raw_p_name)
+            
+            n_val = get_badge(row.get("손톱박리", "-"))
+            t_val = get_badge(row.get("테이프박리", "-"))
+            r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
+            
+            fname = str(row.get("사진파일명", "none"))
+            if fname != "none":
+                ip = os.path.join(D, fname)
+                if os.path.exists(ip):
+                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px;">🔍</a>'
                 else:
-                    filtered_df = df
-                
-                if not filtered_df.empty:
-                    target_options = [f"[{i}] 번호: {row.get('포장재번호','')} | 약호: {row.get('포장재약호','')}" for i, row in filtered_df.iterrows()]
-                    selected_target_str = st.selectbox("수정할 검사 내역 선택", target_options)
-                    
-                    if selected_target_str:
-                        sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
-                        curr_row = df.loc[sel_idx]
-                        
-                        with st.form("edit_form"):
-                            try:
-                                default_in_date = datetime.strptime(str(curr_row.get("입고일자", ""))[:10], "%Y-%m-%d").date()
-                            except:
-                                default_in_date = kst_today
-                            edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
-                            edit_in_date_str = edit_in_date_val.isoformat()
-                            
-                            try:
-                                default_inspect_date = datetime.strptime(str(curr_row.get("검사일자", ""))[:10], "%Y-%m-%d").date()
-                            except:
-                                default_inspect_date = kst_today
-                            edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
-                            edit_inspect_date_str = edit_inspect_date_val.isoformat()
-                            
-                            edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
-                            edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
-                            
-                            nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
-                            curr_nail = str(curr_row.get("손톱박리", ""))
-                            nail_default = nail_opts.index(curr_nail) if curr_nail in nail_opts else 0
-                            edit_nail = st.selectbox("손톱 박리 결과 수정", nail_opts, index=nail_default)
-                            
-                            tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
-                            curr_tape = str(curr_row.get("테이프박리", ""))
-                            tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
-                            edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
-                            
-                            edit_file = st.file_uploader("새로운 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
-                            edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
-                            
-                            update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
-                            
-                            if update_btn:
-                                new_fn = str(curr_row.get("사진파일명", "none"))
-                                if edit_file:
-                                    s_lot = "".join(c for c in edit_mat_no if c.isalnum())
-                                    t_str = get_kst_now().strftime("%Y%m%d_%H%M%S")
-                                    new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
-                                    file_path = os.path.join(D, new_fn)
-                                    with open(file_path, "wb") as f:
-                                        f.write(edit_file.getbuffer())
-                                
-                                updated_row_data = [
-                                    edit_in_date_str,
-                                    edit_inspect_date_str,
-                                    str(edit_mat_no),
-                                    str(edit_pack_name) if edit_pack_name.strip() else "-",
-                                    new_fn,
-                                    edit_nail,
-                                    edit_tape,
-                                    str(edit_rem) if edit_rem.strip() else "-"
-                                ]
-                                
-                                if update_sheet(curr_row.get("포장재번호"), updated_row_data):
-                                    st.session_state["show_edited_modal"] = True
-                                    st.rerun()
-                                else:
-                                    st.error("❌ 수정 중 오류가 발생했습니다.")
-                else:
-                    st.info("검색 결과가 없습니다.")
+                    img_td = '-'
+            else:
+                img_td = '-'
 
-                st.markdown("---")
-                if st.button("🗑️ 사진 폴더 비우기", use_container_width=True):
-                    if os.path.exists(D):
-                        for f_name in os.listdir(D):
-                            f_path = os.path.join(D, f_name)
-                            if os.path.isfile(f_path):
-                                os.remove(f_path)
-                    st.success("사진 폴더가 초기화되었습니다!")
-                    st.rerun()
+            # 💡 약호 칸은 450px 고정, 텍스트 절삭(ellipsis) 없이 전체 출력 보장
+            row_str = ('<tr>'
+                       '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
+                       '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
+                       '<td style="padding:6px 8px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
+                       '<td style="padding:6px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
+                       '<td style="padding:6px 6px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px;">' + img_td + '</td>'
+                       '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
+                       '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
+                       '<td style="padding:6px 10px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>'
+                       '</tr>')
+            rows_list.append(row_str)
 
-                st.markdown("---")
-                st.markdown("""
-                    <style>
-                    div.stButton > button {
-                        border-color: #ff4b4b;
-                    }
-                    div.stButton > button:hover {
-                        border-color: #ff2121;
-                        color: #ff2121;
-                    }
-                    </style>
-                """, unsafe_allow_html=True)
-
-                if st.button("🚨 전체 데이터 초기화", use_container_width=True):
-                    if clear_sheet_data():
-                        st.success("모든 검사 이력이 초기화되었습니다!")
-                        st.rerun()
-                    else:
-                        st.error("❌ 초기화 중 오류가 발생했습니다.")
-
-            elif admin_input:
-                st.error("❌ 비밀번호가 틀렸습니다.")
-    else:
-        st.info("저장된 검사 이력이 없습니다.")
-except Exception as e:
-    st.error(f"오류 발생: {e}")
-
-st.markdown("---")
-st.markdown(
-    "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.21 (Photo View Button Restored)" \
-    "</div>", 
-    unsafe_allow_html=True
-)
+        all_rows = "".join(rows_list)
+        table_code = '<div style="overflow-x:auto; max-height:450px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
+                     '<table style="width:1250px; table-layout:fixed; border-collapse:collapse;">' \
+                     '<colgroup>' \
+                     '<col style="width:90px;">' \
+                     '<col style="width:90px;">' \
+                     '<col style="width:100px;">' \
+                     '<col style="width:450px;">' \
+                     '<col style="width:45px;">' \
+                     '<col style="width:110px;">' \
+                     '<col style="width:110px;">' \
+                     '<col style="width:200px;">' \
+                     '</colgroup>' \
+                     '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
+                     '<tr>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">입고 일자</th>' \
+                     '<th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">검사 일자</th>' \
+                     '<th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 번호</th>' \
+                     '<th style="padding:8px 12px; white-space:nowrap
