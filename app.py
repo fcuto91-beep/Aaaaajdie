@@ -115,45 +115,7 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 순수 팝업 창 전용 뷰어 모드 (주소창/툴바 없는 깔끔한 팝업 내부 화면)
-if "view_img" in st.query_params:
-    try:
-        img_name = st.query_params["view_img"]
-        m_no = st.query_params.get("m_no", "-")
-        p_name = st.query_params.get("p_name", "-")
-        d_str = st.query_params.get("d_str", "-")
-        
-        st.markdown("""
-            <style>
-            #MainMenu {visibility: hidden;}
-            header {visibility: hidden;}
-            footer {visibility: hidden;}
-            .block-container {
-                padding-top: 1rem !important;
-                padding-bottom: 1rem !important;
-                max-width: 550px !important;
-            }
-            body { background-color: #f8f9fa; }
-            </style>
-        """, unsafe_allow_html=True)
-
-        img_full_path = os.path.join(D, img_name)
-        if os.path.exists(img_full_path):
-            st.markdown(f"### 🔍 검사 사진 크게 보기")
-            st.markdown(f"📦 **포장재 번호:** {m_no}")
-            st.markdown(f"🏷️ **포장재 약호:** {p_name}")
-            st.caption(f"📅 검사 일자: {d_str}")
-            st.image(img_full_path, use_column_width=True)
-            
-            st.markdown("")
-            if st.button("❌ 닫기", type="primary", use_container_width=True):
-                st.markdown("<script>window.close();</script>", unsafe_allow_html=True)
-            st.stop()
-    except Exception as e:
-        st.error(f"이미지 로드 오류: {e}")
-        st.stop()
-
-# 💡 평소 메인 화면
+# UI 레이아웃
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if os.path.exists(LOGO_PATH):
@@ -240,6 +202,54 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
+        # 💡 돋보기 클릭 시 현재 페이지 위에 주소창 없는 순수 오버레이 팝업창을 띄우기 위한 상태 처리
+        if "pop_idx" in st.query_params:
+            try:
+                p_idx = int(st.query_params["pop_idx"])
+                if 0 <= p_idx < len(df_f):
+                    p_row = df_f.iloc[p_idx]
+                    p_fname = str(p_row.get("사진파일명", "none"))
+                    if p_fname != "none":
+                        p_ip = os.path.join(D, p_fname)
+                        if os.path.exists(p_ip):
+                            raw_dt = str(p_row.get("검사일자", "-"))
+                            m_val_pop = html.escape(str(p_row.get("포장재번호", "-")))
+                            p_val_pop = html.escape(str(p_row.get("포장재약호", "-")))
+                            d_val_pop = format_date_str(raw_dt)
+                            
+                            # Base64 이미지 변환 대신 파일 경로 활용 또는 컴포넌트 출력
+                            import base64
+                            with open(p_ip, "rb") as img_file:
+                                encoded_img = base64.b64encode(img_file.read()).decode()
+                            
+                            # 💡 주소창/탭바가 아예 없는 순수 HTML 모달 팝업 오버레이 주입
+                            popup_html = f"""
+                            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 99999; display: flex; justify-content: center; align-items: center;">
+                                <div style="background: white; padding: 25px; border-radius: 12px; width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <h3 style="margin: 0; font-size: 18px; color: #333;">🔍 검사 사진 크게 보기</h3>
+                                        <a href="?close_pop=1" target="_self" style="text-decoration: none; font-size: 20px; color: #888; font-weight: bold; cursor: pointer;">&times;</a>
+                                    </div>
+                                    <p style="margin: 5px 0; font-size: 13px; color: #444;">📦 <b>포장재 번호:</b> {m_val_pop}</p>
+                                    <p style="margin: 5px 0; font-size: 13px; color: #444;">🏷️ <b>포장재 약호:</b> {p_val_pop}</p>
+                                    <p style="margin: 5px 0 15px 0; font-size: 13px; color: #444;">📅 <b>검사 일자:</b> {d_val_pop}</p>
+                                    <div style="text-align: center; background: #f1f3f5; border-radius: 8px; padding: 10px;">
+                                        <img src="data:image/jpeg;base64,{encoded_img}" style="max-width: 100%; max-height: 450px; border-radius: 6px;">
+                                    </div>
+                                    <div style="margin-top: 20px; text-align: center;">
+                                        <a href="?close_pop=1" target="_self" style="display: inline-block; background-color: #ff4b4b; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; width: 100%;">닫기</a>
+                                    </div>
+                                </div>
+                            </div>
+                            """
+                            st.components.v1.html(popup_html, height=0, scrolling=False)
+            except:
+                pass
+
+        if "close_pop" in st.query_params:
+            st.query_params.clear()
+            st.rerun()
+
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
@@ -271,11 +281,8 @@ try:
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    safe_m = str(row.get("포장재번호", "-"))
-                    safe_p = str(row.get("포장재약호", "-"))
-                    target_url = f"/?view_img={fname}&m_no={safe_m}&p_name={safe_p}&d_str={d_val}"
-                    # 💡 주소창, 툴바, 메뉴바를 전부 없애고 순수 팝업창(location=no, toolbar=no 등)으로 띄우는 자바스크립트
-                    img_td = f'''<a href="#" onclick="window.open('{target_url}', 'popupWindow', 'width=580,height=750,location=no,toolbar=no,menubar=no,status=no,scrollbars=yes,resizable=yes'); return false;" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'''
+                    # 💡 현재 페이지 내부에서 주소창 없는 깔끔한 모달 오버레이를 띄우도록 링크 연결
+                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                 else:
                     img_td = '-'
             else:
@@ -469,7 +476,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.45 (Toolbar-less Pure Popup Window)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.46 (Addressbar-less HTML Overlay Popup)" \
     "</div>", 
     unsafe_allow_html=True
 )
