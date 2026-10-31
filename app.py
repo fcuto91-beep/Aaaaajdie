@@ -106,7 +106,8 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
-        dt_str = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+        # 💡 검사 일자도 시간 없이 날짜(YYYY-MM-DD) 형식으로만 저장되도록 변경
+        dt_str = datetime.now(KST).strftime("%Y-%m-%d")
         fn = "none"
         if up_file:
             s_lot = "".join(c for c in mat_no if c.isalnum())
@@ -218,7 +219,7 @@ try:
                       '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
-                      '<td style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:14px;">' + img_td + '</td>' \
+                      '<td style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
@@ -276,7 +277,6 @@ try:
                     filtered_df = df
                 
                 if not filtered_df.empty:
-                    # 💡 수정 선택 항목 표시를 [포장재 번호]와 [포장재 약호] 위주로 깔끔하게 변경
                     target_options = [f"[{i}] 번호: {row.get('포장재번호','')} | 약호: {row.get('포장재약호','')}" for i, row in filtered_df.iterrows()]
                     selected_target_str = st.selectbox("수정할 검사 내역 선택", target_options)
                     
@@ -286,12 +286,19 @@ try:
                         
                         with st.form("edit_form"):
                             try:
-                                default_date = datetime.strptime(str(curr_row.get("입고일자", ""))[:10], "%Y-%m-%d").date()
+                                default_in_date = datetime.strptime(str(curr_row.get("입고일자", ""))[:10], "%Y-%m-%d").date()
                             except:
-                                default_date = datetime.now(KST).date()
-                                
-                            edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_date)
+                                default_in_date = datetime.now(KST).date()
+                            edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
                             edit_in_date_str = edit_in_date_val.strftime("%Y-%m-%d")
+                            
+                            # 💡 수정 폼에 검사 일자도 날짜 선택으로 변경하여 쉽게 고칠 수 있게 추가
+                            try:
+                                default_inspect_date = datetime.strptime(str(curr_row.get("검사일자", ""))[:10], "%Y-%m-%d").date()
+                            except:
+                                default_inspect_date = datetime.now(KST).date()
+                            edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
+                            edit_inspect_date_str = edit_inspect_date_val.strftime("%Y-%m-%d")
                             
                             edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
                             edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
@@ -323,7 +330,7 @@ try:
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
-                                    str(curr_row.get("검사일자", datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S"))),
+                                    edit_inspect_date_str,
                                     str(edit_mat_no),
                                     str(edit_pack_name) if edit_pack_name.strip() else "-",
                                     new_fn,
@@ -368,7 +375,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.7.8 (Clean Edit Selectbox)" \
+    "Author : 김태현 책임기사<br>Version : v1.7.9 (Inspection Date Simplified & Editable)" \
     "</div>", 
     unsafe_allow_html=True
 )
