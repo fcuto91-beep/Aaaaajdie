@@ -103,59 +103,6 @@ def clear_sheet_data():
         print(f"Clear error: {e}")
         return False
 
-# 💡 새 창(팝업)에서 아예 팝업 카드 형태로만 깔끔하게 뜨도록 스타일링 적용한 라우터 파트
-if "view_img" in st.query_params:
-    try:
-        img_name = st.query_params["view_img"]
-        m_no = st.query_params.get("m_no", "-")
-        p_name = st.query_params.get("p_name", "-")
-        d_str = st.query_params.get("d_str", "-")
-        
-        # 스트림릿 기본 헤더/푸터 및 여백을 숨기는 CSS 주입
-        st.markdown("""
-            <style>
-            #MainMenu {visibility: hidden;}
-            header {visibility: hidden;}
-            footer {visibility: hidden;}
-            .block-container {
-                padding-top: 1rem !important;
-                padding-bottom: 1rem !important;
-                max-width: 600px !important;
-            }
-            body {
-                background-color: #f8f9fa;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-
-        img_full_path = os.path.join(D, img_name)
-        if os.path.exists(img_full_path):
-            st.markdown(f"### 🔍 검사 사진 크게 보기")
-            st.markdown(f"📦 **포장재 번호:** {m_no}")
-            st.markdown(f"🏷️ **포장재 약호:** {p_name}")
-            st.caption(f"📅 검사 일자: {d_str}")
-            st.image(img_full_path, use_column_width=True)
-            
-            st.markdown("")
-            if st.button("창 닫기", type="primary", use_container_width=True):
-                st.markdown("<script>window.close();</script>", unsafe_allow_html=True)
-            st.stop()
-    except Exception as e:
-        st.error(f"이미지 로드 오류: {e}")
-        st.stop()
-
-# UI 레이아웃
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, use_column_width=True)
-
-st.markdown("")
-st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
-
-current_time_str = get_kst_now().strftime('%Y-%m-%d %H:%M:%S')
-st.info("⏰ 일자: **" + current_time_str + "**")
-
 @st.dialog("🎉 저장 완료")
 def show_save_success_popup():
     st.success("검사 결과가 구글 시트에 실시간으로 안전하게 저장되었습니다!")
@@ -167,6 +114,46 @@ def show_edit_success_popup():
     st.success("검사 내역이 구글 시트에 성공적으로 수정 반영되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
+
+# 💡 사진 크게 보기 중앙 다이얼로그 팝업 함수
+@st.dialog("🔍 검사 사진 크게 보기")
+def show_image_popup(img_path, m_name, p_name, date_str):
+    st.markdown(f"📦 **포장재 번호:** {m_name}")
+    st.markdown(f"🏷️ **포장재 약호:** {p_name}")
+    st.caption(f"📅 검사 일자: {date_str[:10] if len(date_str) >= 10 else date_str}")
+    st.image(img_path, use_column_width=True)
+    if st.button("닫기", type="primary", use_container_width=True):
+        st.query_params.clear()
+        st.rerun()
+
+# 💡 핵심: 돋보기 버튼을 눌러 팝업을 띄울 때는 메인 화면 코드를 아예 실행하지 않음 (뒤에 잔상 남음 방지)
+if "pop_idx" in st.query_params:
+    try:
+        temp_df = load_data()
+        p_idx = int(st.query_params["pop_idx"])
+        if 0 <= p_idx < len(temp_df):
+            p_row = temp_df.iloc[p_idx]
+            p_fname = str(p_row.get("사진파일명", "none"))
+            if p_fname != "none":
+                p_ip = os.path.join(D, p_fname)
+                if os.path.exists(p_ip):
+                    raw_dt = str(p_row.get("검사일자", "-"))
+                    show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
+    except:
+        st.query_params.clear()
+        st.rerun()
+
+# UI 레이아웃 (평소 메인 화면)
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if os.path.exists(LOGO_PATH):
+        st.image(LOGO_PATH, use_column_width=True)
+
+st.markdown("")
+st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
+
+current_time_str = get_kst_now().strftime('%Y-%m-%d %H:%M:%S')
+st.info("⏰ 일자: **" + current_time_str + "**")
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
@@ -274,10 +261,7 @@ try:
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    safe_m = str(row.get("포장재번호", "-"))
-                    safe_p = str(row.get("포장재약호", "-"))
-                    target_url = f"/?view_img={fname}&m_no={safe_m}&p_name={safe_p}&d_str={d_val}"
-                    img_td = f'''<a href="#" onclick="window.open('{target_url}', 'popupWindow', 'width=600,height=750,scrollbars=yes'); return false;" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'''
+                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                 else:
                     img_td = '-'
             else:
@@ -471,7 +455,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.40 (Clean Popup Card Styling)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.41 (Pure Dialog Modal Overlay Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
