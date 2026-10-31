@@ -7,6 +7,7 @@ import zipfile
 import requests
 import json
 import html
+import base64
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
@@ -115,44 +116,6 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 세션 상태를 이용한 완벽한 단독 모달 팝업 창 함수
-@st.dialog("🔍 검사 사진 크게 보기")
-def show_image_popup(img_path, m_name, p_name, date_str):
-    st.markdown(f"📦 **포장재 번호:** {m_name}")
-    st.markdown(f"🏷️ **포장재 약호:** {p_name}")
-    st.caption(f"📅 검사 일자: {date_str[:10] if len(date_str) >= 10 else date_str}")
-    st.image(img_path, use_column_width=True)
-    if st.button("닫기", type="primary", use_container_width=True):
-        st.session_state["active_popup"] = None
-        st.rerun()
-
-# 💡 URL 파라미터 대신 버튼 클릭으로 세션에 인덱스 저장 처리
-if "active_popup" not in st.session_state:
-    st.session_state["active_popup"] = None
-
-if "pop_idx" in st.query_params:
-    try:
-        st.session_state["active_popup"] = int(st.query_params["pop_idx"])
-        st.query_params.clear()
-    except:
-        st.query_params.clear()
-
-# 만약 팝업 활성화 상태라면 다이얼로그 호출
-if st.session_state["active_popup"] is not None:
-    try:
-        temp_df = load_data()
-        p_idx = st.session_state["active_popup"]
-        if 0 <= p_idx < len(temp_df):
-            p_row = temp_df.iloc[p_idx]
-            p_fname = str(p_row.get("사진파일명", "none"))
-            if p_fname != "none":
-                p_ip = os.path.join(D, p_fname)
-                if os.path.exists(p_ip):
-                    raw_dt = str(p_row.get("검사일자", "-"))
-                    show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
-    except:
-        st.session_state["active_popup"] = None
-
 # UI 레이아웃
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -252,6 +215,8 @@ try:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
         rows_list = []
+        modals_list = []
+        
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
             d_val = format_date_str(row.get("검사일자", "-"))
@@ -271,7 +236,34 @@ try:
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
+                    with open(ip, "rb") as img_file:
+                        encoded_img = base64.b64encode(img_file.read()).decode()
+                    
+                    modal_id = f"modal_{idx}"
+                    # 💡 돋보기 버튼 클릭 시 페이지 이동 없이 자바스크립트로 해당 모달만 띄움
+                    img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
+                    
+                    # 💡 기존 웹 화면 위에 반투명 배경과 함께 띄워질 순수 HTML 모달 팝업 구성
+                    modal_html = f"""
+                    <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
+                        <div style="background:white; padding:25px; border-radius:12px; width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.3); position:relative;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                                <h3 style="margin:0; font-size:18px; color:#333;">🔍 검사 사진 크게 보기</h3>
+                                <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#888; font-weight:bold; cursor:pointer; padding:0 5px;">&times;</a>
+                            </div>
+                            <p style="margin:6px 0; font-size:13px; color:#444;">📦 <b>포장재 번호:</b> {m_val}</p>
+                            <p style="margin:6px 0; font-size:13px; color:#444;">🏷️ <b>포장재 약호:</b> {p_val}</p>
+                            <p style="margin:6px 0 15px 0; font-size:13px; color:#444;">📅 <b>검사 일자:</b> {d_val}</p>
+                            <div style="text-align:center; background:#f1f3f5; border-radius:8px; padding:10px;">
+                                <img src="data:image/jpeg;base64,{encoded_img}" style="max-width:100%; max-height:400px; border-radius:6px;">
+                            </div>
+                            <div style="margin-top:20px; text-align:center;">
+                                <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; font-size:14px; width:100%; cursor:pointer;">닫기</button>
+                            </div>
+                        </div>
+                    </div>
+                    """
+                    modals_list.append(modal_html)
                 else:
                     img_td = '-'
             else:
@@ -291,6 +283,7 @@ try:
             rows_list.append(row_str)
 
         all_rows = "\n".join(rows_list)
+        all_modals = "\n".join(modals_list)
         
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -322,9 +315,10 @@ try:
         </tbody>
     </table>
 </div>
+{all_modals}
 """
 
-        st.components.v1.html(table_code, height=490, scrolling=True)
+        st.components.v1.html(table_code, height=520, scrolling=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -465,7 +459,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.47 (Session State Dialog Modal Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.48 (Seamless JavaScript Modal Popup Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
