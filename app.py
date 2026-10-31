@@ -26,13 +26,18 @@ def get_kst_now():
         return target_min
     return actual_kst
 
+# 💡 영문 날짜(Sat Oct 31 등)나 어떤 형태의 날짜든 무조건 YYYY-MM-DD로 완벽 변환하는 초강력 함수
 def format_date_str(val):
-    if not val or val == "nan" or val == "NaT" or val == "None":
+    if not val or str(val).lower() in ["nan", "nat", "none", "", "-"]:
         return "-"
     v_str = str(val).strip()
-    if len(v_str) >= 10:
-        return v_str[:10]
-    return v_str
+    try:
+        parsed_dt = pd.to_datetime(v_str, errors='coerce')
+        if pd.notna(parsed_dt):
+            return parsed_dt.strftime("%Y-%m-%d")
+    except:
+        pass
+    return v_str[:10] if len(v_str) >= 10 else v_str
 
 def load_data():
     try:
@@ -42,7 +47,6 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 df = pd.DataFrame(data)
-                # 💡 핵심: 판다스가 날짜를 제멋대로 변환하지 못하도록 전체 데이터를 순수 문자열로 강제 고정
                 df = df.astype(str)
                 return df
     except Exception as e:
@@ -337,7 +341,7 @@ try:
                                     new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
                                     file_path = os.path.join(D, new_fn)
                                     with open(file_path, "wb") as f:
-                                        f.write(up_file.getbuffer())
+                                        f.write(edit_file.getbuffer())
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
@@ -386,7 +390,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.9.9 (DataFrame Force String Cast)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.0 (Robust Date Formatting Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
