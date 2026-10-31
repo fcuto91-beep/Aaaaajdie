@@ -256,35 +256,197 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 약호 칸은 450px 고정, 텍스트 절삭(ellipsis) 없이 전체 출력 보장
-            row_str = ('<tr>'
-                       '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
-                       '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
-                       '<td style="padding:6px 8px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
-                       '<td style="padding:6px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
-                       '<td style="padding:6px 6px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px;">' + img_td + '</td>'
-                       '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
-                       '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
-                       '<td style="padding:6px 10px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">' + r_val + '</td>'
-                       '</tr>')
+            row_str = f"""
+                <tr>
+                    <td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">{in_val}</td>
+                    <td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">{d_val}</td>
+                    <td style="padding:6px 8px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle;">{m_val}</td>
+                    <td style="padding:6px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">{p_val}</td>
+                    <td style="padding:6px 6px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px;">{img_td}</td>
+                    <td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">{n_val}</td>
+                    <td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">{t_val}</td>
+                    <td style="padding:6px 10px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">{r_val}</td>
+                </tr>
+            """
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
-        table_code = '<div style="overflow-x:auto; max-height:450px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
-                     '<table style="width:1250px; table-layout:fixed; border-collapse:collapse;">' \
-                     '<colgroup>' \
-                     '<col style="width:90px;">' \
-                     '<col style="width:90px;">' \
-                     '<col style="width:100px;">' \
-                     '<col style="width:450px;">' \
-                     '<col style="width:45px;">' \
-                     '<col style="width:110px;">' \
-                     '<col style="width:110px;">' \
-                     '<col style="width:200px;">' \
-                     '</colgroup>' \
-                     '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
-                     '<tr>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">입고 일자</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">검사 일자</th>' \
-                     '<th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 번호</th>' \
-                     '<th style="padding:8px 12px; white-space:nowrap
+        
+        # 💡 삼중 따옴표로 감싸서 백슬래시 문법 오류 원천 방지
+        table_code = f"""
+        <div style="overflow-x:auto; max-height:450px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">
+            <table style="width:1250px; table-layout:fixed; border-collapse:collapse;">
+                <colgroup>
+                    <col style="width:90px;">
+                    <col style="width:90px;">
+                    <col style="width:100px;">
+                    <col style="width:450px;">
+                    <col style="width:45px;">
+                    <col style="width:110px;">
+                    <col style="width:110px;">
+                    <col style="width:200px;">
+                </colgroup>
+                <thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">
+                    <tr>
+                        <th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">입고 일자</th>
+                        <th style="padding:8px 6px; white-space:nowrap; font-size:11.5px; text-align:center;">검사 일자</th>
+                        <th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 번호</th>
+                        <th style="padding:8px 12px; white-space:nowrap; font-size:11.5px; text-align:center;">포장재 약호</th>
+                        <th style="padding:8px 6px; text-align:center; white-space:nowrap; font-size:11.5px;">보기</th>
+                        <th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">손톱</th>
+                        <th style="padding:8px 8px; white-space:nowrap; font-size:11.5px; text-align:center;">테이프</th>
+                        <th style="padding:8px 10px; white-space:nowrap; font-size:11.5px; text-align:center;">특이사항</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {all_rows}
+                </tbody>
+            </table>
+        </div>
+        """
+
+        st.markdown(table_code, unsafe_allow_html=True)
+
+        st.markdown("---")
+        with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
+            admin_input = st.text_input("관리자 비밀번호를 입력하세요", type="password")
+            
+            if admin_input == ADMIN_PW:
+                st.success("✅ 관리자 인증이 완료되었습니다.")
+                
+                zb = io.BytesIO()
+                with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
+                    csv_bytes = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+                    zf.writestr("inspection_history.csv", csv_bytes)
+                    if os.path.exists(D):
+                        for file in os.listdir(D):
+                            zf.write(os.path.join(D, file), arcname=os.path.join("inspection_images", file))
+                zb.seek(0)
+                
+                backup_filename = f"backup_{get_kst_now().strftime('%Y%m%d')}.zip"
+                st.download_button("💾 전체 검사 내역 및 사진 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
+                
+                st.markdown("---")
+                st.subheader("✏️ 검사 내역 수정")
+                edit_q = st.text_input("🔎 수정할 항목 검색 (포장재 번호)", placeholder="예: 5115558")
+                
+                if edit_q:
+                    mask = df.astype(str).apply(lambda r: r.str.contains(q if 'q' in locals() else edit_q, case=False).any(), axis=1)
+                    filtered_df = df[mask]
+                else:
+                    filtered_df = df
+                
+                if not filtered_df.empty:
+                    target_options = [f"[{i}] 번호: {row.get('포장재번호','')} | 약호: {row.get('포장재약호','')}" for i, row in filtered_df.iterrows()]
+                    selected_target_str = st.selectbox("수정할 검사 내역 선택", target_options)
+                    
+                    if selected_target_str:
+                        sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
+                        curr_row = df.loc[sel_idx]
+                        
+                        with st.form("edit_form"):
+                            try:
+                                default_in_date = datetime.strptime(str(curr_row.get("입고일자", ""))[:10], "%Y-%m-%d").date()
+                            except:
+                                default_in_date = kst_today
+                            edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
+                            edit_in_date_str = edit_in_date_val.isoformat()
+                            
+                            try:
+                                default_inspect_date = datetime.strptime(str(curr_row.get("검사일자", ""))[:10], "%Y-%m-%d").date()
+                            except:
+                                default_inspect_date = kst_today
+                            edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
+                            edit_inspect_date_str = edit_inspect_date_val.isoformat()
+                            
+                            edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
+                            edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
+                            
+                            nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
+                            curr_nail = str(curr_row.get("손톱박리", ""))
+                            nail_default = nail_opts.index(curr_nail) if curr_nail in nail_opts else 0
+                            edit_nail = st.selectbox("손톱 박리 결과 수정", nail_opts, index=nail_default)
+                            
+                            tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
+                            curr_tape = str(curr_row.get("테이프박리", ""))
+                            tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
+                            edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
+                            
+                            edit_file = st.file_uploader("새로운 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
+                            edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
+                            
+                            update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
+                            
+                            if update_btn:
+                                new_fn = str(curr_row.get("사진파일명", "none"))
+                                if edit_file:
+                                    s_lot = "".join(c for c in edit_mat_no if c.isalnum())
+                                    t_str = get_kst_now().strftime("%Y%m%d_%H%M%S")
+                                    new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
+                                    file_path = os.path.join(D, new_fn)
+                                    with open(file_path, "wb") as f:
+                                        f.write(edit_file.getbuffer())
+                                
+                                updated_row_data = [
+                                    edit_in_date_str,
+                                    edit_inspect_date_str,
+                                    str(edit_mat_no),
+                                    str(edit_pack_name) if edit_pack_name.strip() else "-",
+                                    new_fn,
+                                    edit_nail,
+                                    edit_tape,
+                                    str(edit_rem) if edit_rem.strip() else "-"
+                                ]
+                                
+                                if update_sheet(curr_row.get("포장재번호"), updated_row_data):
+                                    st.session_state["show_edited_modal"] = True
+                                    st.rerun()
+                                else:
+                                    st.error("❌ 수정 중 오류가 발생했습니다.")
+                else:
+                    st.info("검색 결과가 없습니다.")
+
+                st.markdown("---")
+                if st.button("🗑️ 사진 폴더 비우기", use_container_width=True):
+                    if os.path.exists(D):
+                        for f_name in os.listdir(D):
+                            f_path = os.path.join(D, f_name)
+                            if os.path.isfile(f_path):
+                                os.remove(f_path)
+                    st.success("사진 폴더가 초기화되었습니다!")
+                    st.rerun()
+
+                st.markdown("---")
+                st.markdown("""
+                    <style>
+                    div.stButton > button {
+                        border-color: #ff4b4b;
+                    }
+                    div.stButton > button:hover {
+                        border-color: #ff2121;
+                        color: #ff2121;
+                    }
+                    </style>
+                """, unsafe_allow_html=True)
+
+                if st.button("🚨 전체 데이터 초기화", use_container_width=True):
+                    if clear_sheet_data():
+                        st.success("모든 검사 이력이 초기화되었습니다!")
+                        st.rerun()
+                    else:
+                        st.error("❌ 초기화 중 오류가 발생했습니다.")
+
+            elif admin_input:
+                st.error("❌ 비밀번호가 틀렸습니다.")
+    else:
+        st.info("저장된 검사 이력이 없습니다.")
+except Exception as e:
+    st.error(f"오류 발생: {e}")
+
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
+    "Author : 김태현 책임기사<br>Version : v1.10.23 (Python Syntax Error Fixed)" \
+    "</div>", 
+    unsafe_allow_html=True
+)
