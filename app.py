@@ -12,7 +12,8 @@ st.set_page_config(page_title="Inspection", layout="centered")
 D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdKZ6DM75Uhxa_BBb7EzePmIngwzJSBzc6qkip-YFuSTW6THJhbYktbZf_bmePBF18Xg/exec"
+# 💡 형님이 알려주신 최신 웹 앱 URL로 완벽하게 교체 완료!
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqCvl8jzARTsIM7idZ3WwZBvOuuBhwEWNohpGdvKFthm6IUAouM6XlgDkO3cAzVw6uEg/exec"
 
 if not os.path.exists(D):
     os.makedirs(D)
@@ -388,7 +389,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.9.6 (Raw String UI Force Render)" \
+    "Author : 김태현 책임기사<br>Version : v1.9.7 (Correct Apps Script URL Applied)" \
     "</div>", 
     unsafe_allow_html=True
 )
