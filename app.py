@@ -41,9 +41,9 @@ def append_to_sheet(row_data):
         print(f"Append error: {e}")
         return False
 
-def update_sheet(date_val, mat_val, row_data):
+def update_sheet(old_date, old_mat, row_data):
     try:
-        payload = {"action": "update", "date": str(date_val), "mat_no": str(mat_val), "row": row_data}
+        payload = {"action": "update", "date": str(old_date), "mat_no": str(old_mat), "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
         return response.status_code == 200
     except Exception as e:
@@ -106,7 +106,6 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
-        # 💡 검사 일자도 시간 없이 날짜(YYYY-MM-DD) 형식으로만 저장되도록 변경
         dt_str = datetime.now(KST).strftime("%Y-%m-%d")
         fn = "none"
         if up_file:
@@ -292,7 +291,6 @@ try:
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
                             edit_in_date_str = edit_in_date_val.strftime("%Y-%m-%d")
                             
-                            # 💡 수정 폼에 검사 일자도 날짜 선택으로 변경하여 쉽게 고칠 수 있게 추가
                             try:
                                 default_inspect_date = datetime.strptime(str(curr_row.get("검사일자", ""))[:10], "%Y-%m-%d").date()
                             except:
@@ -339,6 +337,7 @@ try:
                                     str(edit_rem) if edit_rem.strip() else "-"
                                 ]
                                 
+                                # 💡 수정 시 타겟을 찾는 기준을 기존 검사일자와 포장재번호 조합으로 확실하게 전달
                                 if update_sheet(curr_row.get("검사일자"), curr_row.get("포장재번호"), updated_row_data):
                                     st.session_state["show_edited_modal"] = True
                                     st.rerun()
@@ -375,7 +374,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.7.9 (Inspection Date Simplified & Editable)" \
+    "Author : 김태현 책임기사<br>Version : v1.8.0 (Edit Identification Fixed)" \
     "</div>", 
     unsafe_allow_html=True
 )
