@@ -115,18 +115,7 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 사진 크게 보기 중앙 다이얼로그 팝업 함수
-@st.dialog("🔍 검사 사진 크게 보기")
-def show_image_popup(img_path, m_name, p_name, date_str):
-    st.markdown(f"📦 **포장재 번호:** {m_name}")
-    st.markdown(f"🏷️ **포장재 약호:** {p_name}")
-    st.caption(f"📅 검사 일자: {date_str[:10] if len(date_str) >= 10 else date_str}")
-    st.image(img_path, use_column_width=True)
-    if st.button("닫기", type="primary", use_container_width=True):
-        st.query_params.clear()
-        st.rerun()
-
-# 💡 핵심: 팝업 파라미터가 있을 때 다이얼로그를 띄우고 즉시 st.stop()으로 뒤의 메인 화면 실행을 완벽 차단!
+# 💡 팝업 모드 체크 및 처리 (뒤에 메인 화면이 절대 보이지 않게 단독 렌더링)
 if "pop_idx" in st.query_params:
     try:
         temp_df = load_data()
@@ -138,8 +127,22 @@ if "pop_idx" in st.query_params:
                 p_ip = os.path.join(D, p_fname)
                 if os.path.exists(p_ip):
                     raw_dt = str(p_row.get("검사일자", "-"))
-                    show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
-                    st.stop()  # 뒤에 있는 메인 화면 내용이 절대 밑으로 따라 나오지 않게 여기서 실행 중단!
+                    
+                    # 팝업 전용 깔끔한 중앙 카드 컨테이너
+                    _, center_col, _ = st.columns([1, 2, 1])
+                    with center_col:
+                        st.markdown("<div style='background-color:white; padding:25px; border-radius:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border:1px solid #ddd;'>", unsafe_allow_html=True)
+                        st.markdown("### 🔍 검사 사진 크게 보기")
+                        st.markdown(f"📦 **포장재 번호:** {str(p_row.get('포장재번호', '-'))}")
+                        st.markdown(f"🏷️ **포장재 약호:** {str(p_row.get('포장재약호', '-'))}")
+                        st.caption(f"📅 검사 일자: {raw_dt[:10] if len(raw_dt) >= 10 else raw_dt}")
+                        st.image(p_ip, use_column_width=True)
+                        
+                        if st.button("❌ 닫기", type="primary", use_container_width=True):
+                            st.query_params.clear()
+                            st.rerun()
+                        st.markdown("</div>", unsafe_allow_html=True)
+                    st.stop()  # 뒤에 있는 메인 화면 코드가 절대 실행되지 않도록 여기서 완전 차단!
     except:
         st.query_params.clear()
         st.rerun()
@@ -456,7 +459,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.42 (Strict Stop Dialog Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.43 (Isolated Single Card View Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
