@@ -275,7 +275,7 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 v1.10.52 원본 HTML 표 서식 완벽 적용
+            # 💡 모든 칸(특이사항 포함)에 테두리와 배경 서식이 완벽하게 들어가도록 수정된 행 코드
             row_str = f"""
 <tr>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
@@ -285,37 +285,27 @@ try:
     <td style="padding:8px 6px; text-align:center; width:40px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
-    <td style="padding:8px 10px; width:auto; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
+    <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{r_val}</td>
 </tr>"""
             rows_list.append(row_str)
 
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
-        # 💡 깔끔한 테두리와 고정 헤더가 적용된 HTML 테이블 구조
+        # 💡 테이블 전체 폭과 최소 너비를 확실하게 잡아 특이사항 칸 테두리 보존
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin:0;">
-        <colgroup>
-            <col style="width:85px;">
-            <col style="width:85px;">
-            <col style="width:95px;">
-            <col style="width:220px;">
-            <col style="width:40px;">
-            <col style="width:100px;">
-            <col style="width:100px;">
-            <col style="width:auto;">
-        </colgroup>
+    <table style="width:100%; min-width:850px; table-layout:auto; border-collapse:collapse; margin:0;">
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
             <tr>
-                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
-                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">검사 일자</th>
-                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
-                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
-                <th style="padding:10px 6px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
-                <th style="padding:10px 6px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
-                <th style="padding:10px 6px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
-                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center;">특이사항</th>
+                <th style="padding:10px 8px; width:85px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
+                <th style="padding:10px 8px; width:85px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">검사 일자</th>
+                <th style="padding:10px 8px; width:95px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
+                <th style="padding:10px 10px; width:220px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
+                <th style="padding:10px 6px; width:40px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
+                <th style="padding:10px 6px; width:100px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
+                <th style="padding:10px 6px; width:100px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
+                <th style="padding:10px 10px; min-width:130px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">특이사항</th>
             </tr>
         </thead>
         <tbody>
@@ -467,7 +457,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.71 (Restored Table CSS & Correct Descending Sort)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.72 (Fixed Remarks Column Border Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
