@@ -210,7 +210,8 @@ try:
             elif "적합" in v_str or "PASS" in v_str:
                 return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🟢 적합 (PASS)</span>'
             elif "시험 대기" in v_str or "사양 확인" in v_str:
-                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:10px; font-size:9px; white-space:nowrap; display:inline-block;">🟡 시험대기 (사양확인)</span>'
+                # 💡 노란색 배지 글자 크기와 패딩을 줄여서 칸 안으로 완벽하게 수납
+                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 시험대기(사양확인)</span>'
             else:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
@@ -457,7 +458,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.65 (Restored v1.10.52 Layout)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.66 (Fixed Yellow Badge Overflow)" \
     "</div>", 
     unsafe_allow_html=True
 )
