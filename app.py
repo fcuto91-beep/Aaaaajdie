@@ -22,9 +22,11 @@ KST = timezone(timedelta(hours=9))
 def get_kst_now():
     return datetime.now(timezone.utc) + timedelta(hours=9)
 
+# 💡 캐시를 타지 않고 무조건 실시간으로 최신 구글 시트 데이터를 가져오도록 타임스탬프 파라미터 추가
 def load_data():
     try:
-        response = requests.get(APPS_SCRIPT_URL, timeout=10)
+        no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
+        response = requests.get(no_cache_url, timeout=10)
         if response.status_code == 200:
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
@@ -88,7 +90,6 @@ def show_edit_success_popup():
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
-    # 💡 오늘 날짜를 확실하게 가져오도록 기본값 지정
     kst_today = get_kst_now().date()
     in_date_val = st.date_input("포장재 입고 일자", value=kst_today)
     in_date_str = in_date_val.strftime("%Y-%m-%d")
@@ -111,7 +112,7 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
-        # 💡 검사 일자도 현재 KST 날짜 문자열로 정확히 생성
+        # 💡 무조건 현재 KST 기준 날짜로 검사일자 생성
         dt_str = get_kst_now().strftime("%Y-%m-%d")
         fn = "none"
         if up_file:
@@ -379,7 +380,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.8.6 (Robust KST Date Handling)" \
+    "Author : 김태현 책임기사<br>Version : v1.8.7 (No-Cache Realtime Load)" \
     "</div>", 
     unsafe_allow_html=True
 )
