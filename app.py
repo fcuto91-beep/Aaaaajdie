@@ -12,7 +12,8 @@ st.set_page_config(page_title="Inspection", layout="wide")
 D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqCvl8jzARTsIM7idZ3WwZBvOuuBhwEWNohpGdvKFthm6IUAouM6XlgDkO3cAzVw6uEg/exec"
+# 💡 새롭게 발급하신 Apps Script URL 반영
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVa9Xb5roJSHDvtl0bEHuh6sDHeZBtlE3PCw6tARq5Q_s3Eui8RwgzmGO075zZZccxOA/exec"
 
 if not os.path.exists(D):
     os.makedirs(D)
@@ -59,7 +60,6 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 구글 시트 데이터 로딩 시 문자열 손실 및 잘림 현상 원천 차단 파서 적용
 def load_data():
     try:
         no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
@@ -68,7 +68,6 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 df = pd.DataFrame(data)
-                # 모든 컬럼을 명시적 문자열로 변환하고 양쪽 공백 정리 (특수문자 잘림 방지)
                 for col in df.columns:
                     df[col] = df[col].astype(str).str.strip()
                 return df
@@ -378,7 +377,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.18 (Load Data String Safety Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.20 (New Apps Script URL Applied)" \
     "</div>", 
     unsafe_allow_html=True
 )
