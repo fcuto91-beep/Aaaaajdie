@@ -85,8 +85,9 @@ def show_edit_success_popup():
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
-    # 💡 포장재 번호 바로 위에 입고 일자 입력창 추가
-    in_date = st.text_input("포장재 입고 일자", placeholder="예: 20261021")
+    in_date_val = st.date_input("포장재 입고 일자", value=datetime.now(KST).date())
+    in_date_str = in_date_val.strftime("%Y-%m-%d")
+    
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
     pack_name = st.text_input("포장재 약호", placeholder="예: ANA-TBMBM(F)E 용기(공용)")
     
@@ -117,7 +118,7 @@ if ok:
 
         row_data = [
             dt_str, 
-            str(in_date) if in_date.strip() else "-", 
+            in_date_str, 
             str(mat_no), 
             str(pack_name) if pack_name.strip() else "-", 
             nail, 
@@ -187,7 +188,12 @@ try:
         for idx, row in df_f.iterrows():
             raw_d = str(row.get("검사일시", "-"))
             d_val = raw_d[:10] if len(raw_d) >= 10 else raw_d
-            in_val = str(row.get("입고일자", "-")) if pd.notna(row.get("입고일자")) else "-"
+            
+            raw_in = str(row.get("입고일자", "-"))
+            in_val = raw_in[:10] if len(raw_in) >= 10 else raw_in
+            if in_val == "nan" or not in_val.strip():
+                in_val = "-"
+
             m_val = str(row.get("포장재번호", "-"))
             p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
             
@@ -195,6 +201,7 @@ try:
             t_val = get_badge(row.get("테이프박리", "-"))
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
+            # 미리보기 버튼 처리 (약호와 손톱 사이로 배치)
             fname = str(row.get("사진파일명", "none"))
             if fname != "none":
                 ip = os.path.join(D, fname)
@@ -205,14 +212,15 @@ try:
             else:
                 img_td = '-'
 
+            # 💡 컬럼 순서: 일자 | 입고일자 | 포장재번호 | 포장재약호 | 미리보기 | 손톱 | 테이프 | 특이사항
             row_str = '<tr>' \
                       '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
+                      '<td style="padding:8px 6px; text-align:center; width:70px; font-weight:normal; vertical-align:middle;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
-                      '<td style="padding:8px 6px; text-align:center; width:70px; font-weight:normal; vertical-align:middle;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
                       '</tr>'
             rows_list.append(row_str)
@@ -226,9 +234,9 @@ try:
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">입고 일자</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
+                     '<th style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">미리보기</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
-                     '<th style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">미리보기</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">특이사항</th>' \
                      '</tr>' \
                      '</thead>' \
@@ -262,7 +270,7 @@ try:
                 edit_q = st.text_input("🔎 수정할 항목 검색 (포장재 번호)", placeholder="예: 5115558")
                 
                 if edit_q:
-                    mask = df.astype(str).apply(lambda r: r.str.contains(edit_q, case=False).any(), axis=1)
+                    mask = df.astype(str).apply(lambda r: r.str.contains(q if 'q' in locals() else edit_q, case=False).any(), axis=1)
                     filtered_df = df[mask]
                 else:
                     filtered_df = df
@@ -276,7 +284,14 @@ try:
                         curr_row = df.loc[sel_idx]
                         
                         with st.form("edit_form"):
-                            edit_in_date = st.text_input("포장재 입고 일자 수정", value=str(curr_row.get("입고일자", "")))
+                            try:
+                                default_date = datetime.strptime(str(curr_row.get("입고일자", ""))[:10], "%Y-%m-%d").date()
+                            except:
+                                default_date = datetime.now(KST).date()
+                                
+                            edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_date)
+                            edit_in_date_str = edit_in_date_val.strftime("%Y-%m-%d")
+                            
                             edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
                             edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
                             
@@ -307,7 +322,7 @@ try:
                                 
                                 updated_row_data = [
                                     str(curr_row.get("검사일시", "")),
-                                    str(edit_in_date) if edit_in_date.strip() else "-",
+                                    edit_in_date_str,
                                     str(edit_mat_no),
                                     str(edit_pack_name) if edit_pack_name.strip() else "-",
                                     edit_nail,
@@ -352,7 +367,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.6.5 (Inbound Date Added)" \
+    "Author : 김태현 책임기사<br>Version : v1.6.7 (Preview Column Moved)" \
     "</div>", 
     unsafe_allow_html=True
 )
