@@ -337,7 +337,6 @@ try:
                             edit_inspect_date_str = edit_inspect_date_val.isoformat()
                             
                             edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
-                            # 💡 기존에 짤려서 들어간 데이터 대신 전체 풀네임을 입력할 수 있도록 기본값 제공 및 수정 칸 확장
                             edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
                             
                             nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
@@ -363,7 +362,7 @@ try:
                                     new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
                                     file_path = os.path.join(D, new_fn)
                                     with open(file_path, "wb") as f:
-                                        f.write(edit_file.getbuffer())
+                                        f.write(up_file.getbuffer())
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
@@ -424,7 +423,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.11 (Edit Form Full Name Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.12 (Data Flow Safeguard)" \
     "</div>", 
     unsafe_allow_html=True
 )
