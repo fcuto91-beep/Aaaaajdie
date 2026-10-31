@@ -115,6 +115,44 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
+# 💡 세션 상태를 이용한 완벽한 단독 모달 팝업 창 함수
+@st.dialog("🔍 검사 사진 크게 보기")
+def show_image_popup(img_path, m_name, p_name, date_str):
+    st.markdown(f"📦 **포장재 번호:** {m_name}")
+    st.markdown(f"🏷️ **포장재 약호:** {p_name}")
+    st.caption(f"📅 검사 일자: {date_str[:10] if len(date_str) >= 10 else date_str}")
+    st.image(img_path, use_column_width=True)
+    if st.button("닫기", type="primary", use_container_width=True):
+        st.session_state["active_popup"] = None
+        st.rerun()
+
+# 💡 URL 파라미터 대신 버튼 클릭으로 세션에 인덱스 저장 처리
+if "active_popup" not in st.session_state:
+    st.session_state["active_popup"] = None
+
+if "pop_idx" in st.query_params:
+    try:
+        st.session_state["active_popup"] = int(st.query_params["pop_idx"])
+        st.query_params.clear()
+    except:
+        st.query_params.clear()
+
+# 만약 팝업 활성화 상태라면 다이얼로그 호출
+if st.session_state["active_popup"] is not None:
+    try:
+        temp_df = load_data()
+        p_idx = st.session_state["active_popup"]
+        if 0 <= p_idx < len(temp_df):
+            p_row = temp_df.iloc[p_idx]
+            p_fname = str(p_row.get("사진파일명", "none"))
+            if p_fname != "none":
+                p_ip = os.path.join(D, p_fname)
+                if os.path.exists(p_ip):
+                    raw_dt = str(p_row.get("검사일자", "-"))
+                    show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
+    except:
+        st.session_state["active_popup"] = None
+
 # UI 레이아웃
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -202,54 +240,6 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 돋보기 클릭 시 현재 페이지 위에 주소창 없는 순수 오버레이 팝업창을 띄우기 위한 상태 처리
-        if "pop_idx" in st.query_params:
-            try:
-                p_idx = int(st.query_params["pop_idx"])
-                if 0 <= p_idx < len(df_f):
-                    p_row = df_f.iloc[p_idx]
-                    p_fname = str(p_row.get("사진파일명", "none"))
-                    if p_fname != "none":
-                        p_ip = os.path.join(D, p_fname)
-                        if os.path.exists(p_ip):
-                            raw_dt = str(p_row.get("검사일자", "-"))
-                            m_val_pop = html.escape(str(p_row.get("포장재번호", "-")))
-                            p_val_pop = html.escape(str(p_row.get("포장재약호", "-")))
-                            d_val_pop = format_date_str(raw_dt)
-                            
-                            # Base64 이미지 변환 대신 파일 경로 활용 또는 컴포넌트 출력
-                            import base64
-                            with open(p_ip, "rb") as img_file:
-                                encoded_img = base64.b64encode(img_file.read()).decode()
-                            
-                            # 💡 주소창/탭바가 아예 없는 순수 HTML 모달 팝업 오버레이 주입
-                            popup_html = f"""
-                            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 99999; display: flex; justify-content: center; align-items: center;">
-                                <div style="background: white; padding: 25px; border-radius: 12px; width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                        <h3 style="margin: 0; font-size: 18px; color: #333;">🔍 검사 사진 크게 보기</h3>
-                                        <a href="?close_pop=1" target="_self" style="text-decoration: none; font-size: 20px; color: #888; font-weight: bold; cursor: pointer;">&times;</a>
-                                    </div>
-                                    <p style="margin: 5px 0; font-size: 13px; color: #444;">📦 <b>포장재 번호:</b> {m_val_pop}</p>
-                                    <p style="margin: 5px 0; font-size: 13px; color: #444;">🏷️ <b>포장재 약호:</b> {p_val_pop}</p>
-                                    <p style="margin: 5px 0 15px 0; font-size: 13px; color: #444;">📅 <b>검사 일자:</b> {d_val_pop}</p>
-                                    <div style="text-align: center; background: #f1f3f5; border-radius: 8px; padding: 10px;">
-                                        <img src="data:image/jpeg;base64,{encoded_img}" style="max-width: 100%; max-height: 450px; border-radius: 6px;">
-                                    </div>
-                                    <div style="margin-top: 20px; text-align: center;">
-                                        <a href="?close_pop=1" target="_self" style="display: inline-block; background-color: #ff4b4b; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; width: 100%;">닫기</a>
-                                    </div>
-                                </div>
-                            </div>
-                            """
-                            st.components.v1.html(popup_html, height=0, scrolling=False)
-            except:
-                pass
-
-        if "close_pop" in st.query_params:
-            st.query_params.clear()
-            st.rerun()
-
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
@@ -281,7 +271,6 @@ try:
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    # 💡 현재 페이지 내부에서 주소창 없는 깔끔한 모달 오버레이를 띄우도록 링크 연결
                     img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                 else:
                     img_td = '-'
@@ -476,7 +465,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.46 (Addressbar-less HTML Overlay Popup)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.47 (Session State Dialog Modal Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
