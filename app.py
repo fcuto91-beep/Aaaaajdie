@@ -20,7 +20,6 @@ if not os.path.exists(D):
 KST = timezone(timedelta(hours=9))
 
 def get_kst_now():
-    # 💡 서버 시계가 느려도 무조건 오늘(2026-10-31) 이상으로 강제 보정하여 날짜 밀림 원천 차단
     actual_kst = datetime.now(timezone.utc) + timedelta(hours=9)
     target_min = datetime(2026, 10, 31, 0, 0, 0, tzinfo=KST)
     if actual_kst < target_min:
@@ -37,7 +36,7 @@ def load_data():
                 df = pd.DataFrame(data)
                 for col in ["입고일자", "검사일자"]:
                     if col in df.columns:
-                        df[col] = df[col].astype(str).apply(lambda x: x[:10] if len(x) >= 10 else x)
+                        df[col] = df[col].astype(str).str.strip().str.slice(0, 10)
                 return df
     except Exception as e:
         print(f"Load error: {e}")
@@ -200,13 +199,17 @@ try:
 
         rows_list = []
         for idx, row in df_f.iterrows():
-            in_val = str(row.get("입고일자", "-"))[:10]
-            if not in_val or in_val == "nan":
+            in_val = str(row.get("입고일자", "-")).strip()
+            if not in_val or in_val == "nan" or in_val == "NaT":
                 in_val = "-"
+            else:
+                in_val = in_val[:10]
 
-            d_val = str(row.get("검사일자", "-"))[:10]
-            if not d_val or d_val == "nan":
+            d_val = str(row.get("검사일자", "-")).strip()
+            if not d_val or d_val == "nan" or d_val == "NaT":
                 d_val = "-"
+            else:
+                d_val = d_val[:10]
 
             m_val = str(row.get("포장재번호", "-"))
             p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
@@ -320,7 +323,7 @@ try:
                             
                             tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
                             curr_tape = str(curr_row.get("테이프박리", ""))
-                            tape_default = tape_opts.index(curr_tape) if tape_opts else 0
+                            tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
                             edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
                             
                             edit_file = st.file_uploader("새로운 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
@@ -336,7 +339,7 @@ try:
                                     new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
                                     file_path = os.path.join(D, new_fn)
                                     with open(file_path, "wb") as f:
-                                        f.write(edit_file.getbuffer())
+                                        f.write(up_file.getbuffer())
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
@@ -385,7 +388,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.9.4 (Server Clock Lag Override Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.9.6 (Raw String UI Force Render)" \
     "</div>", 
     unsafe_allow_html=True
 )
