@@ -90,7 +90,6 @@ def show_edit_success_popup():
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     
-    # 💡 강제로 오늘 날짜(2026-10-31) 고정
     in_date_str = "2026-10-31"
     st.text(f"포장재 입고 일자: {in_date_str}")
     
@@ -112,7 +111,6 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
-        # 💡 검사 일자도 무조건 2026-10-31로 강제 고정
         dt_str = "2026-10-31"
         fn = "none"
         if up_file:
@@ -220,16 +218,16 @@ try:
             else:
                 img_td = '-'
 
-            row_str = '<tr>' \
-                      '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>' \
-                      '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
-                      '<td style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">' + img_td + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
-                      '</tr>' \
+            row_str = ('<tr>'
+                       '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>'
+                       '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>'
+                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>'
+                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>'
+                       '<td style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">' + img_td + '</td>'
+                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>'
+                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>'
+                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>'
+                       '</tr>')
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
@@ -242,9 +240,9 @@ try:
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
                      '<th style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">보기</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">특이사항</th>' \
+                     '<th style="padding:8px 6px; font-size:12px; text-align:center;">손톱</th>' \
+                     '<th style="padding:8px 6px; font-size:12px; text-align:center;">테이프</th>' \
+                     '<th style="padding:8px 6px; font-size:12px; text-align:center;">특이사항</th>' \
                      '</tr>' \
                      '</thead>' \
                      '<tbody>' + all_rows + '</tbody>' \
@@ -372,7 +370,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.8.9 (Forced 2026-10-31 App.py Lock)" \
+    "Author : 김태현 책임기사<br>Version : v1.9.0 (Syntax Error Fixed & Forced Date)" \
     "</div>", 
     unsafe_allow_html=True
 )
