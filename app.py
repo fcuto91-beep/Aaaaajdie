@@ -255,12 +255,12 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 약호 셀에 명확한 너비와 white-space 지정
+            # 💡 절삭(overflow:hidden) 속성을 완전히 제거하고 width를 600px로 대폭 확장
             row_str = ('<tr>'
                        '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
                        '<td style="padding:6px 6px; width:90px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
                        '<td style="padding:6px 8px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
-                       '<td style="padding:6px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; overflow:hidden; text-overflow:ellipsis;">' + p_val + '</td>'
+                       '<td style="padding:6px 12px; width:600px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
                        '<td style="padding:6px 6px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px;">' + img_td + '</td>'
                        '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
                        '<td style="padding:6px 8px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
@@ -269,14 +269,14 @@ try:
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
-        # 💡 table-layout: fixed를 적용하여 각 컬럼의 width 속성이 절대 찌그러지지 않고 그대로 유지되도록 강제 고정
+        # 💡 테이블 전체 너비를 1450px로 넉넉하게 확장하여 모든 내용이 잘림 없이 쫙 펼쳐지도록 조치
         table_code = '<div style="overflow-x:auto; max-height:450px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
-                     '<table style="width:1150px; table-layout:fixed; border-collapse:collapse;">' \
+                     '<table style="width:1450px; table-layout:fixed; border-collapse:collapse;">' \
                      '<colgroup>' \
                      '<col style="width:90px;">' \
                      '<col style="width:90px;">' \
                      '<col style="width:100px;">' \
-                     '<col style="width:450px;">' \
+                     '<col style="width:600px;">' \
                      '<col style="width:45px;">' \
                      '<col style="width:110px;">' \
                      '<col style="width:110px;">' \
@@ -439,7 +439,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.15 (Table Layout Fixed & Colgroup Force)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.16 (Overflow Ellipsis Removed & Width Expanded)" \
     "</div>", 
     unsafe_allow_html=True
 )
