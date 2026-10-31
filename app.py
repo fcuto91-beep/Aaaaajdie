@@ -12,7 +12,6 @@ st.set_page_config(page_title="Inspection", layout="centered")
 D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 형님이 알려주신 최신 웹 앱 URL로 완벽하게 교체 완료!
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqCvl8jzARTsIM7idZ3WwZBvOuuBhwEWNohpGdvKFthm6IUAouM6XlgDkO3cAzVw6uEg/exec"
 
 if not os.path.exists(D):
@@ -27,6 +26,24 @@ def get_kst_now():
         return target_min
     return actual_kst
 
+# 💡 날짜 문자열을 무조건 YYYY-MM-DD 형식으로 예쁘게 파싱해 주는 안전 함수
+def format_date_str(val):
+    if not val or val == "nan" or val == "NaT":
+        return "-"
+    v_str = str(val).strip()
+    # 만약 Sat Oct 31 형태이거나 날짜 객체 형태일 경우 안전하게 YYYY-MM-DD로 변환 시도
+    try:
+        # ISO 형식이나 일반 문자열 앞 10자리 추출 시도
+        if len(v_str) >= 10 and v_str[:4].isdigit():
+            return v_str[:10]
+        # 그 외 판다스/자바스크립트 변환 날짜 문자열 처리
+        parsed = pd.to_datetime(v_str)
+        if pd.notna(parsed):
+            return parsed.strftime("%Y-%m-%d")
+    except:
+        pass
+    return v_str[:10] if len(v_str) >= 10 else v_str
+
 def load_data():
     try:
         no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
@@ -35,9 +52,6 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 df = pd.DataFrame(data)
-                for col in ["입고일자", "검사일자"]:
-                    if col in df.columns:
-                        df[col] = df[col].astype(str).str.strip().str.slice(0, 10)
                 return df
     except Exception as e:
         print(f"Load error: {e}")
@@ -200,17 +214,9 @@ try:
 
         rows_list = []
         for idx, row in df_f.iterrows():
-            in_val = str(row.get("입고일자", "-")).strip()
-            if not in_val or in_val == "nan" or in_val == "NaT":
-                in_val = "-"
-            else:
-                in_val = in_val[:10]
-
-            d_val = str(row.get("검사일자", "-")).strip()
-            if not d_val or d_val == "nan" or d_val == "NaT":
-                d_val = "-"
-            else:
-                d_val = d_val[:10]
+            # 💡 날짜를 깔끔한 YYYY-MM-DD 형식으로 변환
+            in_val = format_date_str(row.get("입고일자", "-"))
+            d_val = format_date_str(row.get("검사일자", "-"))
 
             m_val = str(row.get("포장재번호", "-"))
             p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
@@ -389,7 +395,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.9.7 (Correct Apps Script URL Applied)" \
+    "Author : 김태현 책임기사<br>Version : v1.9.8 (Date Formatting Normalization)" \
     "</div>", 
     unsafe_allow_html=True
 )
