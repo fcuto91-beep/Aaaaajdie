@@ -220,13 +220,13 @@ try:
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
-                return '<span style="background-color:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px;">🔴 부적합 (FAIL)</span>'
+                return '<span style="background-color:#fce8e6; color:#c5221f; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px; white-space:nowrap;">🔴 부적합 (FAIL)</span>'
             elif "적합" in v_str or "PASS" in v_str:
-                return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px;">🟢 적합 (PASS)</span>'
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px; white-space:nowrap;">🟢 적합 (PASS)</span>'
             elif "시험 대기" in v_str or "사양 확인" in v_str:
-                return '<span style="background-color:#fef7e0; color:#b06000; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px;">🟡 시험 대기 (사양 확인 중)</span>'
+                return '<span style="background-color:#fef7e0; color:#b06000; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px; white-space:nowrap;">🟡 시험 대기 (사양 확인 중)</span>'
             else:
-                return f'<span>{val}</span>'
+                return f'<span style="white-space:nowrap;">{val}</span>'
 
         rows_list = []
         for idx, row in df_f.iterrows():
@@ -251,14 +251,14 @@ try:
                 img_td = '-'
 
             row_str = ('<tr>'
-                       '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>'
-                       '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>'
-                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>'
-                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>'
-                       '<td style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">' + img_td + '</td>'
-                       '<td style="padding:8px 6px; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>'
-                       '<td style="padding:8px 6px; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>'
-                       '<td style="padding:8px 6px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>'
+                       '<td style="padding:8px 6px; width:95px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>'
+                       '<td style="padding:8px 6px; width:95px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>'
+                       '<td style="padding:8px 8px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>'
+                       '<td style="padding:8px 12px; min-width:180px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + p_val + '</td>'
+                       '<td style="padding:8px 6px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">' + img_td + '</td>'
+                       '<td style="padding:8px 8px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>'
+                       '<td style="padding:8px 8px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>'
+                       '<td style="padding:8px 10px; min-width:140px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; word-break:break-all;">' + r_val + '</td>'
                        '</tr>')
             rows_list.append(row_str)
 
@@ -267,14 +267,14 @@ try:
                      '<table style="width:100%; border-collapse:collapse;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
-                     '<th style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; text-align:center;">입고 일자</th>' \
-                     '<th style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
-                     '<th style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">보기</th>' \
-                     '<th style="padding:8px 6px; font-size:12px; text-align:center;">손톱</th>' \
-                     '<th style="padding:8px 6px; font-size:12px; text-align:center;">테이프</th>' \
-                     '<th style="padding:8px 6px; font-size:12px; text-align:center;">특이사항</th>' \
+                     '<th style="padding:8px 6px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">입고 일자</th>' \
+                     '<th style="padding:8px 6px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
+                     '<th style="padding:8px 8px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
+                     '<th style="padding:8px 12px; min-width:180px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
+                     '<th style="padding:8px 6px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">보기</th>' \
+                     '<th style="padding:8px 8px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
+                     '<th style="padding:8px 8px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
+                     '<th style="padding:8px 10px; min-width:140px; white-space:nowrap; font-size:12px; text-align:center;">특이사항</th>' \
                      '</tr>' \
                      '</thead>' \
                      '<tbody>' + all_rows + '</tbody>' \
@@ -383,8 +383,7 @@ try:
                     st.info("검색 결과가 없습니다.")
 
                 st.markdown("---")
-                # 💡 사진 폴더 비우기 버튼 빨간색(Danger) 적용
-                if st.button("🗑️ 사진 폴더 비우기", type="secondary", use_container_width=True):
+                if st.button("🗑️ 사진 폴더 비우기", use_container_width=True):
                     if os.path.exists(D):
                         for f_name in os.listdir(D):
                             f_path = os.path.join(D, f_name)
@@ -394,16 +393,14 @@ try:
                     st.rerun()
 
                 st.markdown("---")
-                # 💡 전체 데이터 초기화 버튼 빨간색(Danger) 적용 위해 HTML 스타일 강제 주입
                 st.markdown("""
                     <style>
-                    div.stButton > button[kind="secondary"] {
-                        background-color: #ff4b4b;
-                        color: white;
+                    div.stButton > button {
+                        border-color: #ff4b4b;
                     }
-                    div.stButton > button[kind="secondary"]:hover {
-                        background-color: #ff2121;
-                        color: white;
+                    div.stButton > button:hover {
+                        border-color: #ff2121;
+                        color: #ff2121;
                     }
                     </style>
                 """, unsafe_allow_html=True)
@@ -425,7 +422,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.2 (Danger Buttons Styled)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.3 (Table Layout & Column Widths Optimized)" \
     "</div>", 
     unsafe_allow_html=True
 )
