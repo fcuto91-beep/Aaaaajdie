@@ -17,10 +17,16 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdKZ6DM75Uhxa_BBb7Ez
 if not os.path.exists(D):
     os.makedirs(D)
 
+# 💡 명시적인 한국 시간(KST) 타임존 정의
 KST = timezone(timedelta(hours=9))
 
-def get_kst_now():
-    return datetime.now(timezone.utc) + timedelta(hours=9)
+def get_kst_today_str():
+    # 현재 한국 시간 기준의 날짜 문자열(YYYY-MM-DD)을 무조건 반환
+    return datetime.now(KST).strftime('%Y-%m-%d')
+
+def get_kst_now_str():
+    # 현재 한국 시간 기준의 상세 일시 문자열을 무조건 반환
+    return datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
 
 def load_data():
     try:
@@ -71,7 +77,7 @@ with col2:
 st.markdown("")
 st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
-current_time_str = get_kst_now().strftime('%Y-%m-%d %H:%M:%S')
+current_time_str = get_kst_now_str()
 st.info("⏰ 일자: **" + current_time_str + "**")
 
 @st.dialog("🎉 저장 완료")
@@ -88,7 +94,8 @@ def show_edit_success_popup():
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
-    in_date_val = st.date_input("포장재 입고 일자", value=get_kst_now().date())
+    # 💡 KST 기준 오늘 날짜로 명시적 지정
+    in_date_val = st.date_input("포장재 입고 일자", value=datetime.now(KST).date())
     in_date_str = in_date_val.strftime("%Y-%m-%d")
     
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
@@ -109,11 +116,12 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
-        dt_str = get_kst_now().strftime("%Y-%m-%d")
+        # 💡 검사 일자도 KST 기준 오늘 날짜 문자열로 정확히 생성
+        dt_str = get_kst_today_str()
         fn = "none"
         if up_file:
             s_lot = "".join(c for c in mat_no if c.isalnum())
-            t_str = get_kst_now().strftime("%Y%m%d_%H%M%S")
+            t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
             fn = f"{s_lot}_{t_str}_{up_file.name}"
             file_path = os.path.join(D, fn)
             with open(file_path, "wb") as f:
@@ -265,7 +273,7 @@ try:
                             zf.write(os.path.join(D, file), arcname=os.path.join("inspection_images", file))
                 zb.seek(0)
                 
-                backup_filename = f"backup_{get_kst_now().strftime('%Y%m%d')}.zip"
+                backup_filename = f"backup_{datetime.now(KST).strftime('%Y%m%d')}.zip"
                 st.download_button("💾 전체 검사 내역 및 사진 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
                 
                 st.markdown("---")
@@ -290,14 +298,14 @@ try:
                             try:
                                 default_in_date = datetime.strptime(str(curr_row.get("입고일자", ""))[:10], "%Y-%m-%d").date()
                             except:
-                                default_in_date = get_kst_now().date()
+                                default_in_date = datetime.now(KST).date()
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
                             edit_in_date_str = edit_in_date_val.strftime("%Y-%m-%d")
                             
                             try:
                                 default_inspect_date = datetime.strptime(str(curr_row.get("검사일자", ""))[:10], "%Y-%m-%d").date()
                             except:
-                                default_inspect_date = get_kst_now().date()
+                                default_inspect_date = datetime.now(KST).date()
                             edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
                             edit_inspect_date_str = edit_inspect_date_val.strftime("%Y-%m-%d")
                             
@@ -323,7 +331,7 @@ try:
                                 new_fn = str(curr_row.get("사진파일명", "none"))
                                 if edit_file:
                                     s_lot = "".join(c for c in edit_mat_no if c.isalnum())
-                                    t_str = get_kst_now().strftime("%Y%m%d_%H%M%S")
+                                    t_str = datetime.now(KST).strftime("%Y%m%d_%H%M%S")
                                     new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
                                     file_path = os.path.join(D, new_fn)
                                     with open(file_path, "wb") as f:
@@ -376,7 +384,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.8.3 (Forced KST Time Enforcement)" \
+    "Author : 김태현 책임기사<br>Version : v1.8.4 (Absolute KST Date Lock)" \
     "</div>", 
     unsafe_allow_html=True
 )
