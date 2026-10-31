@@ -6,6 +6,7 @@ import io
 import zipfile
 import requests
 import json
+import html
 
 st.set_page_config(page_title="Inspection", layout="centered")
 
@@ -226,19 +227,19 @@ try:
             elif "시험 대기" in v_str or "사양 확인" in v_str:
                 return '<span style="background-color:#fef7e0; color:#b06000; padding:3px 8px; border-radius:12px; font-weight:normal; font-size:11px; white-space:nowrap;">🟡 시험 대기 (사양 확인 중)</span>'
             else:
-                return f'<span style="white-space:nowrap;">{val}</span>'
+                return f'<span style="white-space:nowrap;">{html.escape(val)}</span>'
 
         rows_list = []
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
             d_val = format_date_str(row.get("검사일자", "-"))
 
-            m_val = str(row.get("포장재번호", "-"))
-            p_val = str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-"
+            m_val = html.escape(str(row.get("포장재번호", "-")))
+            p_val = html.escape(str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-")
             
             n_val = get_badge(row.get("손톱박리", "-"))
             t_val = get_badge(row.get("테이프박리", "-"))
-            r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
+            r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
             
             fname = str(row.get("사진파일명", "none"))
             if fname != "none":
@@ -250,28 +251,28 @@ try:
             else:
                 img_td = '-'
 
-            # 💡 포장재 약호 칸에 white-space: normal 적용 완료
+            # 💡 약호 및 특이사항 셀에 overflow-wrap 및 word-break를 철저히 적용하여 풀네임 전체 출력 보장
             row_str = ('<tr>'
                        '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>'
                        '<td style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>'
                        '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>'
-                       '<td style="padding:8px 10px; min-width:250px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; word-break:break-all; white-space:normal;">' + p_val + '</td>'
+                       '<td style="padding:8px 10px; min-width:260px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; overflow-wrap:break-word; word-break:break-all; white-space:normal;">' + p_val + '</td>'
                        '<td style="padding:8px 4px; text-align:center; width:40px; white-space:nowrap; font-size:12px;">' + img_td + '</td>'
                        '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>'
                        '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>'
-                       '<td style="padding:8px 8px; min-width:150px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; word-break:break-all; white-space:normal;">' + r_val + '</td>'
+                       '<td style="padding:8px 8px; min-width:150px; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal; overflow-wrap:break-word; word-break:break-all; white-space:normal;">' + r_val + '</td>'
                        '</tr>')
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
         table_code = '<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
-                     '<table style="width:100%; border-collapse:collapse;">' \
+                     '<table style="width:100%; border-collapse:collapse; table-layout:auto;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
                      '<th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">입고 일자</th>' \
                      '<th style="padding:8px 4px; width:82px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
-                     '<th style="padding:8px 10px; min-width:250px; white-space:normal; font-size:12px; text-align:center;">포장재 약호</th>' \
+                     '<th style="padding:8px 10px; min-width:260px; white-space:normal; font-size:12px; text-align:center;">포장재 약호</th>' \
                      '<th style="padding:8px 4px; text-align:center; width:40px; white-space:nowrap; font-size:12px;">보기</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
@@ -423,7 +424,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.5 (Packing Name Wrap Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.6 (HTML Escaping & Safe Word Wrap)" \
     "</div>", 
     unsafe_allow_html=True
 )
