@@ -12,7 +12,6 @@ st.set_page_config(page_title="Inspection", layout="wide")
 D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 새롭게 발급하신 Apps Script URL 반영
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVa9Xb5roJSHDvtl0bEHuh6sDHeZBtlE3PCw6tARq5Q_s3Eui8RwgzmGO075zZZccxOA/exec"
 
 if not os.path.exists(D):
@@ -204,39 +203,52 @@ try:
         q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         df_f = df[df.astype(str).apply(lambda r: r.str.contains(q, case=False).any(), axis=1)].reset_index(drop=True) if q else df.reset_index(drop=True)
 
-        if "pop_idx" in st.query_params:
-            try:
-                p_idx = int(st.query_params["pop_idx"])
-                if 0 <= p_idx < len(df_f):
-                    p_row = df_f.iloc[p_idx]
-                    p_fname = str(p_row.get("사진파일명", "none"))
-                    if p_fname != "none":
-                        p_ip = os.path.join(D, p_fname)
-                        if os.path.exists(p_ip):
-                            raw_dt = str(p_row.get("검사일자", "-"))
-                            show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
-                st.query_params.clear()
-            except:
-                st.query_params.clear()
-
+        # 💡 개별 행 선택을 위한 인터랙티브 데이터프레임 구성 (선택 시 사진 팝업 호출)
         display_df = pd.DataFrame()
         display_df["입고 일자"] = df_f["입고일자"].apply(format_date_str)
         display_df["검사 일자"] = df_f["검사일자"].apply(format_date_str)
         display_df["포장재 번호"] = df_f["포장재번호"]
         display_df["포장재 약호"] = df_f["포장재약호"]
+        
+        # 사진 유무 표시 컬럼
+        img_status_list = []
+        for idx, row in df_f.iterrows():
+            fname = str(row.get("사진파일명", "none"))
+            if fname != "none" and os.path.exists(os.path.join(D, fname)):
+                img_status_list.append("🔍 [보기]")
+            else:
+                img_status_list.append("-")
+        display_df["사진 보기"] = img_status_list
+
         display_df["손톱 박리"] = df_f["손톱박리"]
         display_df["테이프 박리"] = df_f["테이프박리"]
         display_df["특이사항"] = df_f["특이사항"]
 
-        st.dataframe(
+        event = st.dataframe(
             display_df,
             use_container_width=True,
             hide_index=True,
+            selection_mode="single-row",
+            on_select="rerun",
             column_config={
                 "포장재 약호": st.column_config.TextColumn("포장재 약호", width="large"),
+                "사진 보기": st.column_config.TextColumn("사진 보기", width="small"),
                 "특이사항": st.column_config.TextColumn("특이사항", width="medium"),
             }
         )
+
+        # 행 선택 시 해당 사진 팝업 띄우기
+        selected_rows = event.selection.rows if event and hasattr(event, "selection") else []
+        if selected_rows:
+            sel_idx = selected_rows[0]
+            if 0 <= sel_idx < len(df_f):
+                p_row = df_f.iloc[sel_idx]
+                p_fname = str(p_row.get("사진파일명", "none"))
+                if p_fname != "none":
+                    p_ip = os.path.join(D, p_fname)
+                    if os.path.exists(p_ip):
+                        raw_dt = str(p_row.get("검사일자", "-"))
+                        show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -377,7 +389,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.20 (New Apps Script URL Applied)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.21 (Photo View Button Restored)" \
     "</div>", 
     unsafe_allow_html=True
 )
