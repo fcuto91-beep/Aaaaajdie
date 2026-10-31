@@ -242,7 +242,7 @@ try:
                     modal_id = f"modal_{idx}"
                     img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                     
-                    # 💡 브라우저 화면 전체 기준의 뷰포트 절대 정중앙에 위치하도록 수정
+                    # 💡 팝업창을 화면 정가운데 완벽하게 배치하도록 고정 및 정렬 속성 강화
                     modal_html = f"""
                     <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.15);">
                         <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
@@ -277,17 +277,17 @@ try:
     <td style="padding:8px 6px; text-align:center; width:40px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
-    <td style="padding:8px 10px; width:auto; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
+    <td style="padding:8px 10px; width:180px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
 </tr>"""
             rows_list.append(row_str)
 
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
-        # 💡 테이블 전체 너비를 100%로 설정하고 특이사항 칸이 남는 공간을 모두 채우도록 유연하게 설정
+        # 💡 테이블 전체 너비를 다시 고정(1005px)하고 특이사항 칸 크기를 원래대로 복구
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin:0;">
+    <table style="width:1005px; table-layout:fixed; border-collapse:collapse; margin:0;">
         <colgroup>
             <col style="width:85px;">
             <col style="width:85px;">
@@ -296,7 +296,7 @@ try:
             <col style="width:40px;">
             <col style="width:100px;">
             <col style="width:100px;">
-            <col style="width:auto;">
+            <col style="width:180px;">
         </colgroup>
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
             <tr>
@@ -459,7 +459,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.52 (Absolute Center Popup & Expanded Remarks Fill)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.53 (True Center Popup & Restored Remarks Width)" \
     "</div>", 
     unsafe_allow_html=True
 )
