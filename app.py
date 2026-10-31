@@ -235,7 +235,12 @@ try:
             d_val = format_date_str(row.get("검사일자", "-"))
 
             m_val = html.escape(str(row.get("포장재번호", "-")))
-            p_val = html.escape(str(row.get("포장재약호", "-")) if pd.notna(row.get("포장재약호")) else "-")
+            
+            # 💡 구글 시트의 원본 문자열을 온전히 가져와 HTML 이스케이프 후 공백이 끊기지 않도록 처리
+            raw_p_name = str(row.get("포장재약호", "-"))
+            if pd.isna(row.get("포장재약호")) or raw_p_name.lower() in ["nan", "none", ""]:
+                raw_p_name = "-"
+            p_val = html.escape(raw_p_name)
             
             n_val = get_badge(row.get("손톱박리", "-"))
             t_val = get_badge(row.get("테이프박리", "-"))
@@ -251,11 +256,12 @@ try:
             else:
                 img_td = '-'
 
+            # 💡 약호 셀의 min-width를 350px로 넉넉히 주어 한 줄로 길게 출력 보장
             row_str = ('<tr>'
                        '<td style="padding:6px 4px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + in_val + '</td>'
                        '<td style="padding:6px 4px; width:75px; white-space:nowrap; font-size:10.5px; color:#333; text-align:center; vertical-align:middle;">' + d_val + '</td>'
                        '<td style="padding:6px 6px; width:85px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle;">' + m_val + '</td>'
-                       '<td style="padding:6px 10px; min-width:320px; white-space:nowrap; font-size:11px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
+                       '<td style="padding:6px 10px; min-width:350px; white-space:nowrap; font-size:11px; color:#555; text-align:left; vertical-align:middle;">' + p_val + '</td>'
                        '<td style="padding:6px 4px; text-align:center; width:35px; white-space:nowrap; font-size:11px;">' + img_td + '</td>'
                        '<td style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; color:#555; text-align:center; vertical-align:middle;">' + n_val + '</td>'
                        '<td style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; color:#555; text-align:center; vertical-align:middle;">' + t_val + '</td>'
@@ -264,14 +270,15 @@ try:
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
+        # 💡 테이블 전체 최소 너비를 950px로 넓혀서 가로 스크롤로 전체 내용 확인 가능하게 조치
         table_code = '<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
-                     '<table style="width:100%; min-width:900px; border-collapse:collapse;">' \
+                     '<table style="width:100%; min-width:950px; border-collapse:collapse;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
                      '<th style="padding:6px 4px; width:75px; white-space:nowrap; font-size:11px; text-align:center;">입고 일자</th>' \
                      '<th style="padding:6px 4px; width:75px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
                      '<th style="padding:6px 6px; width:85px; white-space:nowrap; font-size:11px; text-align:center;">포장재 번호</th>' \
-                     '<th style="padding:6px 10px; min-width:320px; white-space:nowrap; font-size:11px; text-align:center;">포장재 약호</th>' \
+                     '<th style="padding:6px 10px; min-width:350px; white-space:nowrap; font-size:11px; text-align:center;">포장재 약호</th>' \
                      '<th style="padding:6px 4px; text-align:center; width:35px; white-space:nowrap; font-size:11px;">보기</th>' \
                      '<th style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">손톱</th>' \
                      '<th style="padding:6px 6px; width:95px; white-space:nowrap; font-size:11px; text-align:center;">테이프</th>' \
@@ -362,7 +369,7 @@ try:
                                     new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
                                     file_path = os.path.join(D, new_fn)
                                     with open(file_path, "wb") as f:
-                                        f.write(up_file.getbuffer())
+                                        f.write(edit_file.getbuffer())
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
@@ -423,7 +430,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.12 (Data Flow Safeguard)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.13 (Sheet Data Direct Sync & Full Display)" \
     "</div>", 
     unsafe_allow_html=True
 )
