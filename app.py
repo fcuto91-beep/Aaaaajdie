@@ -127,6 +127,33 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
+# 💡 사진 미리보기 단독 출력 컨테이너 (페이지 상단에 깔끔하게 표시)
+if "pop_idx" in st.query_params:
+    try:
+        p_idx = int(st.query_params["pop_idx"])
+        # 데이터 로드 후 확인
+        temp_df = load_data()
+        if 0 <= p_idx < len(temp_df):
+            p_row = temp_df.iloc[p_idx]
+            p_fname = str(p_row.get("사진파일명", "none"))
+            if p_fname != "none":
+                p_ip = os.path.join(D, p_fname)
+                if os.path.exists(p_ip):
+                    st.markdown("---")
+                    st.container()
+                    st.markdown("### 🔍 검사 사진 크게 보기")
+                    st.markdown(f"📦 **포장재 번호:** {p_row.get('포장재번호', '-')}")
+                    st.markdown(f"🏷️ **포장재 약호:** {p_row.get('포장재약호', '-')}")
+                    st.caption(f"📅 검사 일자: {format_date_str(p_row.get('검사일자', '-'))}")
+                    st.image(p_ip, use_column_width=True)
+                    if st.button("❌ 닫기", type="primary", use_container_width=True):
+                        st.query_params.clear()
+                        st.rerun()
+                    st.markdown("---")
+    except Exception as e:
+        print(f"Preview error: {e}")
+        st.query_params.clear()
+
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
     
@@ -187,13 +214,6 @@ if st.session_state.get("show_edited_modal", False):
     st.session_state["show_edited_modal"] = False
     show_edit_success_popup()
 
-@st.dialog("🔍 검사 사진 크게 보기")
-def show_image_popup(img_path, m_name, p_name, date_str):
-    st.markdown(f"📦 **포장재 번호: {m_name}**")
-    st.markdown(f"🏷️ **포장재 약호: {p_name}**")
-    st.caption(f"📅 검사 일자: {date_str[:10] if len(date_str) >= 10 else date_str}")
-    st.image(img_path, use_column_width=True)
-
 st.markdown("---")
 st.subheader("📋 전체 검사 내역")
 
@@ -208,21 +228,6 @@ try:
             df_f = df[mask].reset_index(drop=True)
         else:
             df_f = df.reset_index(drop=True)
-
-        if "pop_idx" in st.query_params:
-            try:
-                p_idx = int(st.query_params["pop_idx"])
-                if 0 <= p_idx < len(df_f):
-                    p_row = df_f.iloc[p_idx]
-                    p_fname = str(p_row.get("사진파일명", "none"))
-                    if p_fname != "none":
-                        p_ip = os.path.join(D, p_fname)
-                        if os.path.exists(p_ip):
-                            raw_dt = str(p_row.get("검사일자", "-"))
-                            show_image_popup(p_ip, str(p_row.get("포장재번호", "-")), str(p_row.get("포장재약호", "-")), raw_dt)
-                st.query_params.clear()
-            except:
-                st.query_params.clear()
 
         def get_badge(val):
             v_str = str(val).strip()
@@ -308,7 +313,6 @@ try:
 </div>
 """
 
-        # 💡 st.components.v1.html을 사용하여 코드 노출을 원천 방지하고 돋보기 링크 및 표 양식을 완벽히 구현
         st.components.v1.html(table_code, height=490, scrolling=True)
 
         st.markdown("---")
@@ -450,7 +454,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.33 (HTML Component Fix & Direct Magnifier Pop)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.34 (Dedicated Preview Container Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
