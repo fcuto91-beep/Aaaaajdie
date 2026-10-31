@@ -22,7 +22,12 @@ KST = timezone(timedelta(hours=9))
 def get_kst_now():
     return datetime.now(timezone.utc) + timedelta(hours=9)
 
-# 💡 캐시를 타지 않고 무조건 실시간으로 최신 구글 시트 데이터를 가져오도록 타임스탬프 파라미터 추가
+# 💡 절대 오나전한 오늘 날짜 문자열을 반환하는 함수 (UTC 시간 기준 강제 보정)
+def get_safe_today_str():
+    now_utc = datetime.now(timezone.utc)
+    now_kst = now_utc + timedelta(hours=9)
+    return now_kst.strftime('%Y-%m-%d')
+
 def load_data():
     try:
         no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
@@ -90,8 +95,11 @@ def show_edit_success_popup():
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
-    kst_today = get_kst_now().date()
-    in_date_val = st.date_input("포장재 입고 일자", value=kst_today)
+    # 💡 안전하게 계산된 KST 오늘 날짜 객체 생성
+    safe_date_str = get_safe_today_str()
+    kst_today_date = datetime.strptime(safe_date_str, "%Y-%m-%d").date()
+    
+    in_date_val = st.date_input("포장재 입고 일자", value=kst_today_date)
     in_date_str = in_date_val.strftime("%Y-%m-%d")
     
     mat_no = st.text_input("포장재 번호", placeholder="예: 5115558")
@@ -112,8 +120,8 @@ if ok:
     elif nail == "선택해주세요" or tape == "선택해주세요":
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
-        # 💡 무조건 현재 KST 기준 날짜로 검사일자 생성
-        dt_str = get_kst_now().strftime("%Y-%m-%d")
+        # 💡 검사 일자도 안전한 KST 오늘 날짜 문자열로 확실하게 고정
+        dt_str = get_safe_today_str()
         fn = "none"
         if up_file:
             s_lot = "".join(c for c in mat_no if c.isalnum())
@@ -294,14 +302,14 @@ try:
                             try:
                                 default_in_date = datetime.strptime(str(curr_row.get("입고일자", ""))[:10], "%Y-%m-%d").date()
                             except:
-                                default_in_date = get_kst_now().date()
+                                default_in_date = kst_today_date
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
                             edit_in_date_str = edit_in_date_val.strftime("%Y-%m-%d")
                             
                             try:
                                 default_inspect_date = datetime.strptime(str(curr_row.get("검사일자", ""))[:10], "%Y-%m-%d").date()
                             except:
-                                default_inspect_date = get_kst_now().date()
+                                default_inspect_date = kst_today_date
                             edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
                             edit_inspect_date_str = edit_inspect_date_val.strftime("%Y-%m-%d")
                             
@@ -380,7 +388,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.8.7 (No-Cache Realtime Load)" \
+    "Author : 김태현 책임기사<br>Version : v1.8.8 (Absolute UTC-KST Date Conversion)" \
     "</div>", 
     unsafe_allow_html=True
 )
