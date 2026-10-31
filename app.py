@@ -206,11 +206,11 @@ try:
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
-                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 6px; border-radius:10px; font-size:10px; white-space:nowrap;">🔴 부적합 (FAIL)</span>'
+                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🔴 부적합 (FAIL)</span>'
             elif "적합" in v_str or "PASS" in v_str:
-                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 6px; border-radius:10px; font-size:10px; white-space:nowrap;">🟢 적합 (PASS)</span>'
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🟢 적합 (PASS)</span>'
             elif "시험 대기" in v_str or "사양 확인" in v_str:
-                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 6px; border-radius:10px; font-size:10px; white-space:nowrap;">🟡 시험 대기 (사양 확인 중)</span>'
+                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:10px; font-size:9px; white-space:nowrap; display:inline-block;">🟡 시험대기 (사양확인)</span>'
             else:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
@@ -240,26 +240,25 @@ try:
                         encoded_img = base64.b64encode(img_file.read()).decode()
                     
                     modal_id = f"modal_{idx}"
-                    # 돋보기 클릭 시 자바스크립트로 해당 팝업만 띄움
                     img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                     
-                    # 💡 배경을 어둡게 하는 회색막(backdrop)을 완전히 제거하고, 팝업 카드 자체에만 강력한 그림자를 주어 기존 웹 화면 위에 독립된 창처럼 보이게 함
+                    # 💡 팝업창 크기를 컴팩트하게 줄여서 스크롤이 생기지 않도록 최적화
                     modal_html = f"""
                     <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:99999; justify-content:center; align-items:center;">
-                        <div style="background:white; padding:25px; border-radius:12px; width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; pointer-events:auto;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                <h3 style="margin:0; font-size:18px; color:#333;">🔍 검사 사진 크게 보기</h3>
-                                <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#888; font-weight:bold; cursor:pointer; padding:0 5px;">&times;</a>
+                        <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; pointer-events:auto; text-align:center;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <h3 style="margin:0; font-size:15px; color:#333;">🔍 검사 사진 크게 보기</h3>
+                                <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:20px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
                             </div>
-                            <p style="margin:6px 0; font-size:13px; color:#444;">📦 <b>포장재 번호:</b> {m_val}</p>
-                            <p style="margin:6px 0; font-size:13px; color:#444;">🏷️ <b>포장재 약호:</b> {p_val}</p>
-                            <p style="margin:6px 0 15px 0; font-size:13px; color:#444;">📅 <b>검사 일자:</b> {d_val}</p>
-                            <div style="text-align:center; background:#f1f3f5; border-radius:8px; padding:10px;">
-                                <img src="data:image/jpeg;base64,{encoded_img}" style="max-width:100%; max-height:400px; border-radius:6px;">
+                            <div style="text-align:left; font-size:12px; color:#444; margin-bottom:8px; line-height:1.4;">
+                                📦 <b>포장재 번호:</b> {m_val}<br>
+                                🏷️ <b>포장재 약호:</b> {p_val}<br>
+                                📅 <b>검사 일자:</b> {d_val}
                             </div>
-                            <div style="margin-top:20px; text-align:center;">
-                                <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; font-size:14px; width:100%; cursor:pointer;">닫기</button>
+                            <div style="background:#f1f3f5; border-radius:6px; padding:6px; margin-bottom:12px;">
+                                <img src="data:image/jpeg;base64,{encoded_img}" style="max-width:100%; max-height:280px; border-radius:4px; object-fit:contain;">
                             </div>
+                            <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
                         </div>
                     </div>
                     """
@@ -271,14 +270,14 @@ try:
 
             row_str = f"""
 <tr>
-    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
-    <td style="padding:8px 8px; width:90px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
-    <td style="padding:8px 10px; width:100px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
-    <td style="padding:8px 12px; width:450px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
-    <td style="padding:8px 8px; text-align:center; width:45px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
-    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
-    <td style="padding:8px 10px; width:110px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
-    <td style="padding:8px 12px; width:200px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
+    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
+    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
+    <td style="padding:8px 8px; width:95px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
+    <td style="padding:8px 10px; width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
+    <td style="padding:8px 6px; text-align:center; width:40px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
+    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
+    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
+    <td style="padding:8px 10px; width:180px; white-space:nowrap; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0;">{r_val}</td>
 </tr>"""
             rows_list.append(row_str)
 
@@ -287,27 +286,27 @@ try:
         
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <table style="width:1295px; table-layout:fixed; border-collapse:collapse; margin:0;">
+    <table style="width:1085px; table-layout:fixed; border-collapse:collapse; margin:0;">
         <colgroup>
-            <col style="width:90px;">
-            <col style="width:90px;">
+            <col style="width:85px;">
+            <col style="width:85px;">
+            <col style="width:95px;">
+            <col style="width:300px;">
+            <col style="width:40px;">
             <col style="width:100px;">
-            <col style="width:450px;">
-            <col style="width:45px;">
-            <col style="width:110px;">
-            <col style="width:110px;">
-            <col style="width:200px;">
+            <col style="width:100px;">
+            <col style="width:180px;">
         </colgroup>
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
             <tr>
                 <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
                 <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">검사 일자</th>
-                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
-                <th style="padding:10px 12px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
-                <th style="padding:10px 8px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
-                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
-                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
-                <th style="padding:10px 12px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center;">특이사항</th>
+                <th style="padding:10px 8px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
+                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
+                <th style="padding:10px 6px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
+                <th style="padding:10px 6px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
+                <th style="padding:10px 6px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
+                <th style="padding:10px 10px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center;">특이사항</th>
             </tr>
         </thead>
         <tbody>
@@ -459,7 +458,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.49 (Transparent Backdrop Floating Popup Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.50 (Compact Popup & Optimized Cell Width)" \
     "</div>", 
     unsafe_allow_html=True
 )
