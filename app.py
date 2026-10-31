@@ -116,7 +116,6 @@ if ok:
             with open(file_path, "wb") as f:
                 f.write(up_file.getbuffer())
 
-        # 💡 데이터 저장 순서: [입고일자, 검사일자, 포장재번호, 약호, 사진명, 손톱, 테이프, 특이사항]
         row_data = [
             in_date_str, 
             dt_str, 
@@ -204,23 +203,24 @@ try:
             t_val = get_badge(row.get("테이프박리", "-"))
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
+            # 💡 미리보기 버튼을 [보기] 텍스트 링크 형태로 변경하여 칸 폭을 대폭 축소
             fname = str(row.get("사진파일명", "none"))
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:18px; padding:4px 8px;">🔍</a>'
+                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; color:#1a73e8; font-weight:bold; font-size:12px;">[보기]</a>'
                 else:
                     img_td = '-'
             else:
                 img_td = '-'
 
-            # 💡 폰트 사이즈 통일 (12px로 맞춤)
+            # 💡 입고/검사일자 칸 폭(width)을 90px로 고정하여 최소화
             row_str = '<tr>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>' \
-                      '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
+                      '<td style="padding:8px 4px; width:90px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>' \
+                      '<td style="padding:8px 4px; width:90px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
-                      '<td style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">' + img_td + '</td>' \
+                      '<td style="padding:8px 4px; text-align:center; width:55px; white-space:nowrap; font-size:12px;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
@@ -232,11 +232,11 @@ try:
                      '<table style="width:100%; border-collapse:collapse;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
                      '<tr>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">입고 일자</th>' \
-                     '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">검사 일자</th>' \
+                     '<th style="padding:8px 4px; width:90px; white-space:nowrap; font-size:12px; text-align:center;">입고 일자</th>' \
+                     '<th style="padding:8px 4px; width:90px; white-space:nowrap; font-size:12px; text-align:center;">검사 일자</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
-                     '<th style="padding:8px 6px; text-align:center; width:70px; white-space:nowrap; font-size:12px;">미리보기</th>' \
+                     '<th style="padding:8px 4px; text-align:center; width:55px; white-space:nowrap; font-size:12px;">미리보기</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">특이사항</th>' \
@@ -369,7 +369,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.7.0 (Columns & Font Fixed)" \
+    "Author : 김태현 책임기사<br>Version : v1.7.1 (Compact Date & Text Preview)" \
     "</div>", 
     unsafe_allow_html=True
 )
