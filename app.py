@@ -240,12 +240,11 @@ try:
                         encoded_img = base64.b64encode(img_file.read()).decode()
                     
                     modal_id = f"modal_{idx}"
-                    # 💡 테이블 안의 돋보기 버튼
-                    img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
+                    # 💡 자바스크립트로 최상위 DOM에 모달을 강제 이동시켜 브라우저 정중앙에 띄우는 스크립트 적용
+                    img_td = f'<a href="javascript:void(0);" onclick="var m=document.getElementById(\'{modal_id}\'); m.style.display=\'flex\'; document.body.appendChild(m);" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
                     
-                    # 💡 팝업창 HTML 코드를 테이블 밖(독립 컴포넌트)으로 분리하기 위해 따로 수집
                     modal_html = f"""
-                    <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.15);">
+                    <div id="{modal_id}" style="display:none; position:fixed !important; top:0 !important; left:0 !important; width:100vw !important; height:100vh !important; z-index:2147483647 !important; justify-content:center !important; align-items:center !important; background:rgba(0,0,0,0.2) !important;">
                         <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                                 <h3 style="margin:0; font-size:15px; color:#333;">🔍 검사 사진 크게 보기</h3>
@@ -285,7 +284,7 @@ try:
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
-        # 💡 오직 테이블 내용만 담는 컴포넌트 (높이 제한 안에서 스크롤 작동)
+        # 💡 테이블과 모달을 하나의 컴포넌트에 통합하여 렌더링 충돌 방지
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin:0;">
@@ -316,13 +315,10 @@ try:
         </tbody>
     </table>
 </div>
+{all_modals}
 """
 
         st.components.v1.html(table_code, height=520, scrolling=True)
-
-        # 💡 팝업창 모달들을 테이블 박스 바깥에 완전히 독립된 별도 컴포넌트로 렌더링하여 브라우저 화면 진짜 정중앙에 띄움!
-        if all_modals:
-            st.components.v1.html(f"<div>{all_modals}</div>", height=0, scrolling=False)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -463,7 +459,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.55 (Isolated Global Center Modal Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.56 (Integrated Popup & Absolute Center Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
