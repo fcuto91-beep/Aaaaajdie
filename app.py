@@ -203,23 +203,23 @@ try:
             t_val = get_badge(row.get("테이프박리", "-"))
             r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             
+            # 💡 표 안의 항목은 돋보기 이모지(🔍)로 렌더링
             fname = str(row.get("사진파일명", "none"))
             if fname != "none":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; color:#1a73e8; font-weight:bold; font-size:12px;">[보기]</a>'
+                    img_td = f'<a href="?pop_idx={idx}" target="_self" style="text-decoration:none; font-size:16px;">🔍</a>'
                 else:
                     img_td = '-'
             else:
                 img_td = '-'
 
-            # 💡 입고/검사 일자 칸 폭을 78px로 대폭 축소하여 슬림화
             row_str = '<tr>' \
                       '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + in_val + '</td>' \
                       '<td style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + d_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#333; text-align:center; vertical-align:middle; font-weight:normal;">' + m_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + p_val + '</td>' \
-                      '<td style="padding:8px 4px; text-align:center; width:50px; white-space:nowrap; font-size:12px;">' + img_td + '</td>' \
+                      '<td style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:14px;">' + img_td + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + n_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:center; vertical-align:middle; font-weight:normal;">' + t_val + '</td>' \
                       '<td style="padding:8px 6px; white-space:nowrap; font-size:12px; color:#555; text-align:left; vertical-align:middle; font-weight:normal;">' + r_val + '</td>' \
@@ -227,6 +227,7 @@ try:
             rows_list.append(row_str)
 
         all_rows = "".join(rows_list)
+        # 💡 헤더 타이틀은 '보기'로 유지
         table_code = '<div style="overflow-x:auto; max-height:400px; border:1px solid #ccc; border-radius:6px; background-color:#fff;">' \
                      '<table style="width:100%; border-collapse:collapse;">' \
                      '<thead style="position:sticky; top:0; background-color:#f0f2f6; border-bottom:2px solid #ddd; z-index:10;">' \
@@ -235,7 +236,7 @@ try:
                      '<th style="padding:8px 3px; width:78px; white-space:nowrap; font-size:11px; text-align:center;">검사 일자</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 번호</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">포장재 약호</th>' \
-                     '<th style="padding:8px 4px; text-align:center; width:50px; white-space:nowrap; font-size:12px;">보기</th>' \
+                     '<th style="padding:8px 4px; text-align:center; width:45px; white-space:nowrap; font-size:12px;">보기</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">손톱</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">테이프</th>' \
                      '<th style="padding:8px 6px; white-space:nowrap; font-size:12px; text-align:center;">특이사항</th>' \
@@ -368,7 +369,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.7.6 (Date Columns Minimized)" \
+    "Author : 김태현 책임기사<br>Version : v1.7.7 (Table Cells Changed to Magnifier Emoji)" \
     "</div>", 
     unsafe_allow_html=True
 )
