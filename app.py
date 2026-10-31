@@ -203,9 +203,10 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 입고 일자 기준 최근 날짜가 위로 오도록 내림차순(descending) 정렬 적용
+        # 💡 입고일자를 실제 datetime 객체로 변환한 후 최신순(내림차순)으로 정확하게 정렬
         try:
-            df_f = df_f.sort_values(by="입고일자", ascending=False).reset_index(drop=True)
+            df_f["_temp_date"] = pd.to_datetime(df_f["입고일자"], errors='coerce')
+            df_f = df_f.sort_values(by="_temp_date", ascending=False).drop(columns=["_temp_date"]).reset_index(drop=True)
         except Exception:
             pass
 
@@ -463,7 +464,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.67 (Sorted by In-Date Descending)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.68 (Fixed Real Datetime Sorting)" \
     "</div>", 
     unsafe_allow_html=True
 )
