@@ -203,10 +203,11 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 입고일자 기준 최신순(내림차순, 가장 최근 날짜가 위로) 정렬 완벽 적용
+        # 💡 날짜순 정렬 후 최신 날짜가 무조건 맨 위로 오도록 강제 오름차순 정렬 후 역순 뒤집기 적용
         try:
             df_f["_temp_date"] = pd.to_datetime(df_f["입고일자"], errors='coerce')
-            df_f = df_f.sort_values(by="_temp_date", ascending=False).drop(columns=["_temp_date"]).reset_index(drop=True)
+            df_f = df_f.sort_values(by="_temp_date", ascending=True).drop(columns=["_temp_date"]).reset_index(drop=True)
+            df_f = df_f.iloc[::-1].reset_index(drop=True) # 물리적 역순 뒤집기
         except Exception:
             pass
 
@@ -464,7 +465,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.69 (Fixed True Descending Sort)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.70 (Physical Reverse Sort Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
