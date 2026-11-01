@@ -23,7 +23,7 @@ KST = timezone(timedelta(hours=9))
 
 def get_kst_now():
     actual_kst = datetime.now(timezone.utc) + timedelta(hours=9)
-    target_min = datetime(2026, 10, 31, 0, 0, 0, tzinfo=KST)
+    target_min = datetime(2026, 11, 2, 0, 0, 0, tzinfo=KST) # 날짜 최신 동기화
     if actual_kst < target_min:
         return target_min
     return actual_kst
@@ -241,48 +241,51 @@ try:
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
             
             fname = str(row.get("사진파일명", "none"))
-            if fname != "none":
+            img_td = '-'
+            if fname and fname.lower() != "none" and fname.strip() != "":
                 ip = os.path.join(D, fname)
                 if os.path.exists(ip):
-                    with open(ip, "rb") as img_file:
-                        encoded_img = base64.b64encode(img_file.read()).decode()
-                    
-                    modal_id = f"modal_{idx}"
-                    img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;">🔍</a>'
-                    
-                    modal_html = f"""
-                    <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.3);">
-                        <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <h3 style="margin:0; font-size:15px; color:#333;">🔍 검사 사진 크게 보기</h3>
-                                <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:20px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
+                    try:
+                        with open(ip, "rb") as img_file:
+                            encoded_img = base64.b64encode(img_file.read()).decode()
+                        
+                        modal_id = f"modal_{idx}"
+                        img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 크게 보기">🔍</a>'
+                        
+                        modal_html = f"""
+                        <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.3);">
+                            <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                    <h3 style="margin:0; font-size:15px; color:#333;">🔍 검사 사진 크게 보기</h3>
+                                    <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:20px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
+                                </div>
+                                <div style="text-align:left; font-size:12px; color:#444; margin-bottom:8px; line-height:1.4;">
+                                    📦 <b>포장재 번호:</b> {m_val}<br>
+                                    🏷️ <b>포장재 약호:</b> {p_val}<br>
+                                    📅 <b>검사 일자:</b> {d_val}
+                                </div>
+                                <div style="background:#f1f3f5; border-radius:6px; padding:6px; margin-bottom:12px;">
+                                    <img src="data:image/jpeg;base64,{encoded_img}" style="max-width:100%; max-height:280px; border-radius:4px; object-fit:contain;">
+                                </div>
+                                <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
                             </div>
-                            <div style="text-align:left; font-size:12px; color:#444; margin-bottom:8px; line-height:1.4;">
-                                📦 <b>포장재 번호:</b> {m_val}<br>
-                                🏷️ <b>포장재 약호:</b> {p_val}<br>
-                                📅 <b>검사 일자:</b> {d_val}
-                            </div>
-                            <div style="background:#f1f3f5; border-radius:6px; padding:6px; margin-bottom:12px;">
-                                <img src="data:image/jpeg;base64,{encoded_img}" style="max-width:100%; max-height:280px; border-radius:4px; object-fit:contain;">
-                            </div>
-                            <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
                         </div>
-                    </div>
-                    """
-                    modals_list.append(modal_html)
+                        """
+                        modals_list.append(modal_html)
+                    except Exception:
+                        img_td = '-'
                 else:
-                    img_td = '-'
-            else:
-                img_td = '-'
+                    # 💡 파일은 시트에 기록되어 있으나 로컬 폴더에 없는 경우 안내 표시 또는 대체 처리
+                    img_td = '<span style="color:#aaa; font-size:10px;" title="서버에 이미지 파일이 없습니다">-</span>'
 
-            # 💡 모든 칸(특이사항 포함)에 테두리와 배경 서식이 완벽하게 들어가도록 수정된 행 코드
+            # 💡 완벽하게 서식이 유지되는 행 HTML 구조
             row_str = f"""
 <tr>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
     <td style="padding:8px 8px; width:95px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
     <td style="padding:8px 10px; width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
-    <td style="padding:8px 6px; text-align:center; width:40px; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
+    <td style="padding:8px 6px; width:40px; text-align:center; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
     <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{r_val}</td>
@@ -292,7 +295,6 @@ try:
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
-        # 💡 테이블 전체 폭과 최소 너비를 확실하게 잡아 특이사항 칸 테두리 보존
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <table style="width:100%; min-width:850px; table-layout:auto; border-collapse:collapse; margin:0;">
@@ -457,7 +459,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.72 (Fixed Remarks Column Border Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.73 (Robust Image Safety Check & Sorting)" \
     "</div>", 
     unsafe_allow_html=True
 )
