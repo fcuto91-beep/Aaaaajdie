@@ -239,17 +239,13 @@ try:
     df = load_data()
     
     if not df.empty:
-        # 💡 검색창과 엑셀 스타일 체크 필터 나란히 배치
+        # 💡 검색창과 단일 선택형 판정 필터(셀렉트박스) 나란히 배치
         col_f1, col_f2 = st.columns([1.2, 1.8])
         with col_f1:
             q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         with col_f2:
-            all_j_types = df["최종판정"].unique().tolist() if "최종판정" in df.columns else []
-            selected_j_filter = st.multiselect(
-                "🏷️ 최종 판정 필터 (체크하여 골라보기)",
-                options=all_j_types,
-                default=all_j_types
-            )
+            filter_options = ["전체 보기", "🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
+            selected_single_filter = st.selectbox("🏷️ 최종 판정 골라보기 (단일 선택)", filter_options)
         
         # 검색어 필터 적용
         if q:
@@ -258,9 +254,16 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 최종 판정 체크(멀티셀렉트) 필터 적용
-        if selected_j_filter:
-            df_f = df_f[df_f["최종판정"].isin(selected_j_filter)].reset_index(drop=True)
+        # 💡 단일 선택 필터 적용
+        if selected_single_filter != "전체 보기":
+            if "적합" in selected_single_filter:
+                df_f = df_f[df_f["최종판정"].str.contains("적합|PASS", case=False, na=False)].reset_index(drop=True)
+            elif "부적합" in selected_single_filter:
+                df_f = df_f[df_f["최종판정"].str.contains("부적합|FAIL", case=False, na=False)].reset_index(drop=True)
+            elif "조건부" in selected_single_filter:
+                df_f = df_f[df_f["최종판정"].str.contains("조건부", case=False, na=False)].reset_index(drop=True)
+            elif "대기" in selected_single_filter:
+                df_f = df_f[df_f["최종판정"].str.contains("대기|확인", case=False, na=False)].reset_index(drop=True)
 
         try:
             df_f["_temp_date"] = pd.to_datetime(df_f["입고일자"], errors='coerce')
@@ -533,7 +536,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.84 (Excel-style Multi-select Filter)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.85 (Single-select Dropdown Filter)" \
     "</div>", 
     unsafe_allow_html=True
 )
