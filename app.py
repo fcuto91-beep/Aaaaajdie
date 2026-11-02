@@ -61,7 +61,7 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 수정된 자동 최종 판정 규칙 (적합+부적합, 부적합+적합, 부적합+부적합 모두 부적합 처리)
+# 💡 엄격한 최종 판정 자동 계산 규칙 (하나라도 부적합이면 최종 부적합)
 def get_auto_final_judgment(nail_val, tape_val):
     n = str(nail_val).strip()
     t = str(tape_val).strip()
@@ -71,17 +71,19 @@ def get_auto_final_judgment(nail_val, tape_val):
     is_n_fail = "부적합" in n or "FAIL" in n
     is_t_fail = "부적합" in t or "FAIL" in t
     
-    # 1. 둘 다 적합인 경우 -> 최종 적합
     if is_n_pass and is_t_pass:
         return "🟢 최종 적합 (PASS)"
-    
-    # 2. 하나라도 부적합이 섞여 있거나 둘 다 부적합인 경우 -> 최종 부적합
     elif is_n_fail or is_t_fail:
         return "🔴 최종 부적합 (FAIL)"
-    
-    # 3. 그 외 (시험 대기 등)
     else:
         return "🟡 판정 대기"
+
+def get_final_judgment_for_row(row):
+    saved_j = str(row.get("최종판정", "")).strip()
+    # 수동으로 협의하여 '조건부 진행'으로 지정한 경우만 유지하고, 나머지는 결과에 맞게 자동 계산
+    if "조건부 진행" in saved_j:
+        return saved_j
+    return get_auto_final_judgment(row.get("손톱박리", ""), row.get("테이프박리", ""))
 
 def get_judgment_badge(val):
     v_str = str(val).strip()
@@ -104,7 +106,6 @@ def load_data():
                 df = pd.DataFrame(data)
                 for col in df.columns:
                     df[col] = df[col].astype(str).str.strip()
-                # 기존 시트에 '최종판정' 컬럼이 없는 구형 데이터를 위한 안전 장치
                 if "최종판정" not in df.columns:
                     df["최종판정"] = df.apply(lambda r: get_auto_final_judgment(r.get("손톱박리", ""), r.get("테이프박리", "")), axis=1)
                 return df
@@ -178,7 +179,6 @@ with st.form("f1", clear_on_submit=True):
     nail = st.selectbox("손톱 박리 결과", result_options)
     tape = st.selectbox("테이프 박리 결과", result_options)
     
-    # 💡 입력 시 최종 판정 수동 선택 가능 (기본값은 자동 계산)
     judgment_options = ["자동 판정", "🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
     manual_judgment = st.selectbox("최종 판정 (협의 후 변경 가능)", judgment_options)
     
@@ -202,7 +202,6 @@ if ok:
             with open(file_path, "wb") as f:
                 f.write(up_file.getbuffer())
 
-        # 최종 판정 결정 (수동 선택했으면 그것으로, 아니면 자동 계산)
         if manual_judgment == "자동 판정":
             final_j_val = get_auto_final_judgment(nail, tape)
         else:
@@ -284,13 +283,8 @@ try:
             n_val = get_badge(row.get("손톱박리", "-"))
             t_val = get_badge(row.get("테이프박리", "-"))
             
-            # 💡 시트에 저장된 최종판정이 있으면 그것을 쓰고, 없으면 자동 계산
-            saved_j = row.get("최종판정", "")
-            if not saved_j or str(saved_j).lower() in ["nan", "none", ""]:
-                final_j = get_auto_final_judgment(row.get("손톱박리", ""), row.get("테이프박리", ""))
-            else:
-                final_j = str(saved_j)
-            
+            # 💡 기존 데이터의 잘못된 값을 바로잡고 자동 정렬 보정
+            final_j = get_final_judgment_for_row(row)
             j_val = get_judgment_badge(final_j)
             
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
@@ -446,7 +440,6 @@ try:
                             tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
                             edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
                             
-                            # 💡 수정 시 최종 판정도 협의 내용에 따라 직접 변경 가능하도록 추가
                             judg_opts = ["🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
                             curr_judg = str(curr_row.get("최종판정", ""))
                             judg_default = judg_opts.index(curr_judg) if curr_judg in judg_opts else 0
@@ -475,7 +468,7 @@ try:
                                     new_fn,
                                     edit_nail,
                                     edit_tape,
-                                    edit_judg, # 수정된 최종 판정 반영
+                                    edit_judg,
                                     str(edit_rem) if edit_rem.strip() else "-"
                                 ]
                                 
@@ -527,7 +520,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.78 (Corrected Failure Judgment & Manual Override)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.79 (Corrected Stored Judgment Override)" \
     "</div>", 
     unsafe_allow_html=True
 )
