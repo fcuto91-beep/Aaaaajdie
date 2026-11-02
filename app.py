@@ -33,6 +33,15 @@ def format_date_str(val):
         return "-"
     v_str = str(val).strip()
     
+    # 숫자 타임스탬프인 경우 처리
+    if v_str.isdigit() and len(v_str) >= 10:
+        try:
+            num_val = float(v_str)
+            dt_obj = datetime.fromtimestamp(num_val / 1000.0 if len(v_str) >= 12 else num_val, tz=KST)
+            return dt_obj.strftime("%Y-%m-%d")
+        except:
+            pass
+
     months = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", 
               "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
     
@@ -61,22 +70,47 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 날짜 문자열을 안전하게 datetime.date로 변환해주는 튼튼한 함수
+# 💡 어떤 형식의 날짜 데이터건 완벽하게 캐치하여 date 객체로 변환하는 불패의 파싱 함수
 def parse_date_safely(val, fallback_date):
-    if not val or str(val).lower() in ["nan", "nat", "none", "", "-"]:
+    if not val or str(val).lower() in ["nan", "nat", "none", "", "-", "null"]:
         return fallback_date
+    
+    if isinstance(val, datetime):
+        return val.date()
+    if isinstance(val, type(fallback_date)):
+        return val
+        
     v_str = str(val).strip()
-    try:
-        # 먼저 표준 형식(YYYY-MM-DD) 시도
-        clean_str = v_str[:10]
-        return datetime.strptime(clean_str, "%Y-%m-%d").date()
-    except:
+    
+    # 숫자 타임스탬프 (밀리초 또는 초) 처리
+    if v_str.isdigit() and len(v_str) >= 10:
         try:
-            parsed_dt = pd.to_datetime(v_str, errors='coerce')
-            if pd.notna(parsed_dt):
-                return parsed_dt.date()
+            num_val = float(v_str)
+            if len(v_str) >= 12:
+                return datetime.fromtimestamp(num_val / 1000.0, tz=KST).date()
+            else:
+                return datetime.fromtimestamp(num_val, tz=KST).date()
         except:
             pass
+            
+    if 'T' in v_str:
+        v_str = v_str.split('T')[0]
+    elif ' ' in v_str:
+        v_str = v_str.split(' ')[0]
+        
+    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d", "%m/%d/%Y", "%d/%m/%Y", "%Y%m%d"):
+        try:
+            return datetime.strptime(v_str[:10], fmt).date()
+        except:
+            continue
+            
+    try:
+        parsed_dt = pd.to_datetime(v_str, errors='coerce')
+        if pd.notna(parsed_dt):
+            return parsed_dt.date()
+    except:
+        pass
+        
     return fallback_date
 
 def get_judgment_badge(val):
@@ -444,7 +478,7 @@ try:
                         curr_row = df.loc[sel_idx]
                         
                         with st.form("edit_form"):
-                            # 💡 기존 저장된 날짜를 안전하게 파싱하여 기본값으로 설정
+                            # 💡 타임스탬프 및 모든 날짜 형식을 완벽하게 파싱하는 안전한 함수 적용
                             default_in_date = parse_date_safely(curr_row.get("입고일자"), kst_today)
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
                             edit_in_date_str = edit_in_date_val.isoformat()
@@ -546,7 +580,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.86 (Safe Date Parsing for Edit Form)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.87 (Bulletproof Date Parsing for Edit Form)" \
     "</div>", 
     unsafe_allow_html=True
 )
