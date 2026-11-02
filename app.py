@@ -61,6 +61,43 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
+# 💡 손톱, 테이프 결과에 따른 자동 최종 판정 로직 함수
+def get_auto_final_judgment(nail_val, tape_val):
+    n = str(nail_val).strip()
+    t = str(tape_val).strip()
+    
+    is_n_pass = "적합" in n or "PASS" in n
+    is_t_pass = "적합" in t or "PASS" in t
+    is_n_fail = "부적합" in n or "FAIL" in n
+    is_t_fail = "부적합" in t or "FAIL" in t
+    
+    # 1. 둘 다 적합인 경우
+    if is_n_pass and is_t_pass:
+        return "🟢 최종 적합 (PASS)"
+    
+    # 2. 둘 다 부적합인 경우
+    elif is_n_fail and is_t_fail:
+        return "🔴 최종 부적합 (FAIL)"
+    
+    # 3. 둘 중 하나라도 부적합이 섞여 있는 경우 (조건부 진행)
+    elif is_n_fail or is_t_fail:
+        return "🟠 조건부 진행 (특이사항 확인)"
+    
+    # 4. 그 외 (시험 대기 등)
+    else:
+        return "🟡 판정 대기"
+
+def get_judgment_badge(val):
+    v_str = str(val).strip()
+    if "최종 적합" in v_str or "PASS" in v_str:
+        return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🟢 최종적합(PASS)</span>'
+    elif "최종 부적합" in v_str or "FAIL" in v_str:
+        return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🔴 최종부적합(FAIL)</span>'
+    elif "조건부 진행" in v_str:
+        return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🟠 조건부진행</span>'
+    else:
+        return '<span style="background-color:#f1f3f5; color:#555; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 판정대기</span>'
+
 def load_data():
     try:
         no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
@@ -236,6 +273,11 @@ try:
             
             n_val = get_badge(row.get("손톱박리", "-"))
             t_val = get_badge(row.get("테이프박리", "-"))
+            
+            # 💡 최종 판정 자동 계산 및 배지 적용
+            final_j = get_auto_final_judgment(row.get("손톱박리", "-"), row.get("테이프박리", "-"))
+            j_val = get_judgment_badge(final_j)
+            
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
             
             fname = str(row.get("사진파일명", "none"))
@@ -275,6 +317,7 @@ try:
                 else:
                     img_td = '<span style="color:#aaa; font-size:10px;" title="서버에 이미지 파일이 없습니다">-</span>'
 
+            # 💡 테이프와 특이사항 사이에 최종 판정 칸 추가
             row_str = f"""
 <tr>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
@@ -284,6 +327,7 @@ try:
     <td style="padding:8px 6px; width:40px; text-align:center; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
     <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
+    <td style="padding:8px 6px; width:120px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{j_val}</td>
     <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{r_val}</td>
 </tr>"""
             rows_list.append(row_str)
@@ -293,7 +337,7 @@ try:
         
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <table style="width:100%; min-width:850px; table-layout:auto; border-collapse:collapse; margin:0;">
+    <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
             <tr>
                 <th style="padding:10px 8px; width:85px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
@@ -303,6 +347,7 @@ try:
                 <th style="padding:10px 6px; width:40px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
                 <th style="padding:10px 6px; width:100px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
                 <th style="padding:10px 6px; width:100px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
+                <th style="padding:10px 6px; width:120px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">최종 판정</th>
                 <th style="padding:10px 10px; min-width:130px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">특이사항</th>
             </tr>
         </thead>
@@ -461,7 +506,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.76 (Clean Indentation Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.77 (Added Final Judgment Column & Rules)" \
     "</div>", 
     unsafe_allow_html=True
 )
