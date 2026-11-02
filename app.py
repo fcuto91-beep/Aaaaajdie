@@ -69,7 +69,6 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 자바스크립트 표준 날짜 문자열(Thu Oct 22 2026 ...)까지 완벽하게 파싱하는 최종 무적 함수
 def parse_date_safely(val, fallback_date):
     if not val or str(val).lower() in ["nan", "nat", "none", "", "-", "null"]:
         return fallback_date
@@ -81,12 +80,10 @@ def parse_date_safely(val, fallback_date):
         
     v_str = str(val).strip()
     
-    # 💡 자바스크립트 표준 날짜 형식 ("Thu Oct 22 2026 ...") 처리
     months_map = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", 
                   "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
     try:
         parts = v_str.replace(",", "").split()
-        # parts 예시: ['Thu', 'Oct', '22', '2026', '00:00:00', 'GMT+0900', ...]
         found_m, found_d, found_y = None, None, "2026"
         for p in parts:
             if p in months_map:
@@ -314,7 +311,7 @@ try:
             q = st.text_input("🔍 검색", placeholder="검색어 입력...")
         with col_f2:
             filter_options = ["전체 보기", "🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
-            selected_single_filter = st.selectbox("🏷️ 최종 판정 골라보기 (단일 선택)", filter_options)
+            selected_single_filter = st.selectbox("🏷️ 최종 판정 (선택)", filter_options)
         
         if q:
             mask = df.apply(lambda r: r.astype(str).str.contains(q, case=False).any(), axis=1)
@@ -599,7 +596,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.90 (JS Date String Parser Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.92" \
     "</div>", 
     unsafe_allow_html=True
 )
