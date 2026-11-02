@@ -61,6 +61,7 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
+# 💡 최종 판정 배지 디자인 (판정 대기도 시험 대기와 동일한 노란색 배지로 통일)
 def get_judgment_badge(val):
     v_str = str(val).strip()
     if "최종 적합" in v_str or "PASS" in v_str:
@@ -69,8 +70,10 @@ def get_judgment_badge(val):
         return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🔴 최종부적합(FAIL)</span>'
     elif "조건부 진행" in v_str:
         return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🟠 조건부진행</span>'
+    elif "대기" in v_str or "확인" in v_str:
+        return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 판정대기</span>'
     else:
-        return f'<span style="background-color:#f1f3f5; color:#555; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">{html.escape(v_str)}</span>'
+        return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
 def load_data():
     try:
@@ -81,29 +84,24 @@ def load_data():
             if isinstance(data, list) and len(data) > 0:
                 normalized_rows = []
                 for item in data:
-                    # 💡 구글 시트 행 데이터가 리스트 형태이든 딕셔너리 형태이든 안전하게 정규화
                     if isinstance(item, list):
                         vals = [str(v).strip() for v in item]
-                        # 구형 데이터(8개 컬럼)인 경우: [입고, 검사, 번호, 약호, 사진, 손톱, 테이프, 특이사항]
                         if len(vals) <= 8:
                             while len(vals) < 8:
                                 vals.append("-")
                             in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, rem_v = vals[:8]
-                            # 구형 데이터는 손톱/테이프 보고 대략적인 기본 최종판정 부여
                             j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
                             normalized_rows.append({
                                 "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
                                 "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
                             })
                         else:
-                            # 신형 데이터(9개 이상 컬럼): [입고, 검사, 번호, 약호, 사진, 손톱, 테이프, 최종판정, 특이사항]
                             in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
                             normalized_rows.append({
                                 "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
                                 "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
                             })
                     elif isinstance(item, dict):
-                        # 딕셔너리 형태인 경우
                         normalized_rows.append({
                             "입고일자": str(item.get("입고일자", "-")).strip(),
                             "검사일자": str(item.get("검사일자", "-")).strip(),
@@ -115,9 +113,7 @@ def load_data():
                             "최종판정": str(item.get("최종판정", item.get("판정", "🟡 판정 대기"))).strip(),
                             "특이사항": str(item.get("특이사항", "-")).strip()
                         })
-                
-                df = pd.DataFrame(normalized_rows)
-                return df
+                return pd.DataFrame(normalized_rows)
     except Exception as e:
         print(f"Load error: {e}")
     
@@ -211,7 +207,6 @@ if ok:
             with open(file_path, "wb") as f:
                 f.write(up_file.getbuffer())
 
-        # 💡 순서 고정: [입고일자, 검사일자, 포장재번호, 포장재약호, 사진파일명, 손톱박리, 테이프박리, 최종판정, 특이사항] (총 9개)
         row_data = [
             in_date_str, 
             dt_str, 
@@ -524,7 +519,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.82 (Fixed Column Index Alignment)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.83 (Uniform Yellow Badge for Pending Status)" \
     "</div>", 
     unsafe_allow_html=True
 )
