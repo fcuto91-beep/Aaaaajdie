@@ -61,7 +61,7 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 손톱, 테이프 결과에 따른 자동 최종 판정 로직 함수
+# 💡 수정된 자동 최종 판정 규칙 (적합+부적합, 부적합+적합, 부적합+부적합 모두 부적합 처리)
 def get_auto_final_judgment(nail_val, tape_val):
     n = str(nail_val).strip()
     t = str(tape_val).strip()
@@ -71,19 +71,15 @@ def get_auto_final_judgment(nail_val, tape_val):
     is_n_fail = "부적합" in n or "FAIL" in n
     is_t_fail = "부적합" in t or "FAIL" in t
     
-    # 1. 둘 다 적합인 경우
+    # 1. 둘 다 적합인 경우 -> 최종 적합
     if is_n_pass and is_t_pass:
         return "🟢 최종 적합 (PASS)"
     
-    # 2. 둘 다 부적합인 경우
-    elif is_n_fail and is_t_fail:
+    # 2. 하나라도 부적합이 섞여 있거나 둘 다 부적합인 경우 -> 최종 부적합
+    elif is_n_fail or is_t_fail:
         return "🔴 최종 부적합 (FAIL)"
     
-    # 3. 둘 중 하나라도 부적합이 섞여 있는 경우 (조건부 진행)
-    elif is_n_fail or is_t_fail:
-        return "🟠 조건부 진행 (특이사항 확인)"
-    
-    # 4. 그 외 (시험 대기 등)
+    # 3. 그 외 (시험 대기 등)
     else:
         return "🟡 판정 대기"
 
@@ -108,11 +104,14 @@ def load_data():
                 df = pd.DataFrame(data)
                 for col in df.columns:
                     df[col] = df[col].astype(str).str.strip()
+                # 기존 시트에 '최종판정' 컬럼이 없는 구형 데이터를 위한 안전 장치
+                if "최종판정" not in df.columns:
+                    df["최종판정"] = df.apply(lambda r: get_auto_final_judgment(r.get("손톱박리", ""), r.get("테이프박리", "")), axis=1)
                 return df
     except Exception as e:
         print(f"Load error: {e}")
     
-    return pd.DataFrame(columns=["입고일자", "검사일자", "포장재번호", "포장재약호", "사진파일명", "손톱박리", "테이프박리", "특이사항"])
+    return pd.DataFrame(columns=["입고일자", "검사일자", "포장재번호", "포장재약호", "사진파일명", "손톱박리", "테이프박리", "최종판정", "특이사항"])
 
 def append_to_sheet(row_data):
     try:
@@ -179,6 +178,10 @@ with st.form("f1", clear_on_submit=True):
     nail = st.selectbox("손톱 박리 결과", result_options)
     tape = st.selectbox("테이프 박리 결과", result_options)
     
+    # 💡 입력 시 최종 판정 수동 선택 가능 (기본값은 자동 계산)
+    judgment_options = ["자동 판정", "🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
+    manual_judgment = st.selectbox("최종 판정 (협의 후 변경 가능)", judgment_options)
+    
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
     rem = st.text_area("특이사항")
     ok = st.form_submit_button("💾 Save", type="primary")
@@ -199,6 +202,12 @@ if ok:
             with open(file_path, "wb") as f:
                 f.write(up_file.getbuffer())
 
+        # 최종 판정 결정 (수동 선택했으면 그것으로, 아니면 자동 계산)
+        if manual_judgment == "자동 판정":
+            final_j_val = get_auto_final_judgment(nail, tape)
+        else:
+            final_j_val = manual_judgment
+
         row_data = [
             in_date_str, 
             dt_str, 
@@ -207,6 +216,7 @@ if ok:
             fn,
             nail, 
             tape, 
+            final_j_val,
             str(rem) if rem.strip() else "-"
         ]
         
@@ -274,8 +284,13 @@ try:
             n_val = get_badge(row.get("손톱박리", "-"))
             t_val = get_badge(row.get("테이프박리", "-"))
             
-            # 💡 최종 판정 자동 계산 및 배지 적용
-            final_j = get_auto_final_judgment(row.get("손톱박리", "-"), row.get("테이프박리", "-"))
+            # 💡 시트에 저장된 최종판정이 있으면 그것을 쓰고, 없으면 자동 계산
+            saved_j = row.get("최종판정", "")
+            if not saved_j or str(saved_j).lower() in ["nan", "none", ""]:
+                final_j = get_auto_final_judgment(row.get("손톱박리", ""), row.get("테이프박리", ""))
+            else:
+                final_j = str(saved_j)
+            
             j_val = get_judgment_badge(final_j)
             
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
@@ -317,7 +332,6 @@ try:
                 else:
                     img_td = '<span style="color:#aaa; font-size:10px;" title="서버에 이미지 파일이 없습니다">-</span>'
 
-            # 💡 테이프와 특이사항 사이에 최종 판정 칸 추가
             row_str = f"""
 <tr>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
@@ -387,7 +401,7 @@ try:
                 st.download_button("💾 전체 검사 내역 및 사진 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
                 
                 st.markdown("---")
-                st.subheader("✏️ 검사 내역 수정")
+                st.subheader("✏️ 검사 내역 수정 (최종 판정 변경 포함)")
                 edit_q = st.text_input("🔎 수정할 항목 검색 (포장재 번호)", placeholder="예: 5115558")
                 
                 if edit_q:
@@ -432,6 +446,12 @@ try:
                             tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
                             edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
                             
+                            # 💡 수정 시 최종 판정도 협의 내용에 따라 직접 변경 가능하도록 추가
+                            judg_opts = ["🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
+                            curr_judg = str(curr_row.get("최종판정", ""))
+                            judg_default = judg_opts.index(curr_judg) if curr_judg in judg_opts else 0
+                            edit_judg = st.selectbox("최종 판정 수정 (협의 후 변경)", judg_opts, index=judg_default)
+                            
                             edit_file = st.file_uploader("새로운 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
                             edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
                             
@@ -455,6 +475,7 @@ try:
                                     new_fn,
                                     edit_nail,
                                     edit_tape,
+                                    edit_judg, # 수정된 최종 판정 반영
                                     str(edit_rem) if edit_rem.strip() else "-"
                                 ]
                                 
@@ -506,7 +527,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.77 (Added Final Judgment Column & Rules)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.78 (Corrected Failure Judgment & Manual Override)" \
     "</div>", 
     unsafe_allow_html=True
 )
