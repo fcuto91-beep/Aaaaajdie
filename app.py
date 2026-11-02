@@ -61,7 +61,6 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 최종 판정 배지 디자인 (판정 대기도 시험 대기와 동일한 노란색 배지로 통일)
 def get_judgment_badge(val):
     v_str = str(val).strip()
     if "최종 적합" in v_str or "PASS" in v_str:
@@ -240,13 +239,28 @@ try:
     df = load_data()
     
     if not df.empty:
-        q = st.text_input("🔍 검색", placeholder="검색어 입력...")
+        # 💡 검색창과 엑셀 스타일 체크 필터 나란히 배치
+        col_f1, col_f2 = st.columns([1.2, 1.8])
+        with col_f1:
+            q = st.text_input("🔍 검색", placeholder="검색어 입력...")
+        with col_f2:
+            all_j_types = df["최종판정"].unique().tolist() if "최종판정" in df.columns else []
+            selected_j_filter = st.multiselect(
+                "🏷️ 최종 판정 필터 (체크하여 골라보기)",
+                options=all_j_types,
+                default=all_j_types
+            )
         
+        # 검색어 필터 적용
         if q:
             mask = df.apply(lambda r: r.astype(str).str.contains(q, case=False).any(), axis=1)
             df_f = df[mask].reset_index(drop=True)
         else:
             df_f = df.reset_index(drop=True)
+
+        # 💡 최종 판정 체크(멀티셀렉트) 필터 적용
+        if selected_j_filter:
+            df_f = df_f[df_f["최종판정"].isin(selected_j_filter)].reset_index(drop=True)
 
         try:
             df_f["_temp_date"] = pd.to_datetime(df_f["입고일자"], errors='coerce')
@@ -519,7 +533,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.83 (Uniform Yellow Badge for Pending Status)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.84 (Excel-style Multi-select Filter)" \
     "</div>", 
     unsafe_allow_html=True
 )
