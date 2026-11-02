@@ -33,7 +33,6 @@ def format_date_str(val):
         return "-"
     v_str = str(val).strip()
     
-    # 숫자 타임스탬프인 경우 처리
     if v_str.isdigit() and len(v_str) >= 10:
         try:
             num_val = float(v_str)
@@ -70,7 +69,6 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 어떤 형식의 날짜 데이터건 완벽하게 캐치하여 date 객체로 변환하는 불패의 파싱 함수
 def parse_date_safely(val, fallback_date):
     if not val or str(val).lower() in ["nan", "nat", "none", "", "-", "null"]:
         return fallback_date
@@ -82,7 +80,6 @@ def parse_date_safely(val, fallback_date):
         
     v_str = str(val).strip()
     
-    # 숫자 타임스탬프 (밀리초 또는 초) 처리
     if v_str.isdigit() and len(v_str) >= 10:
         try:
             num_val = float(v_str)
@@ -154,10 +151,10 @@ def load_data():
                             })
                     elif isinstance(item, dict):
                         normalized_rows.append({
-                            "입고일자": str(item.get("입고일자", "-")).strip(),
-                            "검사일자": str(item.get("검사일자", "-")).strip(),
-                            "포장재번호": str(item.get("포장재번호", "-")).strip(),
-                            "포장재약호": str(item.get("포장재약호", "-")).strip(),
+                            "입고일자": str(item.get("입고일자", item.get("입고 일자", "-"))).strip(),
+                            "검사일자": str(item.get("검사일자", item.get("검사 일자", "-"))).strip(),
+                            "포장재번호": str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
+                            "포장재약호": str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
                             "사진파일명": str(item.get("사진파일명", "none")).strip(),
                             "손톱박리": str(item.get("손톱박리", "-")).strip(),
                             "테이프박리": str(item.get("테이프박리", "-")).strip(),
@@ -478,12 +475,14 @@ try:
                         curr_row = df.loc[sel_idx]
                         
                         with st.form("edit_form"):
-                            # 💡 타임스탬프 및 모든 날짜 형식을 완벽하게 파싱하는 안전한 함수 적용
-                            default_in_date = parse_date_safely(curr_row.get("입고일자"), kst_today)
+                            # 💡 원본 데이터프레임에서 직접 확실하게 값을 추출하여 파싱
+                            raw_in_date = curr_row["입고일자"] if "입고일자" in curr_row else curr_row.get(0, kst_today)
+                            default_in_date = parse_date_safely(raw_in_date, kst_today)
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
                             edit_in_date_str = edit_in_date_val.isoformat()
                             
-                            default_inspect_date = parse_date_safely(curr_row.get("검사일자"), kst_today)
+                            raw_inspect_date = curr_row["검사일자"] if "검사일자" in curr_row else curr_row.get(1, kst_today)
+                            default_inspect_date = parse_date_safely(raw_inspect_date, kst_today)
                             edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
                             edit_inspect_date_str = edit_inspect_date_val.isoformat()
                             
@@ -580,7 +579,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.87 (Bulletproof Date Parsing for Edit Form)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.88 (Direct Row Data Binding Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
