@@ -61,6 +61,24 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
+# 💡 날짜 문자열을 안전하게 datetime.date로 변환해주는 튼튼한 함수
+def parse_date_safely(val, fallback_date):
+    if not val or str(val).lower() in ["nan", "nat", "none", "", "-"]:
+        return fallback_date
+    v_str = str(val).strip()
+    try:
+        # 먼저 표준 형식(YYYY-MM-DD) 시도
+        clean_str = v_str[:10]
+        return datetime.strptime(clean_str, "%Y-%m-%d").date()
+    except:
+        try:
+            parsed_dt = pd.to_datetime(v_str, errors='coerce')
+            if pd.notna(parsed_dt):
+                return parsed_dt.date()
+        except:
+            pass
+    return fallback_date
+
 def get_judgment_badge(val):
     v_str = str(val).strip()
     if "최종 적합" in v_str or "PASS" in v_str:
@@ -239,7 +257,6 @@ try:
     df = load_data()
     
     if not df.empty:
-        # 💡 검색창과 단일 선택형 판정 필터(셀렉트박스) 나란히 배치
         col_f1, col_f2 = st.columns([1.2, 1.8])
         with col_f1:
             q = st.text_input("🔍 검색", placeholder="검색어 입력...")
@@ -247,14 +264,12 @@ try:
             filter_options = ["전체 보기", "🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
             selected_single_filter = st.selectbox("🏷️ 최종 판정 골라보기 (단일 선택)", filter_options)
         
-        # 검색어 필터 적용
         if q:
             mask = df.apply(lambda r: r.astype(str).str.contains(q, case=False).any(), axis=1)
             df_f = df[mask].reset_index(drop=True)
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 단일 선택 필터 적용
         if selected_single_filter != "전체 보기":
             if "적합" in selected_single_filter:
                 df_f = df_f[df_f["최종판정"].str.contains("적합|PASS", case=False, na=False)].reset_index(drop=True)
@@ -429,17 +444,12 @@ try:
                         curr_row = df.loc[sel_idx]
                         
                         with st.form("edit_form"):
-                            try:
-                                default_in_date = datetime.strptime(str(curr_row.get("입고일자", ""))[:10], "%Y-%m-%d").date()
-                            except:
-                                default_in_date = kst_today
+                            # 💡 기존 저장된 날짜를 안전하게 파싱하여 기본값으로 설정
+                            default_in_date = parse_date_safely(curr_row.get("입고일자"), kst_today)
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
                             edit_in_date_str = edit_in_date_val.isoformat()
                             
-                            try:
-                                default_inspect_date = datetime.strptime(str(curr_row.get("검사일자", ""))[:10], "%Y-%m-%d").date()
-                            except:
-                                default_inspect_date = kst_today
+                            default_inspect_date = parse_date_safely(curr_row.get("검사일자"), kst_today)
                             edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
                             edit_inspect_date_str = edit_inspect_date_val.isoformat()
                             
@@ -536,7 +546,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.85 (Single-select Dropdown Filter)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.86 (Safe Date Parsing for Edit Form)" \
     "</div>", 
     unsafe_allow_html=True
 )
