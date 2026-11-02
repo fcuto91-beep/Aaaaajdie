@@ -69,6 +69,7 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
+# 💡 자바스크립트 표준 날짜 문자열(Thu Oct 22 2026 ...)까지 완벽하게 파싱하는 최종 무적 함수
 def parse_date_safely(val, fallback_date):
     if not val or str(val).lower() in ["nan", "nat", "none", "", "-", "null"]:
         return fallback_date
@@ -80,6 +81,26 @@ def parse_date_safely(val, fallback_date):
         
     v_str = str(val).strip()
     
+    # 💡 자바스크립트 표준 날짜 형식 ("Thu Oct 22 2026 ...") 처리
+    months_map = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", 
+                  "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
+    try:
+        parts = v_str.replace(",", "").split()
+        # parts 예시: ['Thu', 'Oct', '22', '2026', '00:00:00', 'GMT+0900', ...]
+        found_m, found_d, found_y = None, None, "2026"
+        for p in parts:
+            if p in months_map:
+                found_m = months_map[p]
+            elif p.isdigit():
+                if len(p) == 2 and not found_d:
+                    found_d = p
+                elif len(p) == 4:
+                    found_y = p
+        if found_m and found_d:
+            return datetime.strptime(f"{found_y}-{found_m}-{found_d}", "%Y-%m-%d").date()
+    except:
+        pass
+
     if v_str.isdigit() and len(v_str) >= 10:
         try:
             num_val = float(v_str)
@@ -92,7 +113,7 @@ def parse_date_safely(val, fallback_date):
             
     if 'T' in v_str:
         v_str = v_str.split('T')[0]
-    elif ' ' in v_str:
+    elif ' ' in v_str and not ('GMT' in v_str or 'Standard' in v_str):
         v_str = v_str.split(' ')[0]
         
     for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d", "%m/%d/%Y", "%d/%m/%Y", "%Y%m%d"):
@@ -474,9 +495,6 @@ try:
                         sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
                         curr_row = df.loc[sel_idx]
                         
-                        # 💡 디버그용: 시트에서 읽어온 원본 날짜 값을 화면에 그대로 출력해 확인
-                        st.info(f"🔍 [디버그] 원본 입고일자: '{curr_row.get('입고일자')}' / 원본 검사일자: '{curr_row.get('검사일자')}'")
-                        
                         with st.form("edit_form"):
                             raw_in_date = curr_row["입고일자"] if "입고일자" in curr_row else curr_row.get(0, kst_today)
                             default_in_date = parse_date_safely(raw_in_date, kst_today)
@@ -581,7 +599,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.89 (Date Debug Logging Added)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.90 (JS Date String Parser Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
