@@ -61,7 +61,6 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 형님이 선택한 최종 판정 값에 맞는 배지 디자인 출력 함수
 def get_judgment_badge(val):
     v_str = str(val).strip()
     if "최종 적합" in v_str or "PASS" in v_str:
@@ -80,11 +79,44 @@ def load_data():
         if response.status_code == 200:
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
-                df = pd.DataFrame(data)
-                for col in df.columns:
-                    df[col] = df[col].astype(str).str.strip()
-                if "최종판정" not in df.columns:
-                    df["최종판정"] = "🟡 판정 대기"
+                normalized_rows = []
+                for item in data:
+                    # 💡 구글 시트 행 데이터가 리스트 형태이든 딕셔너리 형태이든 안전하게 정규화
+                    if isinstance(item, list):
+                        vals = [str(v).strip() for v in item]
+                        # 구형 데이터(8개 컬럼)인 경우: [입고, 검사, 번호, 약호, 사진, 손톱, 테이프, 특이사항]
+                        if len(vals) <= 8:
+                            while len(vals) < 8:
+                                vals.append("-")
+                            in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, rem_v = vals[:8]
+                            # 구형 데이터는 손톱/테이프 보고 대략적인 기본 최종판정 부여
+                            j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
+                            normalized_rows.append({
+                                "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
+                                "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
+                            })
+                        else:
+                            # 신형 데이터(9개 이상 컬럼): [입고, 검사, 번호, 약호, 사진, 손톱, 테이프, 최종판정, 특이사항]
+                            in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
+                            normalized_rows.append({
+                                "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
+                                "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
+                            })
+                    elif isinstance(item, dict):
+                        # 딕셔너리 형태인 경우
+                        normalized_rows.append({
+                            "입고일자": str(item.get("입고일자", "-")).strip(),
+                            "검사일자": str(item.get("검사일자", "-")).strip(),
+                            "포장재번호": str(item.get("포장재번호", "-")).strip(),
+                            "포장재약호": str(item.get("포장재약호", "-")).strip(),
+                            "사진파일명": str(item.get("사진파일명", "none")).strip(),
+                            "손톱박리": str(item.get("손톱박리", "-")).strip(),
+                            "테이프박리": str(item.get("테이프박리", "-")).strip(),
+                            "최종판정": str(item.get("최종판정", item.get("판정", "🟡 판정 대기"))).strip(),
+                            "특이사항": str(item.get("특이사항", "-")).strip()
+                        })
+                
+                df = pd.DataFrame(normalized_rows)
                 return df
     except Exception as e:
         print(f"Load error: {e}")
@@ -156,7 +188,6 @@ with st.form("f1", clear_on_submit=True):
     nail = st.selectbox("손톱 박리 결과", result_options)
     tape = st.selectbox("테이프 박리 결과", result_options)
     
-    # 💡 형님이 고른 선택지 값이 그대로 저장되도록 연결
     judgment_options = ["🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
     manual_judgment = st.selectbox("최종 판정 (협의 후 변경 가능)", judgment_options)
     
@@ -180,7 +211,7 @@ if ok:
             with open(file_path, "wb") as f:
                 f.write(up_file.getbuffer())
 
-        # 💡 형님이 선택한 판정 값을 가감 없이 그대로 전달
+        # 💡 순서 고정: [입고일자, 검사일자, 포장재번호, 포장재약호, 사진파일명, 손톱박리, 테이프박리, 최종판정, 특이사항] (총 9개)
         row_data = [
             in_date_str, 
             dt_str, 
@@ -257,7 +288,6 @@ try:
             n_val = get_badge(row.get("손톱박리", "-"))
             t_val = get_badge(row.get("테이프박리", "-"))
             
-            # 💡 시트에 저장된 최종 판정 값을 그대로 읽어서 배지로 표시
             final_j_raw = row.get("최종판정", "🟡 판정 대기")
             j_val = get_judgment_badge(final_j_raw)
             
@@ -494,7 +524,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.81 (Direct Manual Judgment Storage)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.82 (Fixed Column Index Alignment)" \
     "</div>", 
     unsafe_allow_html=True
 )
