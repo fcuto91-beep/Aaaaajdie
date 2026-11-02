@@ -596,7 +596,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.92" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.10.93" \
     "</div>", 
     unsafe_allow_html=True
 )
