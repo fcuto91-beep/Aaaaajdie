@@ -474,8 +474,10 @@ try:
                         sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
                         curr_row = df.loc[sel_idx]
                         
+                        # 💡 디버그용: 시트에서 읽어온 원본 날짜 값을 화면에 그대로 출력해 확인
+                        st.info(f"🔍 [디버그] 원본 입고일자: '{curr_row.get('입고일자')}' / 원본 검사일자: '{curr_row.get('검사일자')}'")
+                        
                         with st.form("edit_form"):
-                            # 💡 원본 데이터프레임에서 직접 확실하게 값을 추출하여 파싱
                             raw_in_date = curr_row["입고일자"] if "입고일자" in curr_row else curr_row.get(0, kst_today)
                             default_in_date = parse_date_safely(raw_in_date, kst_today)
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
@@ -579,7 +581,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.88 (Direct Row Data Binding Fix)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.89 (Date Debug Logging Added)" \
     "</div>", 
     unsafe_allow_html=True
 )
