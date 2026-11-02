@@ -319,11 +319,12 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
+        # 💡 필터 조건식 수정 (부적합이 '적합'에 섞여 들어가지 않도록 부적합을 맨 먼저 정확하게 체크)
         if selected_single_filter != "전체 보기":
-            if "적합" in selected_single_filter:
-                df_f = df_f[df_f["최종판정"].str.contains("적합|PASS", case=False, na=False)].reset_index(drop=True)
-            elif "부적합" in selected_single_filter:
+            if "부적합" in selected_single_filter or "FAIL" in selected_single_filter:
                 df_f = df_f[df_f["최종판정"].str.contains("부적합|FAIL", case=False, na=False)].reset_index(drop=True)
+            elif "적합" in selected_single_filter or "PASS" in selected_single_filter:
+                df_f = df_f[df_f["최종판정"].str.contains("적합|PASS", case=False, na=False)].reset_index(drop=True)
             elif "조건부" in selected_single_filter:
                 df_f = df_f[df_f["최종판정"].str.contains("조건부", case=False, na=False)].reset_index(drop=True)
             elif "대기" in selected_single_filter:
@@ -596,7 +597,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.10.93" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.10.94" \
     "</div>", 
     unsafe_allow_html=True
 )
