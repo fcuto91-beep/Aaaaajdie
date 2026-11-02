@@ -61,30 +61,7 @@ def format_date_str(val):
         
     return v_str[:10] if len(v_str) >= 10 else v_str
 
-# 💡 엄격한 최종 판정 자동 계산 규칙 (하나라도 부적합이면 최종 부적합)
-def get_auto_final_judgment(nail_val, tape_val):
-    n = str(nail_val).strip()
-    t = str(tape_val).strip()
-    
-    is_n_pass = "적합" in n or "PASS" in n
-    is_t_pass = "적합" in t or "PASS" in t
-    is_n_fail = "부적합" in n or "FAIL" in n
-    is_t_fail = "부적합" in t or "FAIL" in t
-    
-    if is_n_pass and is_t_pass:
-        return "🟢 최종 적합 (PASS)"
-    elif is_n_fail or is_t_fail:
-        return "🔴 최종 부적합 (FAIL)"
-    else:
-        return "🟡 판정 대기"
-
-def get_final_judgment_for_row(row):
-    saved_j = str(row.get("최종판정", "")).strip()
-    # 수동으로 협의하여 '조건부 진행'으로 지정한 경우만 유지하고, 나머지는 결과에 맞게 자동 계산
-    if "조건부 진행" in saved_j:
-        return saved_j
-    return get_auto_final_judgment(row.get("손톱박리", ""), row.get("테이프박리", ""))
-
+# 💡 형님이 선택한 최종 판정 값에 맞는 배지 디자인 출력 함수
 def get_judgment_badge(val):
     v_str = str(val).strip()
     if "최종 적합" in v_str or "PASS" in v_str:
@@ -94,7 +71,7 @@ def get_judgment_badge(val):
     elif "조건부 진행" in v_str:
         return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🟠 조건부진행</span>'
     else:
-        return '<span style="background-color:#f1f3f5; color:#555; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 판정대기</span>'
+        return f'<span style="background-color:#f1f3f5; color:#555; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">{html.escape(v_str)}</span>'
 
 def load_data():
     try:
@@ -107,7 +84,7 @@ def load_data():
                 for col in df.columns:
                     df[col] = df[col].astype(str).str.strip()
                 if "최종판정" not in df.columns:
-                    df["최종판정"] = df.apply(lambda r: get_auto_final_judgment(r.get("손톱박리", ""), r.get("테이프박리", "")), axis=1)
+                    df["최종판정"] = "🟡 판정 대기"
                 return df
     except Exception as e:
         print(f"Load error: {e}")
@@ -179,7 +156,8 @@ with st.form("f1", clear_on_submit=True):
     nail = st.selectbox("손톱 박리 결과", result_options)
     tape = st.selectbox("테이프 박리 결과", result_options)
     
-    judgment_options = ["자동 판정", "🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
+    # 💡 형님이 고른 선택지 값이 그대로 저장되도록 연결
+    judgment_options = ["🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
     manual_judgment = st.selectbox("최종 판정 (협의 후 변경 가능)", judgment_options)
     
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
@@ -202,11 +180,7 @@ if ok:
             with open(file_path, "wb") as f:
                 f.write(up_file.getbuffer())
 
-        if manual_judgment == "자동 판정":
-            final_j_val = get_auto_final_judgment(nail, tape)
-        else:
-            final_j_val = manual_judgment
-
+        # 💡 형님이 선택한 판정 값을 가감 없이 그대로 전달
         row_data = [
             in_date_str, 
             dt_str, 
@@ -215,7 +189,7 @@ if ok:
             fn,
             nail, 
             tape, 
-            final_j_val,
+            manual_judgment,
             str(rem) if rem.strip() else "-"
         ]
         
@@ -283,9 +257,9 @@ try:
             n_val = get_badge(row.get("손톱박리", "-"))
             t_val = get_badge(row.get("테이프박리", "-"))
             
-            # 💡 기존 데이터의 잘못된 값을 바로잡고 자동 정렬 보정
-            final_j = get_final_judgment_for_row(row)
-            j_val = get_judgment_badge(final_j)
+            # 💡 시트에 저장된 최종 판정 값을 그대로 읽어서 배지로 표시
+            final_j_raw = row.get("최종판정", "🟡 판정 대기")
+            j_val = get_judgment_badge(final_j_raw)
             
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
             
@@ -324,7 +298,7 @@ try:
                     except Exception:
                         img_td = '-'
                 else:
-                    img_td = '<span style="color:#aaa; font-size:10px;" title="서버에 이미지 파일이 없습니다">-</span>'
+                    img_td = '-'
 
             row_str = f"""
 <tr>
@@ -395,7 +369,7 @@ try:
                 st.download_button("💾 전체 검사 내역 및 사진 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
                 
                 st.markdown("---")
-                st.subheader("✏️ 검사 내역 수정 (최종 판정 변경 포함)")
+                st.subheader("✏️ 검사 내역 수정")
                 edit_q = st.text_input("🔎 수정할 항목 검색 (포장재 번호)", placeholder="예: 5115558")
                 
                 if edit_q:
@@ -443,7 +417,7 @@ try:
                             judg_opts = ["🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
                             curr_judg = str(curr_row.get("최종판정", ""))
                             judg_default = judg_opts.index(curr_judg) if curr_judg in judg_opts else 0
-                            edit_judg = st.selectbox("최종 판정 수정 (협의 후 변경)", judg_opts, index=judg_default)
+                            edit_judg = st.selectbox("최종 판정 수정", judg_opts, index=judg_default)
                             
                             edit_file = st.file_uploader("새로운 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
                             edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
@@ -520,7 +494,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 김태현 책임기사<br>Version : v1.10.79 (Corrected Stored Judgment Override)" \
+    "Author : 김태현 책임기사<br>Version : v1.10.81 (Direct Manual Judgment Storage)" \
     "</div>", 
     unsafe_allow_html=True
 )
