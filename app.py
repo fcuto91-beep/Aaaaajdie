@@ -146,7 +146,7 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 normalized_rows = []
-                # 💡 첫 번째 행(헤더 타이틀)은 건너뛰고 2번째 행부터 데이터 처리
+                # 💡 첫 번째 행(헤더 타이틀)은 건너뛰고 2번째 행부터 안전하게 수집
                 for item in data[1:]:
                     if isinstance(item, list):
                         vals = [str(v).strip() for v in item]
@@ -156,7 +156,6 @@ def load_data():
                         if not j_v or j_v == "-":
                             j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
                         
-                        # 혹시 첫 번째 행에 '입고일자'라는 텍스트가 그대로 들어있다면 안전하게 스킵
                         if in_d == "입고일자" or m_no == "포장재번호":
                             continue
                             
@@ -382,7 +381,8 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                img_td = '🔍'
+                # 💡 v1.11.33 원조 정상 작동 돋보기 링크 복원
+                img_td = f'<a href="?zoom_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
 
             row_str = f"""
 <tr>
@@ -567,7 +567,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.34 (Header Row Skip Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.35 (Header Skip + Zoom Link Fixed)" \
     "</div>", 
     unsafe_allow_html=True
 )
