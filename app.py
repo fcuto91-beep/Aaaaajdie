@@ -8,6 +8,7 @@ import requests
 import json
 import html
 import base64
+from PIL import Image
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
@@ -179,19 +180,36 @@ def load_data():
 
 def process_image_to_base64(uploaded_file):
     try:
-        bytes_data = uploaded_file.getvalue()
-        b64_str = base64.b64encode(bytes_data).decode('utf-8')
-        mime = uploaded_file.type if uploaded_file.type else "image/jpeg"
-        return f"data:{mime};base64,{b64_str}"
+        # 💡 스마트폰 고화질 사진 용량 초과 방지를 위한 자동 리사이징 및 압축
+        image = Image.open(uploaded_file)
+        if image.width > 800:
+            ratio = 800 / image.width
+            new_height = int(image.height * ratio)
+            image = image.resize((800, new_height), Image.Resampling.LANCZOS)
+        
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+            
+        buffered = io.BytesIO()
+        image.save(buffered, format="JPEG", quality=75)
+        b64_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        return f"data:image/jpeg;base64,{b64_str}"
     except Exception as e:
-        print(f"Image processing error: {e}")
+        print(f"Image compression error: {e}")
+        try:
+            bytes_data = uploaded_file.getvalue()
+            b64_str = base64.b64encode(bytes_data).decode('utf-8')
+            mime = uploaded_file.type if uploaded_file.type else "image/jpeg"
+            return f"data:{mime};base64,{b64_str}"
+        except Exception as err:
+            print(f"Fallback error: {err}")
     return "none"
 
 def append_to_sheet(row_data):
     try:
         payload = {"action": "append", "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
-        st.cache_data.clear() # 캐시 초기화 추가
+        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Append error: {e}")
@@ -202,7 +220,7 @@ def update_sheet(old_mat, row_data):
         clean_mat = str(old_mat).strip().split('.')[0]
         payload = {"action": "update", "mat_no": clean_mat, "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
-        st.cache_data.clear() # 💡 수정 시 캐시 강제 초기화 추가
+        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Update error: {e}")
@@ -212,7 +230,7 @@ def clear_sheet_data():
     try:
         payload = {"action": "clear_sheet"}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
-        st.cache_data.clear() # 초기화 시 캐시 강제 초기화 추가
+        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Clear error: {e}")
@@ -603,7 +621,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.34 (Update Cache Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.35 (Image Compression & Update Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
