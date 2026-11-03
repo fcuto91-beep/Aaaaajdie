@@ -344,7 +344,6 @@ try:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
         rows_list = []
-        modals_list = []
         
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
@@ -369,48 +368,45 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                modal_id = f"modal_{idx}"
-                img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
+                # 💡 스트림릿 세션 상태를 활용하여 테이블 바깥(메인 화면 중앙)에 단독 모달 팝업을 띄우도록 트리거 설정
+                modal_key = f"open_modal_{idx}"
+                img_td = f'''
+                <form action="" method="get" style="margin:0; padding:0; display:inline;">
+                    <input type="hidden" name="show_img" value="{idx}">
+                    <button type="submit" name="target_idx" value="{idx}" style="background:none; border:none; color:#0366d6; font-size:16px; cursor:pointer; padding:0;" title="사진 보기">🔍</button>
+                </form>
+                '''
                 
-                if img_val.startswith("data:image"):
-                    modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:420px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
-                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
-                    </div>
-                    """
-                elif "http" in img_val:
-                    modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:420px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
-                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
-                    </div>
-                    """
-                else:
-                    modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:8px; padding:15px; margin-bottom:14px; font-size:13px; color:#555; text-align:center;">
-                        📁 <b>저장된 파일 정보:</b><br>
-                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_val)}</code>
-                    </div>
-                    """
+                # 쿼리 파라미터나 세션 상태로 모달 제어
+                if st.query_params.get("show_img") == str(idx):
+                    st.session_state[f"active_modal_{idx}"] = True
 
-                # 💡 iframe 높이를 넉넉하게 잡고 position fixed 중앙 모달 적용
-                modal_html = f"""
-                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center; background:rgba(0,0,0,0.5);">
-                    <div style="background:white; padding:20px; border-radius:12px; width:460px; max-width:90%; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
-                            <h3 style="margin:0; font-size:15px; color:#222; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
-                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 4px;">&times;</a>
+                if st.session_state.get(f"active_modal_{idx}", False):
+                    # 💡 브라우저 전체 화면을 덮는 완벽한 단독 중앙 팝업 모달창 (두 번째 사진 형태)
+                    modal_container = st.container()
+                    with modal_container:
+                        st.markdown(f"""
+                        <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
+                            <div style="background:white; padding:24px; border-radius:14px; width:480px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid #d0d7de; text-align:center; position:relative;">
+                                <h3 style="margin:0 0 12px 0; font-size:16px; color:#111; font-weight:bold; border-bottom:1px solid #eee; padding-bottom:8px;">🔍 검사 사진 크게 보기</h3>
+                                <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
+                                    📦 <b>포장재 번호:</b> {m_val}<br>
+                                    🏷️ <b>포장재 약호:</b> {p_val}<br>
+                                    📅 <b>검사 일자:</b> {d_val}
+                                </div>
+                                <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:400px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
+                                    <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
+                                </div>
+                            </div>
                         </div>
-                        <div style="text-align:left; font-size:12px; color:#444; margin-bottom:10px; line-height:1.4; background:#f8f9fa; padding:8px 10px; border-radius:6px; border:1px solid #e1e4e8;">
-                            📦 <b>포장재 번호:</b> {m_val}<br>
-                            🏷️ <b>포장재 약호:</b> {p_val}<br>
-                            📅 <b>검사 일자:</b> {d_val}
-                        </div>
-                        {modal_content}
-                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
-                    </div>
-                </div>
-                """
-                modals_list.append(modal_html)
+                        """, unsafe_allow_html=True)
+                        
+                        col_close_1, col_close_2, col_close_3 = st.columns([1, 2, 1])
+                        with col_close_2:
+                            if st.button("닫기", key=f"close_btn_{idx}", type="primary", use_container_width=True):
+                                st.session_state[f"active_modal_{idx}"] = False
+                                st.query_params.clear()
+                                st.rerun()
 
             row_str = f"""
 <tr>
@@ -427,13 +423,9 @@ try:
             rows_list.append(row_str)
 
         all_rows = "\n".join(rows_list)
-        all_modals = "\n".join(modals_list)
         
-        # 💡 iframe 높이를 데이터 개수에 맞춰 넉넉하게 자동 확장하여 팝업 잘림 현상 방지
-        calc_iframe_height = min(max(400, len(df_f) * 45 + 120), 800)
-
         table_code = f"""
-<div style="overflow-x:auto; background-color:#ffffff;">
+<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
             <tr>
@@ -453,10 +445,9 @@ try:
         </tbody>
     </table>
 </div>
-{all_modals}
 """
 
-        st.components.v1.html(table_code, height=calc_iframe_height, scrolling=True)
+        st.components.v1.html(table_code, height=520, scrolling=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -600,7 +591,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.33 (Final Perfect Modal UI)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.34 (Pure Isolated Central Modal)" \
     "</div>", 
     unsafe_allow_html=True
 )
