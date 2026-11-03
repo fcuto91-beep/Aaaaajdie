@@ -383,13 +383,14 @@ try:
             
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
             
-            img_url = str(row.get("사진파일명", "none"))
+            img_url = str(row.get("사진파일명", "none")).strip()
             img_td = '-'
-            if img_url and img_url.lower() != "none" and img_url.strip() != "":
+            
+            # 💡 사진 링크가 유효한 경우에만 돋보기 아이콘 생성 및 뷰어 연결 (이전 'none' 데이터 오류 원인 완벽 차단)
+            if img_url and img_url.lower() != "none" and img_url != "" and "http" in img_url:
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
-                # 💡 구글 드라이브 공식 preview 전용 주소로 안전하게 변환하여 팝업 내 뷰어로 깔끔하게 출력
                 preview_url = img_url
                 if "/view" in img_url:
                     preview_url = img_url.replace("/view?usp=drivesdk", "/preview").replace("/view", "/preview")
@@ -606,7 +607,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.5 (Drive Preview Viewer Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.6 (Iframe URL Safety Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
