@@ -386,12 +386,10 @@ try:
             img_url = str(row.get("사진파일명", "none")).strip()
             img_td = '-'
             
-            # 💡 'none', '-', 빈 값이 아닌 모든 유효한 사진 항목에 돋보기 아이콘 생성
             if img_url and img_url.lower() != "none" and img_url != "" and img_url != "-":
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
-                # 구글 드라이브 링크인 경우와 예전 파일명인 경우 분기 처리
                 if "http" in img_url:
                     preview_url = img_url
                     if "/view" in img_url:
@@ -415,7 +413,7 @@ try:
                     modal_content = f"""
                     <div style="background:#f8f9fa; border-radius:6px; padding:20px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
                         📁 <b>저장된 파일명:</b> {html.escape(img_url)}<br><br>
-                        <span style="color:#e0245e; font-size:12px;">이 사진은 이전 로컬 저장 버전의 파일입니다.<br>서버 재시작으로 로컬 파일이 초기화되어 화면에 표시되지 않습니다.<br>새로 업로드하신 사진부터 드라이브 뷰어로 정상 표시됩니다형님!</span>
+                        <span style="color:#e0245e; font-size:12px;">이 사진은 이전 로컬 저장 버전의 파일입니다.<br>관리자 메뉴의 <b>[검사 내역 수정]</b>에서 새로운 사진을 다시 업로드해 주시면<br>즉시 드라이브 뷰어로 정상 표시됩니다 형님!</span>
                     </div>
                     """
 
@@ -556,6 +554,7 @@ try:
                             update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
                             
                             if update_btn:
+                                # 💡 사진을 새로 올렸을 때 기존 로컬 파일명이 아니라 새로운 구글 드라이브 링크로 확실하게 갱신되도록 수정
                                 new_url = str(curr_row.get("사진파일명", "none"))
                                 if edit_file:
                                     new_url = upload_image_to_drive(edit_file, edit_mat_no)
@@ -620,7 +619,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.7 (Viewer Condition Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.8 (Edit Drive Link Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
