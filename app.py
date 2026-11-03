@@ -341,7 +341,7 @@ try:
             elif "시험 대기" in v_str or "사양 확인" in v_str:
                 return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 시험대기(사양확인)</span>'
             else:
-                return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
+                return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
         rows_list = []
         modals_list = []
@@ -386,7 +386,7 @@ try:
                     </div>
                     """
 
-                # 💡 가로 스크롤 표 바깥에서 브라우저 전체 화면 정중앙에 뜨는 단독 모달 팝업
+                # 💡 iframe을 없애고 메인 DOM에 직접 렌더링하므로 position: fixed가 브라우저 전체 화면 중앙에 완벽하게 뜸!
                 modal_html = f"""
                 <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
                     <div style="background:white; padding:24px; border-radius:14px; width:480px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid #d0d7de; text-align:center; position:relative;">
@@ -423,6 +423,7 @@ try:
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
+        # 💡 iframe을 사용하지 않고 st.markdown을 통해 메인 화면 DOM에 직접 표와 모달을 함께 렌더링
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
@@ -447,7 +448,7 @@ try:
 {all_modals}
 """
 
-        st.components.v1.html(table_code, height=520, scrolling=True)
+        st.markdown(table_code, unsafe_allow_html=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -591,7 +592,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.38 (Original Table + Central Modal)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.39 (True Fullscreen Modal)" \
     "</div>", 
     unsafe_allow_html=True
 )
