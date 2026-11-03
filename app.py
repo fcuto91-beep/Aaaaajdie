@@ -146,23 +146,33 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 normalized_rows = []
-                for item in data:
+                for idx, item in enumerate(data):
                     if isinstance(item, list):
                         vals = [str(v).strip() for v in item]
                         while len(vals) < 9:
                             vals.append("-")
                         in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
+                        
+                        # 💡 첫 번째 행이 헤더이거나 타이틀인 경우 안전하게 건너뜀
+                        if idx == 0 or in_d == "입고일자" or m_no == "포장재번호":
+                            continue
+                            
                         if not j_v or j_v == "-":
                             j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
+                            
                         normalized_rows.append({
                             "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
                             "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
                         })
                     elif isinstance(item, dict):
+                        in_d = str(item.get("입고일자", item.get("입고 일자", "-"))).strip()
+                        m_no = str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip()
+                        if idx == 0 or in_d == "입고일자" or m_no == "포장재번호":
+                            continue
                         normalized_rows.append({
-                            "입고일자": str(item.get("입고일자", item.get("입고 일자", "-"))).strip(),
+                            "입고일자": in_d,
                             "검사일자": str(item.get("검사일자", item.get("검사 일자", "-"))).strip(),
-                            "포장재번호": str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
+                            "포장재번호": m_no,
                             "포장재약호": str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
                             "사진파일명": str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip(),
                             "손톱박리": str(item.get("손톱박리", "-")).strip(),
@@ -227,6 +237,29 @@ def show_save_success_popup():
 def show_edit_success_popup():
     st.success("검사 내역이 시트에 성공적으로 수정 반영되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
+        st.rerun()
+
+# 💡 돋보기 클릭 시 화면 정중앙에 뜨는 네이티브 단독 모달 다이얼로그
+@st.dialog("🔍 검사 사진 크게 보기")
+def show_image_modal(m_no, p_val, d_val, img_url):
+    st.markdown(f"""
+    <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
+        📦 <b>포장재 번호:</b> {m_no}<br>
+        🏷️ <b>포장재 약호:</b> {p_val}<br>
+        📅 <b>검사 일자:</b> {d_val}
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if img_url and img_url.lower() not in ["none", "nat", "nan", "", "-"]:
+        if img_url.startswith("data:image") or img_url.startswith("http"):
+            st.image(img_url, use_column_width=True)
+        else:
+            st.info(f"📁 저장된 이미지 데이터: {img_url}")
+    else:
+        st.warning("⚠️ 등록된 검사 사진이 없습니다.")
+        
+    st.markdown("")
+    if st.button("닫기", type="primary", use_container_width=True):
         st.rerun()
 
 col1, col2, col3 = st.columns([1, 2, 1])
@@ -298,6 +331,24 @@ if st.session_state.get("show_saved_modal", False):
 if st.session_state.get("show_edited_modal", False):
     st.session_state["show_edited_modal"] = False
     show_edit_success_popup()
+
+# 💡 돋보기 클릭 시 쿼리 파라미터 감지하여 정중앙 모달 팝업 호출
+query_params = st.query_params
+if "zoom_idx" in query_params:
+    try:
+        target_zoom_idx = int(query_params["zoom_idx"])
+        temp_df = load_data()
+        if target_zoom_idx < len(temp_df):
+            row_item = temp_df.iloc[target_zoom_idx]
+            m_n = str(row_item.get("포장재번호", "-"))
+            p_n = str(row_item.get("포장재약호", "-"))
+            d_n = format_date_str(row_item.get("검사일자", "-"))
+            i_n = str(row_item.get("사진파일명", "none")).strip()
+            
+            st.query_params.clear()
+            show_image_modal(m_n, p_n, d_n, i_n)
+    except Exception as e:
+        print(f"Zoom trigger error: {e}")
 
 st.markdown("---")
 st.subheader("📋 전체 검사 내역")
@@ -372,7 +423,8 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                img_td = '🔍'
+                # 💡 정확한 인덱스 매핑으로 돋보기 링크 연동 복원
+                img_td = f'<a href="?zoom_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
 
             row_str = f"""
 <tr>
@@ -557,7 +609,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.33 (Stable Revert)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.36 (Header Skip & Zoom Fixed)" \
     "</div>", 
     unsafe_allow_html=True
 )
