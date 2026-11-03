@@ -13,7 +13,6 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 새로 발급받으신 웹 앱 URL 적용
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOOFoKubvnZB9ObfsIe-r9JAeWzOEzu5IlerjE3ikx0RhOA1Up_NBtjuwIFv8Y7nC6MA/exec"
 
 KST = timezone(timedelta(hours=9))
@@ -387,27 +386,26 @@ try:
             img_url = str(row.get("사진파일명", "none"))
             img_td = '-'
             if img_url and img_url.lower() != "none" and img_url.strip() != "":
-                # 구글 드라이브 링크가 저장된 경우 팝업으로 크게 띄우거나 바로 연결
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
+                # 💡 구글 드라이브 링크가 이중으로 뜨지 않도록 깔끔한 버튼 형태로 수정
                 modal_html = f"""
-                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.3);">
-                    <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <h3 style="margin:0; font-size:15px; color:#333;">🔍 검사 사진 보기</h3>
-                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:20px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
+                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.4);">
+                    <div style="background:white; padding:20px 24px; border-radius:12px; width:340px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h3 style="margin:0; font-size:16px; color:#333; font-weight:bold;">🔍 검사 사진 보기</h3>
+                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
                         </div>
-                        <div style="text-align:left; font-size:12px; color:#444; margin-bottom:8px; line-height:1.4;">
+                        <div style="text-align:left; font-size:12.5px; color:#444; margin-bottom:14px; line-height:1.5; background:#f8f9fa; padding:10px; border-radius:6px;">
                             📦 <b>포장재 번호:</b> {m_val}<br>
                             🏷️ <b>포장재 약호:</b> {p_val}<br>
                             📅 <b>검사 일자:</b> {d_val}
                         </div>
-                        <div style="background:#f1f3f5; border-radius:6px; padding:6px; margin-bottom:12px;">
-                            <a href="{img_url}" target="_blank" style="display:block; text-decoration:none; color:#0366d6; font-weight:bold; font-size:13px; margin-bottom:8px;">🔗 구글 드라이브 원본 사진 열기</a>
-                            <iframe src="{img_url.replace('/view?usp=drivesdk', '/preview').replace('/view', '/preview')}" style="width:100%; height:260px; border:none; border-radius:4px;"></iframe>
+                        <div style="margin-bottom:16px;">
+                            <a href="{img_url}" target="_blank" style="display:block; background-color:#0366d6; color:white; text-decoration:none; padding:12px; border-radius:6px; font-weight:bold; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.15);">🔗 구글 드라이브에서 원본 사진 열기</a>
                         </div>
-                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
+                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#6c757d; color:white; border:none; padding:10px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
                     </div>
                 </div>
                 """
@@ -585,7 +583,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.0 (Google Drive Permanent Storage)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.1 (Drive Link Popup Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
