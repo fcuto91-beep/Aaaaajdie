@@ -386,20 +386,38 @@ try:
             img_url = str(row.get("사진파일명", "none")).strip()
             img_td = '-'
             
-            # 💡 사진 링크가 유효한 경우에만 돋보기 아이콘 생성 및 뷰어 연결 (이전 'none' 데이터 오류 원인 완벽 차단)
-            if img_url and img_url.lower() != "none" and img_url != "" and "http" in img_url:
+            # 💡 'none', '-', 빈 값이 아닌 모든 유효한 사진 항목에 돋보기 아이콘 생성
+            if img_url and img_url.lower() != "none" and img_url != "" and img_url != "-":
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
-                preview_url = img_url
-                if "/view" in img_url:
-                    preview_url = img_url.replace("/view?usp=drivesdk", "/preview").replace("/view", "/preview")
-                elif "id=" in img_url:
-                    try:
-                        f_id = img_url.split("id=")[1].split("&")[0]
-                        preview_url = f"https://drive.google.com/file/d/{f_id}/preview"
-                    except:
-                        pass
+                # 구글 드라이브 링크인 경우와 예전 파일명인 경우 분기 처리
+                if "http" in img_url:
+                    preview_url = img_url
+                    if "/view" in img_url:
+                        preview_url = img_url.replace("/view?usp=drivesdk", "/preview").replace("/view", "/preview")
+                    elif "id=" in img_url:
+                        try:
+                            f_id = img_url.split("id=")[1].split("&")[0]
+                            preview_url = f"https://drive.google.com/file/d/{f_id}/preview"
+                        except:
+                            pass
+
+                    modal_content = f"""
+                    <div style="background:#f1f3f5; border-radius:6px; padding:4px; margin-bottom:12px; height:300px;">
+                        <iframe src="{preview_url}" style="width:100%; height:100%; border:none; border-radius:4px;" allow="autoplay"></iframe>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <a href="{img_url}" target="_blank" style="font-size:11.5px; color:#0366d6; text-decoration:none;">🔗 구글 드라이브 원본 링크 새창으로 열기</a>
+                    </div>
+                    """
+                else:
+                    modal_content = f"""
+                    <div style="background:#f8f9fa; border-radius:6px; padding:20px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
+                        📁 <b>저장된 파일명:</b> {html.escape(img_url)}<br><br>
+                        <span style="color:#e0245e; font-size:12px;">이 사진은 이전 로컬 저장 버전의 파일입니다.<br>서버 재시작으로 로컬 파일이 초기화되어 화면에 표시되지 않습니다.<br>새로 업로드하신 사진부터 드라이브 뷰어로 정상 표시됩니다형님!</span>
+                    </div>
+                    """
 
                 modal_html = f"""
                 <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.5);">
@@ -413,12 +431,7 @@ try:
                             🏷️ <b>포장재 약호:</b> {p_val}<br>
                             📅 <b>검사 일자:</b> {d_val}
                         </div>
-                        <div style="background:#f1f3f5; border-radius:6px; padding:4px; margin-bottom:12px; height:300px;">
-                            <iframe src="{preview_url}" style="width:100%; height:100%; border:none; border-radius:4px;" allow="autoplay"></iframe>
-                        </div>
-                        <div style="margin-bottom:8px;">
-                            <a href="{img_url}" target="_blank" style="font-size:11.5px; color:#0366d6; text-decoration:none;">🔗 구글 드라이브 원본 링크 새창으로 열기</a>
-                        </div>
+                        {modal_content}
                         <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
                     </div>
                 </div>
@@ -607,7 +620,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.6 (Iframe URL Safety Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.7 (Viewer Condition Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
