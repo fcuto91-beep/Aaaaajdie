@@ -392,10 +392,10 @@ try:
                     </div>
                     """
 
-                # 💡 테이블 영역을 벗어나 브라우저 화면 전체 중앙에 완벽히 뜨는 단독 중앙 모달 팝업 ("검사 사진 크게 보기")
+                # 💡 iframe 높이를 넉넉하게 잡고 position fixed 중앙 모달 적용
                 modal_html = f"""
-                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999999; justify-content:center; align-items:center; background:rgba(0,0,0,0.5);">
-                    <div style="background:white; padding:20px; border-radius:12px; width:460px; max-width:90vw; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center; background:rgba(0,0,0,0.5);">
+                    <div style="background:white; padding:20px; border-radius:12px; width:460px; max-width:90%; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
                             <h3 style="margin:0; font-size:15px; color:#222; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
                             <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 4px;">&times;</a>
@@ -429,8 +429,11 @@ try:
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
+        # 💡 iframe 높이를 데이터 개수에 맞춰 넉넉하게 자동 확장하여 팝업 잘림 현상 방지
+        calc_iframe_height = min(max(400, len(df_f) * 45 + 120), 800)
+
         table_code = f"""
-<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+<div style="overflow-x:auto; background-color:#ffffff;">
     <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
             <tr>
@@ -453,7 +456,7 @@ try:
 {all_modals}
 """
 
-        st.components.v1.html(table_code, height=520, scrolling=True)
+        st.components.v1.html(table_code, height=calc_iframe_height, scrolling=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -597,7 +600,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.32 (Perfect Table + Central Modal Popup)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.33 (Final Perfect Modal UI)" \
     "</div>", 
     unsafe_allow_html=True
 )
