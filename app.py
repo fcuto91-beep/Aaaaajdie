@@ -368,45 +368,8 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                # 💡 스트림릿 세션 상태를 활용하여 테이블 바깥(메인 화면 중앙)에 단독 모달 팝업을 띄우도록 트리거 설정
-                modal_key = f"open_modal_{idx}"
-                img_td = f'''
-                <form action="" method="get" style="margin:0; padding:0; display:inline;">
-                    <input type="hidden" name="show_img" value="{idx}">
-                    <button type="submit" name="target_idx" value="{idx}" style="background:none; border:none; color:#0366d6; font-size:16px; cursor:pointer; padding:0;" title="사진 보기">🔍</button>
-                </form>
-                '''
-                
-                # 쿼리 파라미터나 세션 상태로 모달 제어
-                if st.query_params.get("show_img") == str(idx):
-                    st.session_state[f"active_modal_{idx}"] = True
-
-                if st.session_state.get(f"active_modal_{idx}", False):
-                    # 💡 브라우저 전체 화면을 덮는 완벽한 단독 중앙 팝업 모달창 (두 번째 사진 형태)
-                    modal_container = st.container()
-                    with modal_container:
-                        st.markdown(f"""
-                        <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
-                            <div style="background:white; padding:24px; border-radius:14px; width:480px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid #d0d7de; text-align:center; position:relative;">
-                                <h3 style="margin:0 0 12px 0; font-size:16px; color:#111; font-weight:bold; border-bottom:1px solid #eee; padding-bottom:8px;">🔍 검사 사진 크게 보기</h3>
-                                <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
-                                    📦 <b>포장재 번호:</b> {m_val}<br>
-                                    🏷️ <b>포장재 약호:</b> {p_val}<br>
-                                    📅 <b>검사 일자:</b> {d_val}
-                                </div>
-                                <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:400px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
-                                    <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        col_close_1, col_close_2, col_close_3 = st.columns([1, 2, 1])
-                        with col_close_2:
-                            if st.button("닫기", key=f"close_btn_{idx}", type="primary", use_container_width=True):
-                                st.session_state[f"active_modal_{idx}"] = False
-                                st.query_params.clear()
-                                st.rerun()
+                # 💡 target="_top"을 주어 iframe을 벗어나 메인 앱 전체 페이지로 쿼리 파라미터 전달
+                img_td = f'<a href="?view_img={idx}" target="_top" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
 
             row_str = f"""
 <tr>
@@ -448,6 +411,41 @@ try:
 """
 
         st.components.v1.html(table_code, height=520, scrolling=True)
+
+        # 💡 메인 앱 레벨에서 돋보기 클릭 감지 시 화면 중앙에 단독 모달 팝업 오버레이 렌더링
+        active_view_idx = st.query_params.get("view_img")
+        if active_view_idx is not None:
+            try:
+                target_idx = int(active_view_idx)
+                if target_idx < len(df_f):
+                    t_row = df_f.iloc[target_idx]
+                    t_m_val = html.escape(str(t_row.get("포장재번호", "-")))
+                    t_p_val = html.escape(str(t_row.get("포장재약호", "-")))
+                    t_d_val = format_date_str(t_row.get("검사일자", "-"))
+                    t_img_val = str(t_row.get("사진파일명", "none")).strip()
+
+                    modal_overlay_html = f"""
+                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
+                        <div style="background:white; padding:24px; border-radius:14px; width:480px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid #d0d7de; text-align:center; position:relative;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #eee; padding-bottom:8px;">
+                                <h3 style="margin:0; font-size:16px; color:#111; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
+                                <a href="?" target="_top" style="text-decoration:none; font-size:24px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 4px;">&times;</a>
+                            </div>
+                            <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
+                                📦 <b>포장재 번호:</b> {t_m_val}<br>
+                                🏷️ <b>포장재 약호:</b> {t_p_val}<br>
+                                📅 <b>검사 일자:</b> {t_d_val}
+                            </div>
+                            <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:400px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
+                                <img src="{t_img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
+                            </div>
+                            <a href="?" target="_top" style="display:block; background-color:#ff4b4b; color:white; border:none; padding:10px 16px; border-radius:8px; font-weight:bold; font-size:13.5px; text-decoration:none; text-align:center;">닫기</a>
+                        </div>
+                    </div>
+                    """
+                    st.markdown(modal_overlay_html, unsafe_allow_html=True)
+            except Exception as e:
+                print(f"Modal render error: {e}")
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -591,7 +589,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.34 (Pure Isolated Central Modal)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.35 (Fixed Top-Level Modal Popup)" \
     "</div>", 
     unsafe_allow_html=True
 )
