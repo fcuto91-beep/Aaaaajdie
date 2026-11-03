@@ -404,12 +404,12 @@ try:
                     </div>
                     """
                 else:
-                    # 💡 형님! 구형 파일명이 들어있는 데이터라도 수정 폼에서 새로 사진을 올리면 즉시 드라이브 링크로 바뀔 수 있도록 안내 문구 제공
+                    # 💡 구형 파일명 데이터일 경우 깔끔하게 파일명만 안내하고 오류 방지
                     modal_content = f"""
-                    <div style="background:#fff3cd; border:1px solid #ffeeba; border-radius:6px; padding:15px; margin-bottom:12px; font-size:12.5px; color:#856404; text-align:center; line-height:1.5;">
-                        ⚠️ <b>이 항목은 예전 로컬 파일명 데이터가 남아있습니다.</b><br>
-                        파일 이름: <code>{html.escape(img_url)}</code><br><br>
-                        아래 관리자 메뉴의 <b>[검사 내역 수정]</b>에서 <b>새로운 사진을 다시 업로드하고 수정 반영</b>해 주시면 즉시 구글 드라이브 뷰어로 정상 작동합니다 형님!
+                    <div style="background:#f8f9fa; border-radius:6px; padding:15px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
+                        📁 <b>저장된 사진 파일명:</b><br>
+                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_url)}</code><br><br>
+                        <span style="font-size:11.5px; color:#666;">이 항목은 이전 로컬 저장소에 있던 파일명입니다.<br>새로 등록하시는 검사 사진부터는 구글 드라이브로 완벽하게 저장됩니다 형님!</span>
                     </div>
                     """
 
@@ -618,7 +618,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.14 (Legacy Filename Helper Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.15 (Clean Filename Notice Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
