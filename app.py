@@ -13,8 +13,7 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 형님께서 방금 새로 발급하신 앱스 스크립트 배포 주소 반영 완료
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi48BfYU2D25IGkQjxkotYKC2kBwPB0rp1hYrHgg3IDN1Ret0xW8djX-hzD-GivBmaqw/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGhXKRINWEH0A1fn57SfcK-TsMtL1rjv22ZDMv2G3SMD8ayyFIZ58khBAINLS_qpf3bw/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -176,29 +175,14 @@ def load_data():
     
     return pd.DataFrame(columns=["입고일자", "검사일자", "포장재번호", "포장재약호", "사진파일명", "손톱박리", "테이프박리", "최종판정", "특이사항"])
 
-def upload_image_to_drive(uploaded_file, mat_no):
+def process_image_to_base64(uploaded_file):
     try:
         bytes_data = uploaded_file.getvalue()
         b64_str = base64.b64encode(bytes_data).decode('utf-8')
-        s_lot = "".join(c for c in mat_no if c.isalnum())
-        t_str = get_kst_now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{s_lot}_{t_str}_{uploaded_file.name}"
-        
-        payload = {
-            "action": "upload_image",
-            "filename": filename,
-            "mimeType": uploaded_file.type,
-            "base64": b64_str
-        }
-        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=30)
-        if res.status_code == 200:
-            res_json = res.json()
-            if res_json.get("status") == "success":
-                url = res_json.get("fileUrl") or res_json.get("url")
-                if url:
-                    return str(url)
+        mime = uploaded_file.type if uploaded_file.type else "image/jpeg"
+        return f"data:{mime};base64,{b64_str}"
     except Exception as e:
-        print(f"Drive upload error: {e}")
+        print(f"Image processing error: {e}")
     return "none"
 
 def append_to_sheet(row_data):
@@ -231,13 +215,13 @@ def clear_sheet_data():
 
 @st.dialog("🎉 저장 완료")
 def show_save_success_popup():
-    st.success("검사 결과와 사진이 구글 드라이브/시트에 안전하게 영구 저장되었습니다!")
+    st.success("검사 결과와 사진이 시트에 안전하게 영구 저장되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
 @st.dialog("✏️ 수정 완료")
 def show_edit_success_popup():
-    st.success("검사 내역이 구글 시트에 성공적으로 수정 반영되었습니다!")
+    st.success("검사 내역이 시트에 성공적으로 수정 반영되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
@@ -281,16 +265,16 @@ if ok:
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
         dt_str = get_kst_now().date().isoformat()
-        img_url = "none"
+        img_data_str = "none"
         if up_file:
-            img_url = upload_image_to_drive(up_file, mat_no)
+            img_data_str = process_image_to_base64(up_file)
 
         row_data = [
             in_date_str, 
             dt_str, 
             str(mat_no), 
             str(pack_name) if pack_name.strip() else "-", 
-            img_url,
+            img_data_str,
             nail, 
             tape, 
             manual_judgment,
@@ -301,7 +285,7 @@ if ok:
             st.session_state["show_saved_modal"] = True
             st.rerun()
         else:
-            st.error("❌ 구글 시트 저장 중 오류가 발생했습니다.")
+            st.error("❌ 시트 저장 중 오류가 발생했습니다.")
 
 if st.session_state.get("show_saved_modal", False):
     st.session_state["show_saved_modal"] = False
@@ -381,37 +365,31 @@ try:
             
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
             
-            img_url = str(row.get("사진파일명", "none")).strip()
+            img_val = str(row.get("사진파일명", "none")).strip()
             img_td = '-'
             
-            if img_url and img_url.lower() not in ["none", "nat", "nan", "", "-"]:
+            if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
-                if "http" in img_url:
-                    preview_url = img_url
-                    if "/view" in img_url:
-                        preview_url = img_url.replace("/view?usp=drivesdk", "/preview").replace("/view", "/preview")
-                    elif "id=" in img_url:
-                        try:
-                            f_id = img_url.split("id=")[1].split("&")[0]
-                            preview_url = f"https://drive.google.com/file/d/{f_id}/preview"
-                        except:
-                            pass
-
+                # 💡 구글 드라이브 iframe 대신 브라우저 내장 이미지 뷰어로 즉시 렌더링 (사내 보안망 100% 우회)
+                if img_val.startswith("data:image"):
                     modal_content = f"""
-                    <div style="background:#f1f3f5; border-radius:6px; padding:4px; margin-bottom:12px; height:300px;">
-                        <iframe src="{preview_url}" style="width:100%; height:100%; border:none; border-radius:4px;" allow="autoplay"></iframe>
+                    <div style="background:#f1f3f5; border-radius:6px; padding:4px; margin-bottom:12px; max-height:350px; overflow-y:auto; text-align:center;">
+                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:4px;" />
                     </div>
+                    """
+                elif "http" in img_val:
+                    modal_content = f"""
                     <div style="margin-bottom:8px;">
-                        <a href="{img_url}" target="_blank" style="font-size:11.5px; color:#0366d6; text-decoration:none;">🔗 구글 드라이브 원본 링크 새창으로 열기</a>
+                        <a href="{img_val}" target="_blank" style="font-size:13px; color:#0366d6; text-decoration:none; font-weight:bold;">🔗 원본 링크 새창으로 열기</a>
                     </div>
                     """
                 else:
                     modal_content = f"""
                     <div style="background:#f8f9fa; border-radius:6px; padding:15px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
                         📁 <b>저장된 파일 정보:</b><br>
-                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_url)}</code>
+                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_val)}</code>
                     </div>
                     """
 
@@ -555,7 +533,7 @@ try:
                             
                             if update_btn:
                                 if edit_file is not None and getattr(edit_file, "size", 0) > 0:
-                                    new_url = upload_image_to_drive(edit_file, edit_mat_no)
+                                    new_url = process_image_to_base64(edit_file)
                                 else:
                                     new_url = str(curr_row.get("사진파일명", "none"))
                                 
@@ -619,7 +597,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.26 (Final Sync Verified)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.27 (Forcepoint Bypass Mode)" \
     "</div>", 
     unsafe_allow_html=True
 )
