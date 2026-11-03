@@ -148,28 +148,23 @@ def load_data():
                 for item in data:
                     if isinstance(item, list):
                         vals = [str(v).strip() for v in item]
-                        if len(vals) <= 8:
-                            while len(vals) < 8:
-                                vals.append("-")
-                            in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, rem_v = vals[:8]
+                        # 💡 리스트 데이터 개수에 맞춰 모든 컬럼(입고일자, 검사일자, 포장재번호, 포장재약호, 사진파일명, 손톱박리, 테이프박리, 최종판정, 특이사항)을 안전하게 매핑
+                        while len(vals) < 9:
+                            vals.append("-")
+                        in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
+                        if not j_v or j_v == "-":
                             j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
-                            normalized_rows.append({
-                                "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
-                                "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
-                            })
-                        else:
-                            in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
-                            normalized_rows.append({
-                                "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
-                                "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
-                            })
+                        normalized_rows.append({
+                            "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
+                            "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
+                        })
                     elif isinstance(item, dict):
                         normalized_rows.append({
                             "입고일자": str(item.get("입고일자", item.get("입고 일자", "-"))).strip(),
                             "검사일자": str(item.get("검사일자", item.get("검사 일자", "-"))).strip(),
                             "포장재번호": str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
                             "포장재약호": str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
-                            "사진파일명": str(item.get("사진파일명", "none")).strip(),
+                            "사진파일명": str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip(),
                             "손톱박리": str(item.get("손톱박리", "-")).strip(),
                             "테이프박리": str(item.get("테이프박리", "-")).strip(),
                             "최종판정": str(item.get("최종판정", item.get("판정", "🟡 판정 대기"))).strip(),
@@ -519,7 +514,6 @@ try:
                         sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
                         curr_row = df.loc[sel_idx]
                         
-                        # 💡 수정 폼 외부에서 파일 업로더를 선언하여 데이터 유실 원천 방지
                         edit_mat_no_val = str(curr_row.get("포장재번호", ""))
                         edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
                         
@@ -623,7 +617,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.10 (Stable Image Uploader Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.11 (Robust Data Parsing Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
