@@ -137,6 +137,7 @@ def get_judgment_badge(val):
     else:
         return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
+@st.cache_data(ttl=60)
 def load_data():
     try:
         no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
@@ -190,6 +191,7 @@ def append_to_sheet(row_data):
     try:
         payload = {"action": "append", "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        st.cache_data.clear() # 캐시 초기화 추가
         return response.status_code == 200
     except Exception as e:
         print(f"Append error: {e}")
@@ -200,6 +202,7 @@ def update_sheet(old_mat, row_data):
         clean_mat = str(old_mat).strip().split('.')[0]
         payload = {"action": "update", "mat_no": clean_mat, "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        st.cache_data.clear() # 💡 수정 시 캐시 강제 초기화 추가
         return response.status_code == 200
     except Exception as e:
         print(f"Update error: {e}")
@@ -209,6 +212,7 @@ def clear_sheet_data():
     try:
         payload = {"action": "clear_sheet"}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        st.cache_data.clear() # 초기화 시 캐시 강제 초기화 추가
         return response.status_code == 200
     except Exception as e:
         print(f"Clear error: {e}")
@@ -393,7 +397,6 @@ try:
                     </div>
                     """
 
-                # 💡 iframe 높이를 넉넉하게 잡고 position fixed 중앙 모달 적용
                 modal_html = f"""
                 <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center; background:transparent;">
                     <div style="background:white; padding:20px; border-radius:12px; width:460px; max-width:90%; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
@@ -430,7 +433,6 @@ try:
         all_rows = "\n".join(rows_list)
         all_modals = "\n".join(modals_list)
         
-        # 💡 iframe 높이를 데이터 개수에 맞춰 넉넉하게 자동 확장하여 팝업 잘림 현상 방지
         calc_iframe_height = min(max(400, len(df_f) * 45 + 120), 800)
 
         table_code = f"""
@@ -601,7 +603,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.33 (Final Perfect Modal UI)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.34 (Update Cache Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
