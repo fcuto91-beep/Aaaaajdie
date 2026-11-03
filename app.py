@@ -137,7 +137,6 @@ def get_judgment_badge(val):
     else:
         return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
-@st.cache_data(ttl=60)
 def load_data():
     try:
         no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
@@ -190,7 +189,6 @@ def append_to_sheet(row_data):
     try:
         payload = {"action": "append", "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
-        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Append error: {e}")
@@ -201,7 +199,6 @@ def update_sheet(old_mat, row_data):
         clean_mat = str(old_mat).strip().split('.')[0]
         payload = {"action": "update", "mat_no": clean_mat, "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
-        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Update error: {e}")
@@ -211,7 +208,6 @@ def clear_sheet_data():
     try:
         payload = {"action": "clear_sheet"}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
-        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Clear error: {e}")
@@ -345,9 +341,10 @@ try:
             elif "시험 대기" in v_str or "사양 확인" in v_str:
                 return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 시험대기(사양확인)</span>'
             else:
-                return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
+                return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
         rows_list = []
+        modals_list = []
         
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
@@ -372,7 +369,48 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                img_td = '🔍'
+                modal_id = f"modal_{idx}"
+                img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
+                
+                if img_val.startswith("data:image"):
+                    modal_content = f"""
+                    <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:420px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
+                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
+                    </div>
+                    """
+                elif "http" in img_val:
+                    modal_content = f"""
+                    <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:420px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
+                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
+                    </div>
+                    """
+                else:
+                    modal_content = f"""
+                    <div style="background:#f8f9fa; border-radius:8px; padding:15px; margin-bottom:14px; font-size:13px; color:#555; text-align:center;">
+                        📁 <b>저장된 파일 정보:</b><br>
+                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_val)}</code>
+                    </div>
+                    """
+
+                # 💡 iframe 높이를 넉넉하게 잡고 position fixed 중앙 모달 적용
+                modal_html = f"""
+                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center; background:rgba(0,0,0,0.5);">
+                    <div style="background:white; padding:20px; border-radius:12px; width:460px; max-width:90%; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
+                            <h3 style="margin:0; font-size:15px; color:#222; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
+                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 4px;">&times;</a>
+                        </div>
+                        <div style="text-align:left; font-size:12px; color:#444; margin-bottom:10px; line-height:1.4; background:#f8f9fa; padding:8px 10px; border-radius:6px; border:1px solid #e1e4e8;">
+                            📦 <b>포장재 번호:</b> {m_val}<br>
+                            🏷️ <b>포장재 약호:</b> {p_val}<br>
+                            📅 <b>검사 일자:</b> {d_val}
+                        </div>
+                        {modal_content}
+                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
+                    </div>
+                </div>
+                """
+                modals_list.append(modal_html)
 
             row_str = f"""
 <tr>
@@ -389,9 +427,13 @@ try:
             rows_list.append(row_str)
 
         all_rows = "\n".join(rows_list)
+        all_modals = "\n".join(modals_list)
         
+        # 💡 iframe 높이를 데이터 개수에 맞춰 넉넉하게 자동 확장하여 팝업 잘림 현상 방지
+        calc_iframe_height = min(max(400, len(df_f) * 45 + 120), 800)
+
         table_code = f"""
-<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+<div style="overflow-x:auto; background-color:#ffffff;">
     <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
             <tr>
@@ -411,9 +453,10 @@ try:
         </tbody>
     </table>
 </div>
+{all_modals}
 """
 
-        st.components.v1.html(table_code, height=520, scrolling=True)
+        st.components.v1.html(table_code, height=calc_iframe_height, scrolling=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -557,7 +600,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.38 (Stable Revert)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.33 (Final Perfect Modal UI)" \
     "</div>", 
     unsafe_allow_html=True
 )
