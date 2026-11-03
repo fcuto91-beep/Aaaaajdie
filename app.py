@@ -13,7 +13,8 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhWAZ15Y3uQYckMcjnnpi9Jeg60zX_tFYT_nP16SrLi0z5BRFfhG9C-kyo5zdjAplR/exec"
+# 💡 새롭게 발급받으신 앱스 스크립트 배포 주소 반영
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxltqHsuZXIkMPcHC2IwUx0EUvQmgzUnckxJetPCKbxu9KI0oL3lIBp_InYtbeJbhlSLA/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -209,7 +210,8 @@ def append_to_sheet(row_data):
 
 def update_sheet(old_mat, row_data):
     try:
-        payload = {"action": "update", "mat_no": str(old_mat), "row": row_data}
+        clean_mat = str(old_mat).strip().split('.')[0]
+        payload = {"action": "update", "mat_no": clean_mat, "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
         return response.status_code == 200
     except Exception as e:
@@ -380,7 +382,6 @@ try:
             img_url = str(row.get("사진파일명", "none")).strip()
             img_td = '-'
             
-            # 💡 핵심 수정: http가 포함된 정상적인 드라이브 링크일 때만 돋보기(🔍)와 모달 뷰어를 생성하도록 확실하게 보장
             if img_url and img_url.lower() not in ["none", "nat", "nan", "", "-"]:
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
@@ -616,7 +617,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.18 (Final Magnifier Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.20 (New Apps Script URL Linked)" \
     "</div>", 
     unsafe_allow_html=True
 )
