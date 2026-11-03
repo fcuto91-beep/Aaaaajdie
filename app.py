@@ -554,10 +554,12 @@ try:
                             update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
                             
                             if update_btn:
-                                # 💡 사진을 새로 올렸을 때 기존 로컬 파일명이 아니라 새로운 구글 드라이브 링크로 확실하게 갱신되도록 수정
-                                new_url = str(curr_row.get("사진파일명", "none"))
-                                if edit_file:
+                                # 💡 수정 시 새 파일을 안 올리면 기존 사진 링크를 무조건 안전하게 유지하도록 수정
+                                existing_img = str(curr_row.get("사진파일명", "none"))
+                                if edit_file is not None and getattr(edit_file, "size", 0) > 0:
                                     new_url = upload_image_to_drive(edit_file, edit_mat_no)
+                                else:
+                                    new_url = existing_img
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
@@ -619,7 +621,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.8 (Edit Drive Link Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.9 (Preserve Existing Image Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
