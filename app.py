@@ -343,109 +343,74 @@ try:
             else:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
-        rows_list = []
-        
+        # 💡 스트림릿 네이티브 방식으로 표와 돋보기 버튼 구현 (클릭 100% 보장)
+        header_cols = st.columns([1.1, 1.1, 1.2, 2.5, 0.7, 1.2, 1.2, 1.4, 1.8])
+        with header_cols[0]: st.markdown("**입고 일자**")
+        with header_cols[1]: st.markdown("**검사 일자**")
+        with header_cols[2]: st.markdown("**포장재 번호**")
+        with header_cols[3]: st.markdown("**포장재 약호**")
+        with header_cols[4]: st.markdown("**보기**")
+        with header_cols[5]: st.markdown("**손톱**")
+        with header_cols[6]: st.markdown("**테이프**")
+        with header_cols[7]: st.markdown("**최종 판정**")
+        with header_cols[8]: st.markdown("**특이사항**")
+        st.markdown("<hr style='margin:4px 0 8px 0;'>", unsafe_auth_html=True if "unsafe_auth_html" in globals() else False)
+
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
             d_val = format_date_str(row.get("검사일자", "-"))
-
-            m_val = html.escape(str(row.get("포장재번호", "-")))
+            m_val = str(row.get("포장재번호", "-"))
+            p_val = str(row.get("포장재약호", "-"))
+            if pd.isna(row.get("포장재약호")) or p_val.lower() in ["nan", "none", ""]:
+                p_val = "-"
             
-            raw_p_name = str(row.get("포장재약호", "-"))
-            if pd.isna(row.get("포장재약호")) or raw_p_name.lower() in ["nan", "none", ""]:
-                raw_p_name = "-"
-            p_val = html.escape(raw_p_name)
-            
-            n_val = get_badge(row.get("손톱박리", "-"))
-            t_val = get_badge(row.get("테이프박리", "-"))
-            
-            final_j_raw = row.get("최종판정", "🟡 판정 대기")
-            j_val = get_judgment_badge(final_j_raw)
-            
-            r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
-            
+            n_val = row.get("손톱박리", "-")
+            t_val = row.get("테이프박리", "-")
+            j_val = row.get("최종판정", "🟡 판정 대기")
+            r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
             img_val = str(row.get("사진파일명", "none")).strip()
-            img_td = '-'
+
+            r_cols = st.columns([1.1, 1.1, 1.2, 2.5, 0.7, 1.2, 1.2, 1.4, 1.8])
+            with r_cols[0]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{in_val}</div>", unsafe_allow_html=True)
+            with r_cols[1]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{d_val}</div>", unsafe_allow_html=True)
+            with r_cols[2]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{m_val}</div>", unsafe_allow_html=True)
+            with r_cols[3]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;' title='{p_val}'>{p_val}</div>", unsafe_allow_html=True)
             
-            if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                # 💡 target="_top"을 주어 iframe을 벗어나 메인 앱 전체 페이지로 쿼리 파라미터 전달
-                img_td = f'<a href="?view_img={idx}" target="_top" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
+            with r_cols[4]:
+                if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
+                    if st.button("🔍", key=f"zoom_{idx}", help="사진 보기"):
+                        st.session_state[f"modal_open_{idx}"] = True
+                else:
+                    st.markdown("<div style='text-align:center; padding-top:6px;'>-</div>", unsafe_allow_html=True)
 
-            row_str = f"""
-<tr>
-    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
-    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
-    <td style="padding:8px 8px; width:95px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
-    <td style="padding:8px 10px; width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
-    <td style="padding:8px 6px; width:40px; text-align:center; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
-    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
-    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
-    <td style="padding:8px 6px; width:120px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{j_val}</td>
-    <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{r_val}</td>
-</tr>"""
-            rows_list.append(row_str)
+            with r_cols[5]: st.markdown(get_judgment_badge(n_val), unsafe_allow_html=True)
+            with r_cols[6]: st.markdown(get_judgment_badge(t_val), unsafe_allow_html=True)
+            with r_cols[7]: st.markdown(get_judgment_badge(j_val), unsafe_allow_html=True)
+            with r_cols[8]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{r_val}</div>", unsafe_allow_html=True)
 
-        all_rows = "\n".join(rows_list)
-        
-        table_code = f"""
-<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
-        <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
-            <tr>
-                <th style="padding:10px 8px; width:85px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
-                <th style="padding:10px 8px; width:85px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">검사 일자</th>
-                <th style="padding:10px 8px; width:95px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
-                <th style="padding:10px 10px; width:220px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
-                <th style="padding:10px 6px; width:40px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
-                <th style="padding:10px 6px; width:100px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
-                <th style="padding:10px 6px; width:100px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
-                <th style="padding:10px 6px; width:120px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">최종 판정</th>
-                <th style="padding:10px 10px; min-width:130px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">특이사항</th>
-            </tr>
-        </thead>
-        <tbody>
-{all_rows}
-        </tbody>
-    </table>
-</div>
-"""
-
-        st.components.v1.html(table_code, height=520, scrolling=True)
-
-        # 💡 메인 앱 레벨에서 돋보기 클릭 감지 시 화면 중앙에 단독 모달 팝업 오버레이 렌더링
-        active_view_idx = st.query_params.get("view_img")
-        if active_view_idx is not None:
-            try:
-                target_idx = int(active_view_idx)
-                if target_idx < len(df_f):
-                    t_row = df_f.iloc[target_idx]
-                    t_m_val = html.escape(str(t_row.get("포장재번호", "-")))
-                    t_p_val = html.escape(str(t_row.get("포장재약호", "-")))
-                    t_d_val = format_date_str(t_row.get("검사일자", "-"))
-                    t_img_val = str(t_row.get("사진파일명", "none")).strip()
-
-                    modal_overlay_html = f"""
-                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
-                        <div style="background:white; padding:24px; border-radius:14px; width:480px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid #d0d7de; text-align:center; position:relative;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #eee; padding-bottom:8px;">
-                                <h3 style="margin:0; font-size:16px; color:#111; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
-                                <a href="?" target="_top" style="text-decoration:none; font-size:24px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 4px;">&times;</a>
-                            </div>
-                            <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
-                                📦 <b>포장재 번호:</b> {t_m_val}<br>
-                                🏷️ <b>포장재 약호:</b> {t_p_val}<br>
-                                📅 <b>검사 일자:</b> {t_d_val}
-                            </div>
-                            <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:400px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
-                                <img src="{t_img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
-                            </div>
-                            <a href="?" target="_top" style="display:block; background-color:#ff4b4b; color:white; border:none; padding:10px 16px; border-radius:8px; font-weight:bold; font-size:13.5px; text-decoration:none; text-align:center;">닫기</a>
+            # 💡 돋보기를 누르면 화면 정중앙에 뜨는 독립형 단독 모달 팝업
+            if st.session_state.get(f"modal_open_{idx}", False):
+                st.markdown(f"""
+                <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
+                    <div style="background:white; padding:24px; border-radius:14px; width:480px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid #d0d7de; text-align:center; position:relative;">
+                        <h3 style="margin:0 0 12px 0; font-size:16px; color:#111; font-weight:bold; border-bottom:1px solid #eee; padding-bottom:8px;">🔍 검사 사진 크게 보기</h3>
+                        <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
+                            📦 <b>포장재 번호:</b> {m_val}<br>
+                            🏷️ <b>포장재 약호:</b> {p_val}<br>
+                            📅 <b>검사 일자:</b> {d_val}
+                        </div>
+                        <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:400px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
+                            <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
                         </div>
                     </div>
-                    """
-                    st.markdown(modal_overlay_html, unsafe_allow_html=True)
-            except Exception as e:
-                print(f"Modal render error: {e}")
+                </div>
+                """, unsafe_allow_html=True)
+                
+                c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
+                with c_btn2:
+                    if st.button("닫기", key=f"close_modal_{idx}", type="primary", use_container_width=True):
+                        st.session_state[f"modal_open_{idx}"] = False
+                        st.rerun()
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -589,7 +554,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.35 (Fixed Top-Level Modal Popup)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.36 (Native Streamlit Button Modal)" \
     "</div>", 
     unsafe_allow_html=True
 )
