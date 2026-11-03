@@ -229,7 +229,7 @@ def show_edit_success_popup():
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, use_column_width=True)
+        st.image(LOGO_PATH, use_column_width=600)
 
 st.markdown("")
 st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
