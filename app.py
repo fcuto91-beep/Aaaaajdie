@@ -13,7 +13,6 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 형님께서 방금 새로 발급하신 앱스 스크립트 배포 주소 반영 완료
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMwkQbFUd7KYTpg1IKhNmuSAXO_KQT0WsNl0ZFfu-rR4rNe9vFJwtyNGKeuP659fDrJA/exec"
 
 KST = timezone(timedelta(hours=9))
@@ -190,11 +189,14 @@ def upload_image_to_drive(uploaded_file, mat_no):
             "mimeType": uploaded_file.type,
             "base64": b64_str
         }
-        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=20)
+        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=30)
         if res.status_code == 200:
             res_json = res.json()
             if res_json.get("status") == "success":
-                return res_json.get("fileUrl")
+                # 💡 드라이브 링크를 확실하게 추출하도록 보완
+                url = res_json.get("fileUrl") or res_json.get("url")
+                if url:
+                    return str(url)
     except Exception as e:
         print(f"Drive upload error: {e}")
     return "none"
@@ -617,7 +619,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.21 (URL Final Sync)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.22 (Robust URL Extraction)" \
     "</div>", 
     unsafe_allow_html=True
 )
