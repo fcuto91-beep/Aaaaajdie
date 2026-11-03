@@ -11,13 +11,10 @@ import base64
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
-D = "inspection_images"
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywD2brYz6Iory_KKDyh5pckjGqYvsf2ws1bY6EN6-NzGEslhyOF65Q9DKngsju5FWmlw/exec"
-
-if not os.path.exists(D):
-    os.makedirs(D)
+# 💡 새로 발급받으신 웹 앱 URL 적용
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOOFoKubvnZB9ObfsIe-r9JAeWzOEzu5IlerjE3ikx0RhOA1Up_NBtjuwIFv8Y7nC6MA/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -185,6 +182,29 @@ def load_data():
     
     return pd.DataFrame(columns=["입고일자", "검사일자", "포장재번호", "포장재약호", "사진파일명", "손톱박리", "테이프박리", "최종판정", "특이사항"])
 
+def upload_image_to_drive(uploaded_file, mat_no):
+    try:
+        bytes_data = uploaded_file.getvalue()
+        b64_str = base64.b64encode(bytes_data).decode('utf-8')
+        s_lot = "".join(c for c in mat_no if c.isalnum())
+        t_str = get_kst_now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{s_lot}_{t_str}_{uploaded_file.name}"
+        
+        payload = {
+            "action": "upload_image",
+            "filename": filename,
+            "mimeType": uploaded_file.type,
+            "base64": b64_str
+        }
+        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=20)
+        if res.status_code == 200:
+            res_json = res.json()
+            if res_json.get("status") == "success":
+                return res_json.get("fileUrl")
+    except Exception as e:
+        print(f"Drive upload error: {e}")
+    return "none"
+
 def append_to_sheet(row_data):
     try:
         payload = {"action": "append", "row": row_data}
@@ -214,7 +234,7 @@ def clear_sheet_data():
 
 @st.dialog("🎉 저장 완료")
 def show_save_success_popup():
-    st.success("검사 결과가 구글 시트에 실시간으로 안전하게 저장되었습니다!")
+    st.success("검사 결과와 사진이 구글 드라이브/시트에 안전하게 영구 저장되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
@@ -264,21 +284,16 @@ if ok:
         st.warning("⚠️ 손톱 및 테이프 박리 결과를 선택해 주세요!")
     else:
         dt_str = get_kst_now().date().isoformat()
-        fn = "none"
+        img_url = "none"
         if up_file:
-            s_lot = "".join(c for c in mat_no if c.isalnum())
-            t_str = get_kst_now().strftime("%Y%m%d_%H%M%S")
-            fn = f"{s_lot}_{t_str}_{up_file.name}"
-            file_path = os.path.join(D, fn)
-            with open(file_path, "wb") as f:
-                f.write(up_file.getbuffer())
+            img_url = upload_image_to_drive(up_file, mat_no)
 
         row_data = [
             in_date_str, 
             dt_str, 
             str(mat_no), 
             str(pack_name) if pack_name.strip() else "-", 
-            fn,
+            img_url,
             nail, 
             tape, 
             manual_judgment,
@@ -319,7 +334,6 @@ try:
         else:
             df_f = df.reset_index(drop=True)
 
-        # 💡 필터 조건식 수정 (부적합이 '적합'에 섞여 들어가지 않도록 부적합을 맨 먼저 정확하게 체크)
         if selected_single_filter != "전체 보기":
             if "부적합" in selected_single_filter or "FAIL" in selected_single_filter:
                 df_f = df_f[df_f["최종판정"].str.contains("부적합|FAIL", case=False, na=False)].reset_index(drop=True)
@@ -370,42 +384,34 @@ try:
             
             r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
             
-            fname = str(row.get("사진파일명", "none"))
+            img_url = str(row.get("사진파일명", "none"))
             img_td = '-'
-            if fname and fname.lower() != "none" and fname.strip() != "":
-                ip = os.path.join(D, fname)
-                if os.path.exists(ip):
-                    try:
-                        with open(ip, "rb") as img_file:
-                            encoded_img = base64.b64encode(img_file.read()).decode()
-                        
-                        modal_id = f"modal_{idx}"
-                        img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 크게 보기">🔍</a>'
-                        
-                        modal_html = f"""
-                        <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.3);">
-                            <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                    <h3 style="margin:0; font-size:15px; color:#333;">🔍 검사 사진 크게 보기</h3>
-                                    <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:20px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
-                                </div>
-                                <div style="text-align:left; font-size:12px; color:#444; margin-bottom:8px; line-height:1.4;">
-                                    📦 <b>포장재 번호:</b> {m_val}<br>
-                                    🏷️ <b>포장재 약호:</b> {p_val}<br>
-                                    📅 <b>검사 일자:</b> {d_val}
-                                </div>
-                                <div style="background:#f1f3f5; border-radius:6px; padding:6px; margin-bottom:12px;">
-                                    <img src="data:image/jpeg;base64,{encoded_img}" style="max-width:100%; max-height:280px; border-radius:4px; object-fit:contain;">
-                                </div>
-                                <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
-                            </div>
+            if img_url and img_url.lower() != "none" and img_url.strip() != "":
+                # 구글 드라이브 링크가 저장된 경우 팝업으로 크게 띄우거나 바로 연결
+                modal_id = f"modal_{idx}"
+                img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
+                
+                modal_html = f"""
+                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.3);">
+                    <div style="background:white; padding:18px 22px; border-radius:10px; width:380px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h3 style="margin:0; font-size:15px; color:#333;">🔍 검사 사진 보기</h3>
+                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:20px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
                         </div>
-                        """
-                        modals_list.append(modal_html)
-                    except Exception:
-                        img_td = '-'
-                else:
-                    img_td = '-'
+                        <div style="text-align:left; font-size:12px; color:#444; margin-bottom:8px; line-height:1.4;">
+                            📦 <b>포장재 번호:</b> {m_val}<br>
+                            🏷️ <b>포장재 약호:</b> {p_val}<br>
+                            📅 <b>검사 일자:</b> {d_val}
+                        </div>
+                        <div style="background:#f1f3f5; border-radius:6px; padding:6px; margin-bottom:12px;">
+                            <a href="{img_url}" target="_blank" style="display:block; text-decoration:none; color:#0366d6; font-weight:bold; font-size:13px; margin-bottom:8px;">🔗 구글 드라이브 원본 사진 열기</a>
+                            <iframe src="{img_url.replace('/view?usp=drivesdk', '/preview').replace('/view', '/preview')}" style="width:100%; height:260px; border:none; border-radius:4px;"></iframe>
+                        </div>
+                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
+                    </div>
+                </div>
+                """
+                modals_list.append(modal_html)
 
             row_str = f"""
 <tr>
@@ -467,13 +473,10 @@ try:
 
                     csv_bytes = export_df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
                     zf.writestr("inspection_history.csv", csv_bytes)
-                    if os.path.exists(D):
-                        for file in os.listdir(D):
-                            zf.write(os.path.join(D, file), arcname=os.path.join("inspection_images", file))
                 zb.seek(0)
                 
                 backup_filename = f"backup_{get_kst_now().strftime('%Y%m%d')}.zip"
-                st.download_button("💾 전체 검사 내역 및 사진 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
+                st.download_button("💾 전체 검사 내역 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
                 
                 st.markdown("---")
                 st.subheader("✏️ 검사 내역 수정")
@@ -528,21 +531,16 @@ try:
                             update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
                             
                             if update_btn:
-                                new_fn = str(curr_row.get("사진파일명", "none"))
+                                new_url = str(curr_row.get("사진파일명", "none"))
                                 if edit_file:
-                                    s_lot = "".join(c for c in edit_mat_no if c.isalnum())
-                                    t_str = get_kst_now().strftime("%Y%m%d_%H%M%S")
-                                    new_fn = f"{s_lot}_{t_str}_{edit_file.name}"
-                                    file_path = os.path.join(D, new_fn)
-                                    with open(file_path, "wb") as f:
-                                        f.write(edit_file.getbuffer())
+                                    new_url = upload_image_to_drive(edit_file, edit_mat_no)
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
                                     edit_inspect_date_str,
                                     str(edit_mat_no),
                                     str(edit_pack_name) if edit_pack_name.strip() else "-",
-                                    new_fn,
+                                    new_url,
                                     edit_nail,
                                     edit_tape,
                                     edit_judg,
@@ -556,16 +554,6 @@ try:
                                     st.error("❌ 수정 중 오류가 발생했습니다.")
                 else:
                     st.info("검색 결과가 없습니다.")
-
-                st.markdown("---")
-                if st.button("🗑️ 사진 폴더 비우기", use_container_width=True):
-                    if os.path.exists(D):
-                        for f_name in os.listdir(D):
-                            f_path = os.path.join(D, f_name)
-                            if os.path.isfile(f_path):
-                                os.remove(f_path)
-                    st.success("사진 폴더가 초기화되었습니다!")
-                    st.rerun()
 
                 st.markdown("---")
                 st.markdown("""
@@ -597,7 +585,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.10.94" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.0 (Google Drive Permanent Storage)" \
     "</div>", 
     unsafe_allow_html=True
 )
