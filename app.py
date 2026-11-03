@@ -137,6 +137,7 @@ def get_judgment_badge(val):
     else:
         return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
+@st.cache_data(ttl=60)
 def load_data():
     try:
         no_cache_url = f"{APPS_SCRIPT_URL}?t={get_kst_now().timestamp()}"
@@ -189,6 +190,7 @@ def append_to_sheet(row_data):
     try:
         payload = {"action": "append", "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Append error: {e}")
@@ -199,6 +201,7 @@ def update_sheet(old_mat, row_data):
         clean_mat = str(old_mat).strip().split('.')[0]
         payload = {"action": "update", "mat_no": clean_mat, "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Update error: {e}")
@@ -208,6 +211,7 @@ def clear_sheet_data():
     try:
         payload = {"action": "clear_sheet"}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
         print(f"Clear error: {e}")
@@ -246,6 +250,7 @@ def show_image_modal(m_no, p_val, d_val, img_url):
         
     st.markdown("")
     if st.button("닫기", type="primary", use_container_width=True):
+        st.session_state.pop("active_modal_item", None)
         st.rerun()
 
 col1, col2, col3 = st.columns([1, 2, 1])
@@ -318,6 +323,29 @@ if st.session_state.get("show_edited_modal", False):
     st.session_state["show_edited_modal"] = False
     show_edit_success_popup()
 
+# 💡 세션 상태 기반 팝업 트리거 체크
+if "active_modal_item" in st.session_state:
+    m_info = st.session_state["active_modal_item"]
+    show_image_modal(m_info["m_no"], m_info["p_val"], m_info["d_val"], m_info["img_val"])
+
+# 💡 쿼리 파라미터로 전달된 돋보기 클릭 신호 감지 (HTML 표 내부 버튼 연동)
+query_params = st.query_params
+if "zoom_idx" in query_params:
+    try:
+        target_zoom_idx = int(query_params["zoom_idx"])
+        temp_df = load_data()
+        if target_zoom_idx < len(temp_df):
+            row_item = temp_df.iloc[target_zoom_idx]
+            m_n = str(row_item.get("포장재번호", "-"))
+            p_n = str(row_item.get("포장재약호", "-"))
+            d_n = format_date_str(row_item.get("검사일자", "-"))
+            i_n = str(row_item.get("사진파일명", "none")).strip()
+            
+            st.query_params.clear()
+            show_image_modal(m_n, p_n, d_n, i_n)
+    except Exception as e:
+        print(f"Zoom trigger error: {e}")
+
 st.markdown("---")
 st.subheader("📋 전체 검사 내역")
 
@@ -366,50 +394,74 @@ try:
             else:
                 return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
-        # 💡 스트림릿 네이티브 가로 스크롤 표 형식 구현 (각 행의 돋보기 버튼 100% 작동 보장)
-        header_cols = st.columns([1.1, 1.1, 1.2, 2.5, 0.7, 1.2, 1.2, 1.4, 1.8])
-        with header_cols[0]: st.markdown("**입고 일자**")
-        with header_cols[1]: st.markdown("**검사 일자**")
-        with header_cols[2]: st.markdown("**포장재 번호**")
-        with header_cols[3]: st.markdown("**포장재 약호**")
-        with header_cols[4]: st.markdown("**보기**")
-        with header_cols[5]: st.markdown("**손톱**")
-        with header_cols[6]: st.markdown("**테이프**")
-        with header_cols[7]: st.markdown("**최종 판정**")
-        with header_cols[8]: st.markdown("**특이사항**")
-        st.markdown("<hr style='margin:4px 0 8px 0;'>", unsafe_allow_html=True)
-
+        rows_list = []
+        
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
             d_val = format_date_str(row.get("검사일자", "-"))
-            m_val = str(row.get("포장재번호", "-"))
-            p_val = str(row.get("포장재약호", "-"))
-            if pd.isna(row.get("포장재약호")) or p_val.lower() in ["nan", "none", ""]:
-                p_val = "-"
+
+            m_val = html.escape(str(row.get("포장재번호", "-")))
             
-            n_val = row.get("손톱박리", "-")
-            t_val = row.get("테이프박리", "-")
-            j_val = row.get("최종판정", "🟡 판정 대기")
-            r_val = str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-"
+            raw_p_name = str(row.get("포장재약호", "-"))
+            if pd.isna(row.get("포장재약호")) or raw_p_name.lower() in ["nan", "none", ""]:
+                raw_p_name = "-"
+            p_val = html.escape(raw_p_name)
+            
+            n_val = get_badge(row.get("손톱박리", "-"))
+            t_val = get_badge(row.get("테이프박리", "-"))
+            
+            final_j_raw = row.get("최종판정", "🟡 판정 대기")
+            j_val = get_judgment_badge(final_j_raw)
+            
+            r_val = html.escape(str(row.get("특이사항", "-")) if pd.notna(row.get("특이사항")) else "-")
+            
             img_val = str(row.get("사진파일명", "none")).strip()
-
-            r_cols = st.columns([1.1, 1.1, 1.2, 2.5, 0.7, 1.2, 1.2, 1.4, 1.8])
-            with r_cols[0]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{in_val}</div>", unsafe_allow_html=True)
-            with r_cols[1]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{d_val}</div>", unsafe_allow_html=True)
-            with r_cols[2]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{m_val}</div>", unsafe_allow_html=True)
-            with r_cols[3]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;' title='{p_val}'>{p_val}</div>", unsafe_allow_html=True)
+            img_td = '-'
             
-            with r_cols[4]:
-                if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                    if st.button("🔍", key=f"zoom_btn_{idx}", help="사진 보기"):
-                        show_image_modal(m_val, p_val, d_val, img_val)
-                else:
-                    st.markdown("<div style='text-align:center; padding-top:6px;'>-</div>", unsafe_allow_html=True)
+            if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
+                # 💡 최상위 창으로 강제 리다이렉트하여 메인 앱의 모달을 띄우는 완벽한 링크 방식
+                img_td = f'<a href="?zoom_idx={idx}" target="_top" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
 
-            with r_cols[5]: st.markdown(get_judgment_badge(n_val), unsafe_allow_html=True)
-            with r_cols[6]: st.markdown(get_judgment_badge(t_val), unsafe_allow_html=True)
-            with r_cols[7]: st.markdown(get_judgment_badge(j_val), unsafe_allow_html=True)
-            with r_cols[8]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{r_val}</div>", unsafe_allow_html=True)
+            row_str = f"""
+<tr>
+    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
+    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
+    <td style="padding:8px 8px; width:95px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
+    <td style="padding:8px 10px; width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
+    <td style="padding:8px 6px; width:40px; text-align:center; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
+    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
+    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
+    <td style="padding:8px 6px; width:120px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{j_val}</td>
+    <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{r_val}</td>
+</tr>"""
+            rows_list.append(row_str)
+
+        all_rows = "\n".join(rows_list)
+        
+        table_code = f"""
+<div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
+        <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
+            <tr>
+                <th style="padding:10px 8px; width:85px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
+                <th style="padding:10px 8px; width:85px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">검사 일자</th>
+                <th style="padding:10px 8px; width:95px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 번호</th>
+                <th style="padding:10px 10px; width:220px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">포장재 약호</th>
+                <th style="padding:10px 6px; width:40px; text-align:center; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; border-right:1px solid #e0e0e0;">보기</th>
+                <th style="padding:10px 6px; width:100px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">손톱</th>
+                <th style="padding:10px 6px; width:100px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">테이프</th>
+                <th style="padding:10px 6px; width:120px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">최종 판정</th>
+                <th style="padding:10px 10px; min-width:130px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">특이사항</th>
+            </tr>
+        </thead>
+        <tbody>
+{all_rows}
+        </tbody>
+    </table>
+</div>
+"""
+
+        st.components.v1.html(table_code, height=520, scrolling=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -553,7 +605,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.46 (Native Button In-Table Modal)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.47 (Target Top Table Modal Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
