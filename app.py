@@ -14,7 +14,8 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGhXKRINWEH0A1fn57SfcK-TsMtL1rjv22ZDMv2G3SMD8ayyFIZ58khBAINLS_qpf3bw/exec"
+# 💡 새로 발급받으신 Apps Script 웹 앱 URL로 업데이트 완료
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGdD50UOQTqZR41WJmHmitTPPgHa3_0cebAvBsszLZdoxvvLuybv7nWDFRMcdbVMffgw/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -520,7 +521,6 @@ try:
                         
                         edit_mat_no_val = str(curr_row.get("포장재번호", ""))
                         
-                        # 💡 파일 업로더를 form 바깥으로 빼내어 데이터 유실 방지
                         edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
                         
                         with st.form(f"edit_form_{sel_idx}"):
@@ -622,7 +622,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.36 (Form File Upload Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.37 (New WebApp URL & Update Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
