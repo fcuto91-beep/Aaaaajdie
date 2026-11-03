@@ -519,7 +519,11 @@ try:
                         sel_idx = int(selected_target_str.split("]")[0].replace("[", ""))
                         curr_row = df.loc[sel_idx]
                         
-                        with st.form("edit_form"):
+                        # 💡 수정 폼 외부에서 파일 업로더를 선언하여 데이터 유실 원천 방지
+                        edit_mat_no_val = str(curr_row.get("포장재번호", ""))
+                        edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
+                        
+                        with st.form(f"edit_form_{sel_idx}"):
                             raw_in_date = curr_row["입고일자"] if "입고일자" in curr_row else curr_row.get(0, kst_today)
                             default_in_date = parse_date_safely(raw_in_date, kst_today)
                             edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
@@ -530,7 +534,7 @@ try:
                             edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
                             edit_inspect_date_str = edit_inspect_date_val.isoformat()
                             
-                            edit_mat_no = st.text_input("포장재 번호 수정", value=str(curr_row.get("포장재번호", "")))
+                            edit_mat_no = st.text_input("포장재 번호 수정", value=edit_mat_no_val)
                             edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
                             
                             nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
@@ -548,13 +552,11 @@ try:
                             judg_default = judg_opts.index(curr_judg) if curr_judg in judg_opts else 0
                             edit_judg = st.selectbox("최종 판정 수정", judg_opts, index=judg_default)
                             
-                            edit_file = st.file_uploader("새로운 사진으로 교체 (선택사항)", type=["jpg", "jpeg", "png"])
                             edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
                             
                             update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
                             
                             if update_btn:
-                                # 💡 수정 시 새 파일을 안 올리면 기존 사진 링크를 무조건 안전하게 유지하도록 수정
                                 existing_img = str(curr_row.get("사진파일명", "none"))
                                 if edit_file is not None and getattr(edit_file, "size", 0) > 0:
                                     new_url = upload_image_to_drive(edit_file, edit_mat_no)
@@ -621,7 +623,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.9 (Preserve Existing Image Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.10 (Stable Image Uploader Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
