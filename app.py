@@ -380,7 +380,8 @@ try:
             img_url = str(row.get("사진파일명", "none")).strip()
             img_td = '-'
             
-            if img_url and img_url.lower() != "none" and img_url != "" and img_url != "-":
+            # 💡 핵심 수정: http가 포함된 정상적인 드라이브 링크일 때만 돋보기(🔍)와 모달 뷰어를 생성하도록 확실하게 보장
+            if img_url and img_url.lower() not in ["none", "nat", "nan", "", "-"]:
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
@@ -404,11 +405,10 @@ try:
                     </div>
                     """
                 else:
-                    # 💡 구형 파일명 데이터일 경우 아예 안내 팝업 대신 깔끔하게 '-' 처리하여 팝업 충돌 원천 차단
                     modal_content = f"""
                     <div style="background:#f8f9fa; border-radius:6px; padding:15px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
-                        📁 <b>등록된 사진 정보가 없습니다.</b><br><br>
-                        <span style="font-size:11.5px; color:#666;">이 항목은 드라이브 링크가 없는 초기 기록입니다.<br>새로운 사진을 등록해 주시면 정상적으로 뷰어가 작동합니다 형님!</span>
+                        📁 <b>저장된 파일 정보:</b><br>
+                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_url)}</code>
                     </div>
                     """
 
@@ -616,7 +616,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.17 (Clean Modal Popup)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.18 (Final Magnifier Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
