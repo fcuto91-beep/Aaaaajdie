@@ -225,7 +225,7 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 돋보기 클릭 시 화면 정중앙에 뜨는 네이티브 단독 모달 팝업
+# 💡 돋보기 클릭 시 화면 정중앙에 뜨는 네이티브 단독 모달 다이얼로그
 @st.dialog("🔍 검사 사진 크게 보기")
 def show_image_modal(m_no, p_val, d_val, img_url):
     st.markdown(f"""
@@ -315,6 +315,26 @@ if st.session_state.get("show_edited_modal", False):
     st.session_state["show_edited_modal"] = False
     show_edit_success_popup()
 
+# 💡 쿼리 파라미터 감지하여 모달 자동 오픈 (표 안의 돋보기 링크와 연동)
+query_params = st.query_params
+if "zoom_idx" in query_params:
+    try:
+        target_zoom_idx = int(query_params["zoom_idx"])
+        # 데이터 다시 로드해서 해당 인덱스 정보 추출 후 다이얼로그 호출
+        temp_df = load_data()
+        if target_zoom_idx < len(temp_df):
+            row_item = temp_df.iloc[target_zoom_idx]
+            m_n = str(row_item.get("포장재번호", "-"))
+            p_n = str(row_item.get("포장재약호", "-"))
+            d_n = format_date_str(row_item.get("검사일자", "-"))
+            i_n = str(row_item.get("사진파일명", "none")).strip()
+            
+            # 파라미터 초기화 후 다이얼로그 실행
+            st.query_params.clear()
+            show_image_modal(m_n, p_n, d_n, i_n)
+    except Exception as e:
+        print(f"Zoom trigger error: {e}")
+
 st.markdown("---")
 st.subheader("📋 전체 검사 내역")
 
@@ -388,8 +408,8 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                # 💡 테이블 내 셀 안에서는 고유 식별 버튼 배치
-                img_td = f"__ZOOM_BTN_{idx}__"
+                # 💡 표 안의 돋보기 아이콘을 누르면 쿼리 파라미터를 통해 파이썬 앱으로 즉시 신호 전달
+                img_td = f'<a href="?zoom_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
 
             row_str = f"""
 <tr>
@@ -403,11 +423,11 @@ try:
     <td style="padding:8px 6px; width:120px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{j_val}</td>
     <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{r_val}</td>
 </tr>"""
-            rows_list.append((idx, row_str, m_val, p_val, d_val, img_val))
+            rows_list.append(row_str)
 
-        # 💡 테이블 HTML 조립 전 임시 마커를 실제 클릭 가능한 버튼으로 치환
-        # Streamlit Native Table Layout 유지
-        table_header = """
+        all_rows = "\n".join(rows_list)
+        
+        table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
@@ -424,34 +444,13 @@ try:
             </tr>
         </thead>
         <tbody>
+{all_rows}
+        </tbody>
+    </table>
+</div>
 """
-        st.markdown(table_header, unsafe_allow_html=True)
 
-        for idx, r_str, m_v, p_v, d_v, i_v in rows_list:
-            # 기본 행 렌더링
-            cleaned_row = r_str.replace(f"__ZOOM_BTN_{idx}__", "-")
-            st.markdown(f"<table style='width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;'><tbody>{cleaned_row}</tbody></table>", unsafe_allow_html=True)
-            
-            # 돋보기 버튼을 해당 위치에 매칭
-            if i_v and i_v.lower() not in ["none", "nat", "nan", "", "-"]:
-                # 자바스크립트나 쿼리 파라미터 대신 Streamlit 네이티브 다이얼로그 호출 트리거 연동
-                pass
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # 💡 간편하고 강력한 방법: 각 행마다 돋보기 버튼을 사이드에 배치하거나 깔끔하게 연동
-        st.markdown("<br><b>🔍 검사 사진 보기 (아래 목록에서 선택)</b>", unsafe_allow_html=True)
-        zoom_cols = st.columns(min(len(df_f), 5) if len(df_f) > 0 else 1)
-        for idx, row in df_f.head(5).iterrows():
-            i_val = str(row.get("사진파일명", "none")).strip()
-            if i_val and i_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                m_no_val = str(row.get("포장재번호", "-"))
-                p_name_val = str(row.get("포장재약호", "-"))
-                d_date_val = format_date_str(row.get("검사일자", "-"))
-                
-                with zoom_cols[idx % len(zoom_cols)]:
-                    if st.button(f"🔍 [{m_no_val}] 보기", key=f"btn_zoom_{idx}", use_container_width=True):
-                        show_image_modal(m_no_val, p_name_val, d_date_val, i_val)
+        st.components.v1.html(table_code, height=520, scrolling=True)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -595,7 +594,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.41 (Native Dialog Modal)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.42 (In-Table Magnifier Dialog)" \
     "</div>", 
     unsafe_allow_html=True
 )
