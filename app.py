@@ -13,7 +13,6 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 새롭게 발급받으신 앱스 스크립트 배포 주소 반영
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhWAZ15Y3uQYckMcjnnpi9Jeg60zX_tFYT_nP16SrLi0z5BRFfhG9C-kyo5zdjAplR/exec"
 
 KST = timezone(timedelta(hours=9))
@@ -405,10 +404,12 @@ try:
                     </div>
                     """
                 else:
+                    # 💡 형님! 구형 파일명이 들어있는 데이터라도 수정 폼에서 새로 사진을 올리면 즉시 드라이브 링크로 바뀔 수 있도록 안내 문구 제공
                     modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:6px; padding:20px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
-                        📁 <b>저장된 파일명:</b> {html.escape(img_url)}<br><br>
-                        <span style="color:#e0245e; font-size:12px;">이 사진은 이전 로컬 저장 버전의 파일입니다.<br>관리자 메뉴의 <b>[검사 내역 수정]</b>에서 새로운 사진을 다시 업로드해 주시면<br>즉시 드라이브 뷰어로 정상 표시됩니다 형님!</span>
+                    <div style="background:#fff3cd; border:1px solid #ffeeba; border-radius:6px; padding:15px; margin-bottom:12px; font-size:12.5px; color:#856404; text-align:center; line-height:1.5;">
+                        ⚠️ <b>이 항목은 예전 로컬 파일명 데이터가 남아있습니다.</b><br>
+                        파일 이름: <code>{html.escape(img_url)}</code><br><br>
+                        아래 관리자 메뉴의 <b>[검사 내역 수정]</b>에서 <b>새로운 사진을 다시 업로드하고 수정 반영</b>해 주시면 즉시 구글 드라이브 뷰어로 정상 작동합니다 형님!
                     </div>
                     """
 
@@ -617,7 +618,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.13 (New Apps Script URL Linked)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.14 (Legacy Filename Helper Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
