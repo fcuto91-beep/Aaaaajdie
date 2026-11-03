@@ -343,7 +343,6 @@ try:
             else:
                 return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
 
-        # 💡 스트림릿 네이티브 방식으로 표와 돋보기 버튼 구현 (클릭 100% 보장)
         header_cols = st.columns([1.1, 1.1, 1.2, 2.5, 0.7, 1.2, 1.2, 1.4, 1.8])
         with header_cols[0]: st.markdown("**입고 일자**")
         with header_cols[1]: st.markdown("**검사 일자**")
@@ -354,7 +353,7 @@ try:
         with header_cols[6]: st.markdown("**테이프**")
         with header_cols[7]: st.markdown("**최종 판정**")
         with header_cols[8]: st.markdown("**특이사항**")
-        st.markdown("<hr style='margin:4px 0 8px 0;'>", unsafe_auth_html=True if "unsafe_auth_html" in globals() else False)
+        st.markdown("<hr style='margin:4px 0 8px 0;'>", unsafe_allow_html=True)
 
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
@@ -388,7 +387,6 @@ try:
             with r_cols[7]: st.markdown(get_judgment_badge(j_val), unsafe_allow_html=True)
             with r_cols[8]: st.markdown(f"<div style='font-size:11.5px; padding-top:6px;'>{r_val}</div>", unsafe_allow_html=True)
 
-            # 💡 돋보기를 누르면 화면 정중앙에 뜨는 독립형 단독 모달 팝업
             if st.session_state.get(f"modal_open_{idx}", False):
                 st.markdown(f"""
                 <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
@@ -554,7 +552,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.36 (Native Streamlit Button Modal)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.37 (Typo Fixed Native Modal)" \
     "</div>", 
     unsafe_allow_html=True
 )
