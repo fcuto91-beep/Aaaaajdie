@@ -13,7 +13,8 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMwkQbFUd7KYTpg1IKhNmuSAXO_KQT0WsNl0ZFfu-rR4rNe9vFJwtyNGKeuP659fDrJA/exec"
+# 💡 형님께서 방금 새로 발급하신 앱스 스크립트 배포 주소 반영 완료
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxUf9EjUPT6_yQpIz7D1GBUyu-oR4KfssJgc4e8r1z5WxHKBMtxlOisNTbi28KHHBDAQ/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -193,7 +194,6 @@ def upload_image_to_drive(uploaded_file, mat_no):
         if res.status_code == 200:
             res_json = res.json()
             if res_json.get("status") == "success":
-                # 💡 드라이브 링크를 확실하게 추출하도록 보완
                 url = res_json.get("fileUrl") or res_json.get("url")
                 if url:
                     return str(url)
@@ -614,12 +614,12 @@ try:
     else:
         st.info("저장된 검사 이력이 없습니다.")
 except Exception as e:
-    st.error(f"오류 발생: {e}")
+    st.error(f"о류 발생: {e}")
 
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.22 (Robust URL Extraction)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.23 (Final Drive Sync)" \
     "</div>", 
     unsafe_allow_html=True
 )
