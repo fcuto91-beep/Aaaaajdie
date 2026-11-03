@@ -180,7 +180,6 @@ def load_data():
 
 def process_image_to_base64(uploaded_file):
     try:
-        # 💡 스마트폰 고화질 사진 용량 초과 방지를 위한 자동 리사이징 및 압축
         image = Image.open(uploaded_file)
         if image.width > 800:
             ratio = 800 / image.width
@@ -520,6 +519,8 @@ try:
                         curr_row = df.loc[sel_idx]
                         
                         edit_mat_no_val = str(curr_row.get("포장재번호", ""))
+                        
+                        # 💡 파일 업로더를 form 바깥으로 빼내어 데이터 유실 방지
                         edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
                         
                         with st.form(f"edit_form_{sel_idx}"):
@@ -621,7 +622,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.35 (Image Compression & Update Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.36 (Form File Upload Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
