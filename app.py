@@ -389,24 +389,20 @@ try:
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
-                # 💡 구글 드라이브 썸네일 우회 주소로 변환하여 이미지 깨짐 완벽 방지
-                display_img_url = img_url
-                if "id=" in img_url:
+                # 💡 구글 드라이브 공식 preview 전용 주소로 안전하게 변환하여 팝업 내 뷰어로 깔끔하게 출력
+                preview_url = img_url
+                if "/view" in img_url:
+                    preview_url = img_url.replace("/view?usp=drivesdk", "/preview").replace("/view", "/preview")
+                elif "id=" in img_url:
                     try:
                         f_id = img_url.split("id=")[1].split("&")[0]
-                        display_img_url = f"https://drive.google.com/thumbnail?id={f_id}&sz=w1000"
-                    except:
-                        pass
-                elif "/d/" in img_url:
-                    try:
-                        f_id = img_url.split("/d/")[1].split("/")[0]
-                        display_img_url = f"https://drive.google.com/thumbnail?id={f_id}&sz=w1000"
+                        preview_url = f"https://drive.google.com/file/d/{f_id}/preview"
                     except:
                         pass
 
                 modal_html = f"""
                 <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.5);">
-                    <div style="background:white; padding:18px 20px; border-radius:12px; width:400px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                    <div style="background:white; padding:18px 20px; border-radius:12px; width:440px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                             <h3 style="margin:0; font-size:15px; color:#333; font-weight:bold;">🔍 검사 사진 보기</h3>
                             <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
@@ -416,8 +412,8 @@ try:
                             🏷️ <b>포장재 약호:</b> {p_val}<br>
                             📅 <b>검사 일자:</b> {d_val}
                         </div>
-                        <div style="background:#f1f3f5; border-radius:6px; padding:6px; margin-bottom:12px; max-height:320px; overflow-y:auto;">
-                            <img src="{display_img_url}" style="max-width:100%; max-height:280px; border-radius:4px; object-fit:contain;">
+                        <div style="background:#f1f3f5; border-radius:6px; padding:4px; margin-bottom:12px; height:300px;">
+                            <iframe src="{preview_url}" style="width:100%; height:100%; border:none; border-radius:4px;" allow="autoplay"></iframe>
                         </div>
                         <div style="margin-bottom:8px;">
                             <a href="{img_url}" target="_blank" style="font-size:11.5px; color:#0366d6; text-decoration:none;">🔗 구글 드라이브 원본 링크 새창으로 열기</a>
@@ -610,7 +606,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.4 (Drive Thumbnail Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.5 (Drive Preview Viewer Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
