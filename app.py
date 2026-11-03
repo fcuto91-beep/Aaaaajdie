@@ -146,8 +146,7 @@ def load_data():
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
                 normalized_rows = []
-                # 💡 첫 번째 행(헤더 타이틀)은 건너뛰고 2번째 행부터 안전하게 수집
-                for item in data[1:]:
+                for item in data:
                     if isinstance(item, list):
                         vals = [str(v).strip() for v in item]
                         while len(vals) < 9:
@@ -155,23 +154,15 @@ def load_data():
                         in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
                         if not j_v or j_v == "-":
                             j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
-                        
-                        if in_d == "입고일자" or m_no == "포장재번호":
-                            continue
-                            
                         normalized_rows.append({
                             "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
                             "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
                         })
                     elif isinstance(item, dict):
-                        in_d = str(item.get("입고일자", item.get("입고 일자", "-"))).strip()
-                        m_no = str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip()
-                        if in_d == "입고일자" or m_no == "포장재번호":
-                            continue
                         normalized_rows.append({
-                            "입고일자": in_d,
+                            "입고일자": str(item.get("입고일자", item.get("입고 일자", "-"))).strip(),
                             "검사일자": str(item.get("검사일자", item.get("검사 일자", "-"))).strip(),
-                            "포장재번호": m_no,
+                            "포장재번호": str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
                             "포장재약호": str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
                             "사진파일명": str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip(),
                             "손톱박리": str(item.get("손톱박리", "-")).strip(),
@@ -381,8 +372,7 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                # 💡 v1.11.33 원조 정상 작동 돋보기 링크 복원
-                img_td = f'<a href="?zoom_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
+                img_td = '🔍'
 
             row_str = f"""
 <tr>
@@ -567,7 +557,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.35 (Header Skip + Zoom Link Fixed)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.33 (Stable Revert)" \
     "</div>", 
     unsafe_allow_html=True
 )
