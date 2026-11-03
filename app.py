@@ -389,18 +389,18 @@ try:
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
-                # 💡 구글 드라이브 링크에서 파일 ID를 완벽하게 추출하여 썸네일/직접 보기 주소로 변환
+                # 💡 구글 드라이브 썸네일 우회 주소로 변환하여 이미지 깨짐 완벽 방지
                 display_img_url = img_url
                 if "id=" in img_url:
                     try:
                         f_id = img_url.split("id=")[1].split("&")[0]
-                        display_img_url = f"https://lh3.googleusercontent.com/d/{f_id}"
+                        display_img_url = f"https://drive.google.com/thumbnail?id={f_id}&sz=w1000"
                     except:
                         pass
                 elif "/d/" in img_url:
                     try:
                         f_id = img_url.split("/d/")[1].split("/")[0]
-                        display_img_url = f"https://lh3.googleusercontent.com/d/{f_id}"
+                        display_img_url = f"https://drive.google.com/thumbnail?id={f_id}&sz=w1000"
                     except:
                         pass
 
@@ -610,7 +610,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.3 (Direct Image Modal Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.4 (Drive Thumbnail Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
