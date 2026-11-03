@@ -225,7 +225,7 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-# 💡 돋보기 클릭 시 화면 정중앙에 뜨는 네이티브 단독 모달 다이얼로그
+# 💡 돋보기 클릭 시 화면 정중앙에 뜨는 네이티브 단독 모달 다이얼로그 (이미지 렌더링 안정화)
 @st.dialog("🔍 검사 사진 크게 보기")
 def show_image_modal(m_no, p_val, d_val, img_url):
     st.markdown(f"""
@@ -236,10 +236,17 @@ def show_image_modal(m_no, p_val, d_val, img_url):
     </div>
     """, unsafe_allow_html=True)
     
-    if img_url.startswith("data:image") or "http" in img_url:
-        st.image(img_url, use_column_width=True)
+    if img_url and img_url.lower() not in ["none", "nat", "nan", "", "-"]:
+        if img_url.startswith("data:image") or img_url.startswith("http"):
+            st.image(img_url, use_column_width=True)
+        else:
+            # 로컬 파일이거나 파일명인 경우 처리
+            if os.path.exists(img_url):
+                st.image(img_url, use_column_width=True)
+            else:
+                st.info(f"📁 저장된 이미지 데이터: {img_url}")
     else:
-        st.info(f"📁 저장된 파일 정보: {img_url}")
+        st.warning("⚠️ 등록된 검사 사진이 없습니다.")
         
     st.markdown("")
     if st.button("닫기", type="primary", use_container_width=True):
@@ -320,7 +327,6 @@ query_params = st.query_params
 if "zoom_idx" in query_params:
     try:
         target_zoom_idx = int(query_params["zoom_idx"])
-        # 데이터 다시 로드해서 해당 인덱스 정보 추출 후 다이얼로그 호출
         temp_df = load_data()
         if target_zoom_idx < len(temp_df):
             row_item = temp_df.iloc[target_zoom_idx]
@@ -329,7 +335,6 @@ if "zoom_idx" in query_params:
             d_n = format_date_str(row_item.get("검사일자", "-"))
             i_n = str(row_item.get("사진파일명", "none")).strip()
             
-            # 파라미터 초기화 후 다이얼로그 실행
             st.query_params.clear()
             show_image_modal(m_n, p_n, d_n, i_n)
     except Exception as e:
@@ -408,7 +413,6 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                # 💡 표 안의 돋보기 아이콘을 누르면 쿼리 파라미터를 통해 파이썬 앱으로 즉시 신호 전달
                 img_td = f'<a href="?zoom_idx={idx}" target="_self" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
 
             row_str = f"""
@@ -594,7 +598,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.42 (In-Table Magnifier Dialog)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.43 (Optimized Dialog Image Handling)" \
     "</div>", 
     unsafe_allow_html=True
 )
