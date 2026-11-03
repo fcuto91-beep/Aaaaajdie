@@ -369,13 +369,48 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                # 💡 Base64 데이터를 새 창(팝업 탭)으로 깔끔하게 띄워 회사 PC 보안망 완벽 우회 및 레이아웃 갇힘 현상 원천 차단
+                modal_id = f"modal_{idx}"
+                img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
+                
                 if img_val.startswith("data:image"):
-                    img_td = f'<a href="{img_val}" target="_blank" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기 (새 창)">🔍</a>'
+                    modal_content = f"""
+                    <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:420px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
+                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
+                    </div>
+                    """
                 elif "http" in img_val:
-                    img_td = f'<a href="{img_val}" target="_blank" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기 (새 창)">🔍</a>'
+                    modal_content = f"""
+                    <div style="margin-bottom:12px; text-align:center;">
+                        <a href="{img_val}" target="_blank" style="font-size:13px; color:#0366d6; text-decoration:none; font-weight:bold;">🔗 원본 링크 새창으로 열기</a>
+                    </div>
+                    """
                 else:
-                    img_td = '-'
+                    modal_content = f"""
+                    <div style="background:#f8f9fa; border-radius:8px; padding:15px; margin-bottom:14px; font-size:13px; color:#555; text-align:center;">
+                        📁 <b>저장된 파일 정보:</b><br>
+                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_val)}</code>
+                    </div>
+                    """
+
+                # 💡 테이블 영역을 벗어나 브라우저 화면 전체 중앙에 뜨는 독립형 모달 팝업
+                modal_html = f"""
+                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999999; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
+                    <div style="background:white; padding:24px; border-radius:14px; width:480px; max-width:90vw; box-shadow:0 20px 40px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #eee; padding-bottom:8px;">
+                            <h3 style="margin:0; font-size:16px; color:#111; font-weight:bold;">🔍 검사 사진 보기</h3>
+                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:24px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 4px;">&times;</a>
+                        </div>
+                        <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
+                            📦 <b>포장재 번호:</b> {m_val}<br>
+                            🏷️ <b>포장재 약호:</b> {p_val}<br>
+                            📅 <b>검사 일자:</b> {d_val}
+                        </div>
+                        {modal_content}
+                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:10px 16px; border-radius:8px; font-weight:bold; font-size:13.5px; width:100%; cursor:pointer;">닫기</button>
+                    </div>
+                </div>
+                """
+                modals_list.append(modal_html)
 
             row_str = f"""
 <tr>
@@ -392,6 +427,7 @@ try:
             rows_list.append(row_str)
 
         all_rows = "\n".join(rows_list)
+        all_modals = "\n".join(modals_list)
         
         table_code = f"""
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -414,6 +450,7 @@ try:
         </tbody>
     </table>
 </div>
+{all_modals}
 """
 
         st.components.v1.html(table_code, height=520, scrolling=True)
@@ -560,7 +597,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.30 (Table Restored & Clean Popup Window)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.31 (Table + Central Modal Popup)" \
     "</div>", 
     unsafe_allow_html=True
 )
