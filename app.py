@@ -395,7 +395,7 @@ try:
 
                 # 💡 iframe 높이를 넉넉하게 잡고 position fixed 중앙 모달 적용
                 modal_html = f"""
-                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center; background:rgba(0,0,0,0.5);">
+                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center; background:transparent;">
                     <div style="background:white; padding:20px; border-radius:12px; width:460px; max-width:90%; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
                             <h3 style="margin:0; font-size:15px; color:#222; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
