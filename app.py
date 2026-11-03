@@ -14,7 +14,6 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 💡 새로 발급받으신 Apps Script 웹 앱 URL로 업데이트 완료
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGdD50UOQTqZR41WJmHmitTPPgHa3_0cebAvBsszLZdoxvvLuybv7nWDFRMcdbVMffgw/exec"
 
 KST = timezone(timedelta(hours=9))
@@ -155,6 +154,8 @@ def load_data():
                         while len(vals) < 9:
                             vals.append("-")
                         in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
+                        if not f_n or f_n.lower() in ["nan", "nat", "", "none"]:
+                            f_n = "none"
                         if not j_v or j_v == "-":
                             j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
                         normalized_rows.append({
@@ -162,12 +163,15 @@ def load_data():
                             "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
                         })
                     elif isinstance(item, dict):
+                        f_n = str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip()
+                        if not f_n or f_n.lower() in ["nan", "nat", "", "none"]:
+                            f_n = "none"
                         normalized_rows.append({
                             "입고일자": str(item.get("입고일자", item.get("입고 일자", "-"))).strip(),
                             "검사일자": str(item.get("검사일자", item.get("검사 일자", "-"))).strip(),
                             "포장재번호": str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
                             "포장재약호": str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
-                            "사진파일명": str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip(),
+                            "사진파일명": f_n,
                             "손톱박리": str(item.get("손톱박리", "-")).strip(),
                             "테이프박리": str(item.get("테이프박리", "-")).strip(),
                             "최종판정": str(item.get("최종판정", item.get("판정", "🟡 판정 대기"))).strip(),
@@ -181,6 +185,7 @@ def load_data():
 
 def process_image_to_base64(uploaded_file):
     try:
+        uploaded_file.seek(0)
         image = Image.open(uploaded_file)
         if image.width > 800:
             ratio = 800 / image.width
@@ -197,6 +202,7 @@ def process_image_to_base64(uploaded_file):
     except Exception as e:
         print(f"Image compression error: {e}")
         try:
+            uploaded_file.seek(0)
             bytes_data = uploaded_file.getvalue()
             b64_str = base64.b64encode(bytes_data).decode('utf-8')
             mime = uploaded_file.type if uploaded_file.type else "image/jpeg"
@@ -521,8 +527,6 @@ try:
                         
                         edit_mat_no_val = str(curr_row.get("포장재번호", ""))
                         
-                        edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
-                        
                         with st.form(f"edit_form_{sel_idx}"):
                             raw_in_date = curr_row["입고일자"] if "입고일자" in curr_row else curr_row.get(0, kst_today)
                             default_in_date = parse_date_safely(raw_in_date, kst_today)
@@ -552,15 +556,22 @@ try:
                             judg_default = judg_opts.index(curr_judg) if curr_judg in judg_opts else 0
                             edit_judg = st.selectbox("최종 판정 수정", judg_opts, index=judg_default)
                             
+                            edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
+                            
                             edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
                             
                             update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
                             
                             if update_btn:
+                                # 💡 사진이 새로 업로드되면 압축 반영, 아니면 기존 사진파일명 유지 (빈칸 방지)
                                 if edit_file is not None and getattr(edit_file, "size", 0) > 0:
                                     new_url = process_image_to_base64(edit_file)
                                 else:
-                                    new_url = str(curr_row.get("사진파일명", "none"))
+                                    existing_img = curr_row.get("사진파일명", "none")
+                                    if not existing_img or str(existing_img).lower() in ["nan", "nat", "none", "", "-", "null"]:
+                                        new_url = "none"
+                                    else:
+                                        new_url = str(existing_img)
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
@@ -622,7 +633,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.37 (New WebApp URL & Update Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.39 (Photo Blank Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
