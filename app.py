@@ -13,7 +13,8 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6f666Twr7A8S9quAuNWRxl1NlIrn3jCvB1GknBG2UurSk65qch7pvcx66ao-HtUk3ZA/exec"
+# 💡 형님께서 방금 새로 발급하신 앱스 스크립트 배포 주소 반영 완료
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi48BfYU2D25IGkQjxkotYKC2kBwPB0rp1hYrHgg3IDN1Ret0xW8djX-hzD-GivBmaqw/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -189,7 +190,7 @@ def upload_image_to_drive(uploaded_file, mat_no):
             "mimeType": uploaded_file.type,
             "base64": b64_str
         }
-        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=20)
+        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=30)
         if res.status_code == 200:
             res_json = res.json()
             if res_json.get("status") == "success":
@@ -198,9 +199,7 @@ def upload_image_to_drive(uploaded_file, mat_no):
                     return str(url)
     except Exception as e:
         print(f"Drive upload error: {e}")
-    
-    # 💡 업로드 실패 시에도 파일 이름을 시트에 남겨 돋보기나 확인이 가능하도록 우회 처리
-    return f"Uploaded_{uploaded_file.name}"
+    return "none"
 
 def append_to_sheet(row_data):
     try:
@@ -232,7 +231,7 @@ def clear_sheet_data():
 
 @st.dialog("🎉 저장 완료")
 def show_save_success_popup():
-    st.success("검사 결과와 사진이 구글 시트에 안전하게 영구 저장되었습니다!")
+    st.success("검사 결과와 사진이 구글 드라이브/시트에 안전하게 영구 저장되었습니다!")
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
@@ -411,8 +410,8 @@ try:
                 else:
                     modal_content = f"""
                     <div style="background:#f8f9fa; border-radius:6px; padding:15px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
-                        📁 <b>업로드된 파일명:</b><br>
-                        <code style="font-size:12px; color:#0366d6; font-weight:bold;">{html.escape(img_url)}</code>
+                        📁 <b>저장된 파일 정보:</b><br>
+                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_url)}</code>
                     </div>
                     """
 
@@ -420,7 +419,7 @@ try:
                 <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; justify-content:center; align-items:center; background:rgba(0,0,0,0.5);">
                     <div style="background:white; padding:18px 20px; border-radius:12px; width:440px; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <h3 style="margin:0; font-size:15px; color:#333; font-weight:bold;">🔍 검사 사진 정보</h3>
+                            <h3 style="margin:0; font-size:15px; color:#333; font-weight:bold;">🔍 검사 사진 보기</h3>
                             <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#888; font-weight:bold; cursor:pointer; padding:0 3px;">&times;</a>
                         </div>
                         <div style="text-align:left; font-size:12px; color:#444; margin-bottom:10px; line-height:1.4; background:#f8f9fa; padding:8px; border-radius:6px;">
@@ -620,7 +619,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.25 (Stable Safe Mode)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.26 (Final Sync Verified)" \
     "</div>", 
     unsafe_allow_html=True
 )
