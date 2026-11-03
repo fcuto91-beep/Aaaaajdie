@@ -404,7 +404,6 @@ try:
                     </div>
                     """
                 else:
-                    # 💡 구형 파일명 데이터일 경우 깔끔하게 파일명만 안내하고 오류 방지
                     modal_content = f"""
                     <div style="background:#f8f9fa; border-radius:6px; padding:15px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
                         📁 <b>저장된 사진 파일명:</b><br>
@@ -552,11 +551,11 @@ try:
                             update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
                             
                             if update_btn:
-                                existing_img = str(curr_row.get("사진파일명", "none"))
+                                # 💡 핵심 수정: 새 파일이 업로드되면 기존 파일명과 상관없이 무조건 구글 드라이브로 업로드하여 새 링크 획득
                                 if edit_file is not None and getattr(edit_file, "size", 0) > 0:
                                     new_url = upload_image_to_drive(edit_file, edit_mat_no)
                                 else:
-                                    new_url = existing_img
+                                    new_url = str(curr_row.get("사진파일명", "none"))
                                 
                                 updated_row_data = [
                                     edit_in_date_str,
@@ -618,7 +617,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.15 (Clean Filename Notice Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.16 (Force Image Upload Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
