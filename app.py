@@ -144,6 +144,7 @@ def load_data():
         if response.status_code == 200:
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
+                data = data[1:]
                 normalized_rows = []
                 for item in data:
                     if isinstance(item, list):
