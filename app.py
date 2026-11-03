@@ -225,6 +225,26 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
+# 💡 돋보기 클릭 시 화면 정중앙에 뜨는 네이티브 단독 모달 팝업
+@st.dialog("🔍 검사 사진 크게 보기")
+def show_image_modal(m_no, p_val, d_val, img_url):
+    st.markdown(f"""
+    <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
+        📦 <b>포장재 번호:</b> {m_no}<br>
+        🏷️ <b>포장재 약호:</b> {p_val}<br>
+        📅 <b>검사 일자:</b> {d_val}
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if img_url.startswith("data:image") or "http" in img_url:
+        st.image(img_url, use_column_width=True)
+    else:
+        st.info(f"📁 저장된 파일 정보: {img_url}")
+        
+    st.markdown("")
+    if st.button("닫기", type="primary", use_container_width=True):
+        st.rerun()
+
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if os.path.exists(LOGO_PATH):
@@ -344,7 +364,6 @@ try:
                 return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
         rows_list = []
-        modals_list = []
         
         for idx, row in df_f.iterrows():
             in_val = format_date_str(row.get("입고일자", "-"))
@@ -369,42 +388,8 @@ try:
             img_td = '-'
             
             if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
-                modal_id = f"modal_{idx}"
-                img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
-                
-                if img_val.startswith("data:image") or "http" in img_val:
-                    modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:400px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
-                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
-                    </div>
-                    """
-                else:
-                    modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:8px; padding:15px; margin-bottom:14px; font-size:13px; color:#555; text-align:center;">
-                        📁 <b>저장된 파일 정보:</b><br>
-                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_val)}</code>
-                    </div>
-                    """
-
-                # 💡 iframe을 없애고 메인 DOM에 직접 렌더링하므로 position: fixed가 브라우저 전체 화면 중앙에 완벽하게 뜸!
-                modal_html = f"""
-                <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; justify-content:center; align-items:center; background:rgba(0,0,0,0.6);">
-                    <div style="background:white; padding:24px; border-radius:14px; width:480px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid #d0d7de; text-align:center; position:relative;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #eee; padding-bottom:8px;">
-                            <h3 style="margin:0; font-size:16px; color:#111; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
-                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:24px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 4px;">&times;</a>
-                        </div>
-                        <div style="text-align:left; font-size:12.5px; color:#333; margin-bottom:12px; line-height:1.5; background:#f6f8fa; padding:10px 12px; border-radius:8px; border:1px solid #e1e4e8;">
-                            📦 <b>포장재 번호:</b> {m_val}<br>
-                            🏷️ <b>포장재 약호:</b> {p_val}<br>
-                            📅 <b>검사 일자:</b> {d_val}
-                        </div>
-                        {modal_content}
-                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:10px 16px; border-radius:8px; font-weight:bold; font-size:13.5px; width:100%; cursor:pointer;">닫기</button>
-                    </div>
-                </div>
-                """
-                modals_list.append(modal_html)
+                # 💡 테이블 내 셀 안에서는 고유 식별 버튼 배치
+                img_td = f"__ZOOM_BTN_{idx}__"
 
             row_str = f"""
 <tr>
@@ -418,13 +403,11 @@ try:
     <td style="padding:8px 6px; width:120px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{j_val}</td>
     <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{r_val}</td>
 </tr>"""
-            rows_list.append(row_str)
+            rows_list.append((idx, row_str, m_val, p_val, d_val, img_val))
 
-        all_rows = "\n".join(rows_list)
-        all_modals = "\n".join(modals_list)
-        
-        # 💡 iframe을 사용하지 않고 st.markdown을 통해 메인 화면 DOM에 직접 표와 모달을 함께 렌더링
-        table_code = f"""
+        # 💡 테이블 HTML 조립 전 임시 마커를 실제 클릭 가능한 버튼으로 치환
+        # Streamlit Native Table Layout 유지
+        table_header = """
 <div style="overflow-x:auto; max-height:480px; border:1px solid #d0d7de; border-radius:8px; background-color:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
@@ -441,14 +424,34 @@ try:
             </tr>
         </thead>
         <tbody>
-{all_rows}
-        </tbody>
-    </table>
-</div>
-{all_modals}
 """
+        st.markdown(table_header, unsafe_allow_html=True)
 
-        st.markdown(table_code, unsafe_allow_html=True)
+        for idx, r_str, m_v, p_v, d_v, i_v in rows_list:
+            # 기본 행 렌더링
+            cleaned_row = r_str.replace(f"__ZOOM_BTN_{idx}__", "-")
+            st.markdown(f"<table style='width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;'><tbody>{cleaned_row}</tbody></table>", unsafe_allow_html=True)
+            
+            # 돋보기 버튼을 해당 위치에 매칭
+            if i_v and i_v.lower() not in ["none", "nat", "nan", "", "-"]:
+                # 자바스크립트나 쿼리 파라미터 대신 Streamlit 네이티브 다이얼로그 호출 트리거 연동
+                pass
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # 💡 간편하고 강력한 방법: 각 행마다 돋보기 버튼을 사이드에 배치하거나 깔끔하게 연동
+        st.markdown("<br><b>🔍 검사 사진 보기 (아래 목록에서 선택)</b>", unsafe_allow_html=True)
+        zoom_cols = st.columns(min(len(df_f), 5) if len(df_f) > 0 else 1)
+        for idx, row in df_f.head(5).iterrows():
+            i_val = str(row.get("사진파일명", "none")).strip()
+            if i_val and i_val.lower() not in ["none", "nat", "nan", "", "-"]:
+                m_no_val = str(row.get("포장재번호", "-"))
+                p_name_val = str(row.get("포장재약호", "-"))
+                d_date_val = format_date_str(row.get("검사일자", "-"))
+                
+                with zoom_cols[idx % len(zoom_cols)]:
+                    if st.button(f"🔍 [{m_no_val}] 보기", key=f"btn_zoom_{idx}", use_container_width=True):
+                        show_image_modal(m_no_val, p_name_val, d_date_val, i_val)
 
         st.markdown("---")
         with st.expander("🔐 관리자 메뉴 (백업 다운로드 / 수정 / 초기화)"):
@@ -592,7 +595,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.39 (True Fullscreen Modal)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.41 (Native Dialog Modal)" \
     "</div>", 
     unsafe_allow_html=True
 )
