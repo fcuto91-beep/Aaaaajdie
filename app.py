@@ -13,7 +13,8 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOOFoKubvnZB9ObfsIe-r9JAeWzOEzu5IlerjE3ikx0RhOA1Up_NBtjuwIFv8Y7nC6MA/exec"
+# 💡 새롭게 발급받으신 앱스 스크립트 배포 주소 반영
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhWAZ15Y3uQYckMcjnnpi9Jeg60zX_tFYT_nP16SrLi0z5BRFfhG9C-kyo5zdjAplR/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -148,7 +149,6 @@ def load_data():
                 for item in data:
                     if isinstance(item, list):
                         vals = [str(v).strip() for v in item]
-                        # 💡 리스트 데이터 개수에 맞춰 모든 컬럼(입고일자, 검사일자, 포장재번호, 포장재약호, 사진파일명, 손톱박리, 테이프박리, 최종판정, 특이사항)을 안전하게 매핑
                         while len(vals) < 9:
                             vals.append("-")
                         in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
@@ -617,7 +617,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.11 (Robust Data Parsing Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.13 (New Apps Script URL Linked)" \
     "</div>", 
     unsafe_allow_html=True
 )
