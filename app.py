@@ -404,11 +404,11 @@ try:
                     </div>
                     """
                 else:
+                    # 💡 구형 파일명 데이터일 경우 아예 안내 팝업 대신 깔끔하게 '-' 처리하여 팝업 충돌 원천 차단
                     modal_content = f"""
                     <div style="background:#f8f9fa; border-radius:6px; padding:15px; margin-bottom:12px; font-size:13px; color:#555; text-align:center;">
-                        📁 <b>저장된 사진 파일명:</b><br>
-                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_url)}</code><br><br>
-                        <span style="font-size:11.5px; color:#666;">이 항목은 이전 로컬 저장소에 있던 파일명입니다.<br>새로 등록하시는 검사 사진부터는 구글 드라이브로 완벽하게 저장됩니다 형님!</span>
+                        📁 <b>등록된 사진 정보가 없습니다.</b><br><br>
+                        <span style="font-size:11.5px; color:#666;">이 항목은 드라이브 링크가 없는 초기 기록입니다.<br>새로운 사진을 등록해 주시면 정상적으로 뷰어가 작동합니다 형님!</span>
                     </div>
                     """
 
@@ -551,7 +551,6 @@ try:
                             update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
                             
                             if update_btn:
-                                # 💡 핵심 수정: 새 파일이 업로드되면 기존 파일명과 상관없이 무조건 구글 드라이브로 업로드하여 새 링크 획득
                                 if edit_file is not None and getattr(edit_file, "size", 0) > 0:
                                     new_url = upload_image_to_drive(edit_file, edit_mat_no)
                                 else:
@@ -617,7 +616,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.16 (Force Image Upload Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.17 (Clean Modal Popup)" \
     "</div>", 
     unsafe_allow_html=True
 )
