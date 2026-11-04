@@ -26,16 +26,32 @@ def get_kst_now():
     return actual_kst
 
 def format_date_str(val):
-    if not val or str(val).lower() in ["nan", "nat", "none", "", "-"]:
+    if not val or str(val).strip().lower() in ["nan", "nat", "", "-", "null"]:
         return "-"
+        
     v_str = str(val).strip()
     
-    # 💡 시차 계산 없이 시트에 적힌 문자열 그대로 앞 10자리(YYYY-MM-DD)를 무조건 반환
+    # ISO 날짜•시간 문자열(예: 2026-10-29T15:00:00.000Z)을
+    # 한국 시간으로 변환한 뒤 날짜만 표시
+    try:
+        iso_str = v_str.replace("Z", "+00:00")
+        parsed_dt = datetime.fromisoformat(iso_str)
+
+        if parsed_dt.tzinfo is not None:
+            parsed_dt = parsed_dt.astimezone(KST)
+
+        return parsed_dt.strftime("%Y-%m-%d")
+    except ValueError:
+        pass
+
+    # 이미 날짜만 있는 값은 그대로 처리
     if len(v_str) >= 10:
-        cleaned = v_str[:10].replace("/", "-").replace(".", "-")
-        if len(cleaned) == 10 and cleaned[4] == '-' and cleaned[7] == '-':
-            return cleaned
-            
+        cleaned = v_str[:10].replace("/", "-").replace(".","-")
+        try:
+            return datetime.strptime(cleaned, "%Y-%m-%d").strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
     return v_str[:10] if len(v_str) >= 10 else v_str
 
 def parse_date_safely(val, fallback_date):
