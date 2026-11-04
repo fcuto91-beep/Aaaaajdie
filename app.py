@@ -31,8 +31,6 @@ def format_date_str(val):
         
     v_str = str(val).strip()
     
-    # ISO 날짜•시간 문자열(예: 2026-10-29T15:00:00.000Z)을
-    # 한국 시간으로 변환한 뒤 날짜만 표시
     try:
         iso_str = v_str.replace("Z", "+00:00")
         parsed_dt = datetime.fromisoformat(iso_str)
@@ -44,7 +42,6 @@ def format_date_str(val):
     except ValueError:
         pass
 
-    # 이미 날짜만 있는 값은 그대로 처리
     if len(v_str) >= 10:
         cleaned = v_str[:10].replace("/", "-").replace(".","-")
         try:
@@ -103,8 +100,10 @@ def load_data():
                         while len(vals) < 9:
                             vals.append("-")
                         in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
-                        if not f_n or f_n.lower() in ["nan", "nat", "", "none"]:
+                        
+                        if not f_n or f_n.lower() in ["nan", "nat", "", "none", ".none"]:
                             f_n = "none"
+                            
                         if not j_v or j_v == "-":
                             j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
                         normalized_rows.append({
@@ -113,8 +112,9 @@ def load_data():
                         })
                     elif isinstance(item, dict):
                         f_n = str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip()
-                        if not f_n or f_n.lower() in ["nan", "nat", "", "none"]:
+                        if not f_n or f_n.lower() in ["nan", "nat", "", "none", ".none"]:
                             f_n = "none"
+                            
                         normalized_rows.append({
                             "입고일자": format_date_str(str(item.get("입고일자", item.get("입고 일자", "-"))).strip()),
                             "검사일자": format_date_str(str(item.get("검사일자", item.get("검사 일자", "-"))).strip()),
@@ -172,7 +172,7 @@ def append_to_sheet(row_data):
 
 def update_sheet(old_mat, row_data):
     try:
-        clean_mat = str(old_mat).strip().split('.')[0]
+        clean_mat = str(old_mat).strip()
         payload = {"action": "update", "mat_no": clean_mat, "row": row_data}
         response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
         st.cache_data.clear()
@@ -346,7 +346,7 @@ try:
             img_val = str(row.get("사진파일명", "none")).strip()
             img_td = '-'
             
-            if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-"]:
+            if img_val and img_val.lower() not in ["none", "nat", "nan", "", "-", ".none"]:
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
@@ -476,7 +476,6 @@ try:
                         
                         edit_mat_no_val = str(curr_row.get("포장재번호", ""))
                         
-                        # 💡 form을 제거하고 일반 구성으로 변경하여 파일 업로더 객체 유실 방지
                         raw_in_date = curr_row["입고일자"] if "입고일자" in curr_row else curr_row.get(0, kst_today)
                         default_in_date = parse_date_safely(raw_in_date, kst_today)
                         edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date, key=f"edit_in_{sel_idx}")
@@ -512,14 +511,15 @@ try:
                         update_btn = st.button("🔄 수정 내용 반영하기", type="primary", key=f"update_btn_{sel_idx}")
                         
                         if update_btn:
-                            if edit_file is not None and getattr(edit_file, "size", 0) > 0:
+                            # 💡 업로드된 파일이 있으면 확실하게 base64로 변환, 없으면 기존 사진 파일명 안전 유지
+                            if edit_file is not None:
                                 new_url = process_image_to_base64(edit_file)
                             else:
-                                existing_img = curr_row.get("사진파일명", "none")
-                                if not existing_img or str(existing_img).lower() in ["nan", "nat", "none", "", "-", "null"]:
+                                existing_img = str(curr_row.get("사진파일명", "none")).strip()
+                                if not existing_img or existing_img.lower() in ["nan", "nat", "none", "", "-", ".none", "null"]:
                                     new_url = "none"
                                 else:
-                                    new_url = str(existing_img)
+                                    new_url = existing_img
                             
                             updated_row_data = [
                                 edit_in_date_str,
@@ -581,7 +581,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.43 (Edit File Uploader Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.45 (Photo Upload Definitive Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
