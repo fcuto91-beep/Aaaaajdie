@@ -14,7 +14,7 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOw70naIi46KJTB-8NstNNAk9UcRpjjhR8t7xtqv5ADvRe0Jy272A2bWoyQXhf-BFkgw/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYbt4TLqHrim_3ZPRBQ2Xq0cDF2LPZDXH5p3ZxfGo3VM1MRWbdVV717Ie1Zx6BOgz6/exec"
 
 KST = timezone(timedelta(hours=9))
 
