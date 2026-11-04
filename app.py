@@ -314,13 +314,13 @@ try:
         def get_badge(val):
             v_str = str(val).strip()
             if "부적합" in v_str or "FAIL" in v_str:
-                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🔴 부적합 (FAIL)</span>'
+                return '<span style="background-color:#fce8e6; color:#c5221f; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block; font-family:-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif;">🔴 부적합 (FAIL)</span>'
             elif "적합" in v_str or "PASS" in v_str:
-                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block;">🟢 적합 (PASS)</span>'
+                return '<span style="background-color:#e6f4ea; color:#137333; padding:2px 5px; border-radius:10px; font-size:9.5px; white-space:nowrap; display:inline-block; font-family:-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif;">🟢 적합 (PASS)</span>'
             elif "시험 대기" in v_str or "사양 확인" in v_str:
-                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 시험대기(사양확인)</span>'
+                return '<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block; font-family:-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif;">🟡 시험대기(사양확인)</span>'
             else:
-                return f'<span style="white-space:nowrap; font-size:11px;">{html.escape(val)}</span>'
+                return f'<span style="white-space:nowrap; font-size:11px; font-family:-apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif;">{html.escape(val)}</span>'
 
         rows_list = []
         modals_list = []
@@ -371,10 +371,9 @@ try:
                     </div>
                     """
 
-                # 💡 팝업창 가로 폭을 기존 460px에서 70% 수준인 320px로 축소
                 modal_html = f"""
                 <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center; background:transparent;">
-                    <div style="background:white; padding:15px; border-radius:10px; width:320px; max-width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                    <div style="background:white; padding:15px; border-radius:10px; width:320px; max-width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:6px;">
                             <h3 style="margin:0; font-size:13.5px; color:#222; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
                             <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:18px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 2px;">&times;</a>
@@ -391,17 +390,18 @@ try:
                 """
                 modals_list.append(modal_html)
 
+            # 💡 테이블 전체에 깔끔한 고딕 폰트 적용 (포장재 약호 포함)
             row_str = f"""
 <tr>
-    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{in_val}</td>
-    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{d_val}</td>
-    <td style="padding:8px 8px; width:95px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{m_val}</td>
-    <td style="padding:8px 10px; width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{p_val}</td>
-    <td style="padding:8px 6px; width:40px; text-align:center; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{img_td}</td>
-    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{n_val}</td>
-    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{t_val}</td>
-    <td style="padding:8px 6px; width:120px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{j_val}</td>
-    <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">{r_val}</td>
+    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{in_val}</td>
+    <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{d_val}</td>
+    <td style="padding:8px 8px; width:95px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{m_val}</td>
+    <td style="padding:8px 10px; width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11.5px; color:#333; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-weight:500;">{p_val}</td>
+    <td style="padding:8px 6px; width:40px; text-align:center; white-space:nowrap; font-size:11.5px; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{img_td}</td>
+    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{n_val}</td>
+    <td style="padding:8px 6px; width:100px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{t_val}</td>
+    <td style="padding:8px 6px; width:120px; white-space:nowrap; font-size:11.5px; color:#555; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{j_val}</td>
+    <td style="padding:8px 10px; min-width:130px; font-size:11.5px; color:#555; text-align:left; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{r_val}</td>
 </tr>"""
             rows_list.append(row_str)
 
@@ -412,7 +412,7 @@ try:
 
         table_code = f"""
 <div style="overflow-x:auto; background-color:#ffffff;">
-    <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0;">
+    <table style="width:100%; min-width:970px; table-layout:auto; border-collapse:collapse; margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
         <thead style="position:sticky; top:0; background-color:#f6f8fa; border-bottom:2px solid #d0d7de; z-index:10;">
             <tr>
                 <th style="padding:10px 8px; width:85px; white-space:nowrap; font-size:12px; font-weight:600; color:#24292f; text-align:center; border-right:1px solid #e0e0e0;">입고 일자</th>
@@ -582,7 +582,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.47 (Popup Size Slim Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.48 (Clean Font Family Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
