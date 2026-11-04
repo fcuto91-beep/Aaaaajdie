@@ -30,6 +30,10 @@ def format_date_str(val):
         return "-"
     v_str = str(val).strip()
     
+    # 💡 타임존 밀림 현상을 방지하기 위해 날짜 문자열 앞 10자리(YYYY-MM-DD)를 그대로 추출
+    if len(v_str) >= 10 and v_str[4] == '-' and v_str[7] == '-':
+        return v_str[:10]
+        
     if v_str.isdigit() and len(v_str) >= 10:
         try:
             num_val = float(v_str)
@@ -76,6 +80,12 @@ def parse_date_safely(val, fallback_date):
         return val
         
     v_str = str(val).strip()
+    
+    if len(v_str) >= 10 and v_str[4] == '-' and v_str[7] == '-':
+        try:
+            return datetime.strptime(v_str[:10], "%Y-%m-%d").date()
+        except:
+            pass
     
     months_map = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", 
                   "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
@@ -159,7 +169,7 @@ def load_data():
                         if not j_v or j_v == "-":
                             j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
                         normalized_rows.append({
-                            "입고일자": in_d, "검사일자": d_d, "포장재번호": m_no, "포장재약호": p_name,
+                            "입고일자": format_date_str(in_d), "검사일자": format_date_str(d_d), "포장재번호": m_no, "포장재약호": p_name,
                             "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
                         })
                     elif isinstance(item, dict):
@@ -167,8 +177,8 @@ def load_data():
                         if not f_n or f_n.lower() in ["nan", "nat", "", "none"]:
                             f_n = "none"
                         normalized_rows.append({
-                            "입고일자": str(item.get("입고일자", item.get("입고 일자", "-"))).strip(),
-                            "검사일자": str(item.get("검사일자", item.get("검사 일자", "-"))).strip(),
+                            "입고일자": format_date_str(str(item.get("입고일자", item.get("입고 일자", "-"))).strip()),
+                            "검사일자": format_date_str(str(item.get("검사일자", item.get("검사 일자", "-"))).strip()),
                             "포장재번호": str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
                             "포장재약호": str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
                             "사진파일명": f_n,
@@ -563,7 +573,6 @@ try:
                             update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
                             
                             if update_btn:
-                                # 💡 사진이 새로 업로드되면 압축 반영, 아니면 기존 사진파일명 유지 (빈칸 방지)
                                 if edit_file is not None and getattr(edit_file, "size", 0) > 0:
                                     new_url = process_image_to_base64(edit_file)
                                 else:
@@ -633,7 +642,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.39 (Photo Blank Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.41 (Date Timezone Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
