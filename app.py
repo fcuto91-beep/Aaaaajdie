@@ -30,44 +30,12 @@ def format_date_str(val):
         return "-"
     v_str = str(val).strip()
     
-    # 💡 타임존 밀림 현상을 방지하기 위해 날짜 문자열 앞 10자리(YYYY-MM-DD)를 그대로 추출
-    if len(v_str) >= 10 and v_str[4] == '-' and v_str[7] == '-':
-        return v_str[:10]
-        
-    if v_str.isdigit() and len(v_str) >= 10:
-        try:
-            num_val = float(v_str)
-            dt_obj = datetime.fromtimestamp(num_val / 1000.0 if len(v_str) >= 12 else num_val, tz=KST)
-            return dt_obj.strftime("%Y-%m-%d")
-        except:
-            pass
-
-    months = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", 
-              "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
-    
-    try:
-        parts = v_str.replace(",", "").split()
-        m_num, d_num, y_num = None, None, "2026"
-        for p in parts:
-            if p in months:
-                m_num = months[p]
-            elif p.isdigit():
-                if len(p) <= 2:
-                    d_num = p.zfill(2)
-                elif len(p) == 4:
-                    y_num = p
-        if m_num and d_num:
-            return f"{y_num}-{m_num}-{d_num}"
-    except:
-        pass
-
-    try:
-        parsed_dt = pd.to_datetime(v_str, errors='coerce')
-        if pd.notna(parsed_dt):
-            return parsed_dt.strftime("%Y-%m-%d")
-    except:
-        pass
-        
+    # 💡 시차 계산 없이 시트에 적힌 문자열 그대로 앞 10자리(YYYY-MM-DD)를 무조건 반환
+    if len(v_str) >= 10:
+        cleaned = v_str[:10].replace("/", "-").replace(".", "-")
+        if len(cleaned) == 10 and cleaned[4] == '-' and cleaned[7] == '-':
+            return cleaned
+            
     return v_str[:10] if len(v_str) >= 10 else v_str
 
 def parse_date_safely(val, fallback_date):
@@ -81,58 +49,13 @@ def parse_date_safely(val, fallback_date):
         
     v_str = str(val).strip()
     
-    if len(v_str) >= 10 and v_str[4] == '-' and v_str[7] == '-':
+    if len(v_str) >= 10:
         try:
-            return datetime.strptime(v_str[:10], "%Y-%m-%d").date()
-        except:
-            pass
-    
-    months_map = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", 
-                  "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
-    try:
-        parts = v_str.replace(",", "").split()
-        found_m, found_d, found_y = None, None, "2026"
-        for p in parts:
-            if p in months_map:
-                found_m = months_map[p]
-            elif p.isdigit():
-                if len(p) == 2 and not found_d:
-                    found_d = p
-                elif len(p) == 4:
-                    found_y = p
-        if found_m and found_d:
-            return datetime.strptime(f"{found_y}-{found_m}-{found_d}", "%Y-%m-%d").date()
-    except:
-        pass
-
-    if v_str.isdigit() and len(v_str) >= 10:
-        try:
-            num_val = float(v_str)
-            if len(v_str) >= 12:
-                return datetime.fromtimestamp(num_val / 1000.0, tz=KST).date()
-            else:
-                return datetime.fromtimestamp(num_val, tz=KST).date()
+            cleaned = v_str[:10].replace("/", "-").replace(".", "-")
+            return datetime.strptime(cleaned, "%Y-%m-%d").date()
         except:
             pass
             
-    if 'T' in v_str:
-        v_str = v_str.split('T')[0]
-    elif ' ' in v_str and not ('GMT' in v_str or 'Standard' in v_str):
-        v_str = v_str.split(' ')[0]
-        
-    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d", "%m/%d/%Y", "%d/%m/%Y", "%Y%m%d"):
-        try:
-            return datetime.strptime(v_str[:10], fmt).date()
-        except:
-            continue
-            
-    try:
-        parsed_dt = pd.to_datetime(v_str, errors='coerce')
-        if pd.notna(parsed_dt):
-            return parsed_dt.date()
-    except:
-        pass
-        
     return fallback_date
 
 def get_judgment_badge(val):
@@ -642,7 +565,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.41 (Date Timezone Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.42 (Date String Raw Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
