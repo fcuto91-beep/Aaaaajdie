@@ -136,16 +136,18 @@ def process_image_to_base64(uploaded_file):
     try:
         uploaded_file.seek(0)
         image = Image.open(uploaded_file)
-        if image.width > 800:
-            ratio = 800 / image.width
+        
+        # 💡 구글 시트 셀 글자수 제한(50,000자)을 완벽히 통과하도록 해상도(500px)와 품질(60)을 최적화
+        if image.width > 500:
+            ratio = 500 / image.width
             new_height = int(image.height * ratio)
-            image = image.resize((800, new_height), Image.Resampling.LANCZOS)
+            image = image.resize((500, new_height), Image.Resampling.LANCZOS)
         
         if image.mode in ("RGBA", "P"):
             image = image.convert("RGB")
             
         buffered = io.BytesIO()
-        image.save(buffered, format="JPEG", quality=75)
+        image.save(buffered, format="JPEG", quality=60)
         b64_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
         return f"data:image/jpeg;base64,{b64_str}"
     except Exception as e:
@@ -511,7 +513,6 @@ try:
                         update_btn = st.button("🔄 수정 내용 반영하기", type="primary", key=f"update_btn_{sel_idx}")
                         
                         if update_btn:
-                            # 💡 업로드된 파일이 있으면 확실하게 base64로 변환, 없으면 기존 사진 파일명 안전 유지
                             if edit_file is not None:
                                 new_url = process_image_to_base64(edit_file)
                             else:
@@ -581,7 +582,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.45 (Photo Upload Definitive Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.46 (Sheet Cell Limit Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
