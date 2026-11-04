@@ -137,7 +137,6 @@ def process_image_to_base64(uploaded_file):
         uploaded_file.seek(0)
         image = Image.open(uploaded_file)
         
-        # 💡 구글 시트 셀 글자수 제한(50,000자)을 완벽히 통과하도록 해상도(500px)와 품질(60)을 최적화
         if image.width > 500:
             ratio = 500 / image.width
             new_height = int(image.height * ratio)
@@ -354,38 +353,39 @@ try:
                 
                 if img_val.startswith("data:image"):
                     modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:420px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
-                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
+                    <div style="background:#f8f9fa; border-radius:6px; padding:4px; margin-bottom:10px; max-height:280px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
+                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:4px; display:inline-block;" />
                     </div>
                     """
                 elif "http" in img_val:
                     modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:8px; padding:6px; margin-bottom:14px; max-height:420px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
-                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:6px; display:inline-block;" />
+                    <div style="background:#f8f9fa; border-radius:6px; padding:4px; margin-bottom:10px; max-height:280px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
+                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:4px; display:inline-block;" />
                     </div>
                     """
                 else:
                     modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:8px; padding:15px; margin-bottom:14px; font-size:13px; color:#555; text-align:center;">
+                    <div style="background:#f8f9fa; border-radius:6px; padding:10px; margin-bottom:10px; font-size:12px; color:#555; text-align:center;">
                         📁 <b>저장된 파일 정보:</b><br>
-                        <code style="font-size:11px; color:#0366d6;">{html.escape(img_val)}</code>
+                        <code style="font-size:10px; color:#0366d6;">{html.escape(img_val)}</code>
                     </div>
                     """
 
+                # 💡 팝업창 가로 폭을 기존 460px에서 70% 수준인 320px로 축소
                 modal_html = f"""
                 <div id="{modal_id}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center; background:transparent;">
-                    <div style="background:white; padding:20px; border-radius:12px; width:460px; max-width:90%; box-shadow:0 15px 35px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
-                            <h3 style="margin:0; font-size:15px; color:#222; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
-                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:22px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 4px;">&times;</a>
+                    <div style="background:white; padding:15px; border-radius:10px; width:320px; max-width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.4); border:1px solid #d0d7de; position:relative; text-align:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:6px;">
+                            <h3 style="margin:0; font-size:13.5px; color:#222; font-weight:bold;">🔍 검사 사진 크게 보기</h3>
+                            <a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="text-decoration:none; font-size:18px; color:#666; font-weight:bold; cursor:pointer; line-height:1; padding:0 2px;">&times;</a>
                         </div>
-                        <div style="text-align:left; font-size:12px; color:#444; margin-bottom:10px; line-height:1.4; background:#f8f9fa; padding:8px 10px; border-radius:6px; border:1px solid #e1e4e8;">
+                        <div style="text-align:left; font-size:11px; color:#444; margin-bottom:8px; line-height:1.3; background:#f8f9fa; padding:6px 8px; border-radius:5px; border:1px solid #e1e4e8;">
                             📦 <b>포장재 번호:</b> {m_val}<br>
                             🏷️ <b>포장재 약호:</b> {p_val}<br>
                             📅 <b>검사 일자:</b> {d_val}
                         </div>
                         {modal_content}
-                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:13px; width:100%; cursor:pointer;">닫기</button>
+                        <button onclick="document.getElementById(\'{modal_id}\').style.display=\'none\';" style="background-color:#ff4b4b; color:white; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; font-size:12px; width:100%; cursor:pointer;">닫기</button>
                     </div>
                 </div>
                 """
@@ -582,7 +582,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.46 (Sheet Cell Limit Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.47 (Popup Size Slim Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
