@@ -476,68 +476,68 @@ try:
                         
                         edit_mat_no_val = str(curr_row.get("포장재번호", ""))
                         
-                        with st.form(f"edit_form_{sel_idx}"):
-                            raw_in_date = curr_row["입고일자"] if "입고일자" in curr_row else curr_row.get(0, kst_today)
-                            default_in_date = parse_date_safely(raw_in_date, kst_today)
-                            edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date)
-                            edit_in_date_str = edit_in_date_val.isoformat()
-                            
-                            raw_inspect_date = curr_row["검사일자"] if "검사일자" in curr_row else curr_row.get(1, kst_today)
-                            default_inspect_date = parse_date_safely(raw_inspect_date, kst_today)
-                            edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date)
-                            edit_inspect_date_str = edit_inspect_date_val.isoformat()
-                            
-                            edit_mat_no = st.text_input("포장재 번호 수정", value=edit_mat_no_val)
-                            edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")))
-                            
-                            nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
-                            curr_nail = str(curr_row.get("손톱박리", ""))
-                            nail_default = nail_opts.index(curr_nail) if curr_nail in nail_opts else 0
-                            edit_nail = st.selectbox("손톱 박리 결과 수정", nail_opts, index=nail_default)
-                            
-                            tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
-                            curr_tape = str(curr_row.get("테이프박리", ""))
-                            tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
-                            edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default)
-                            
-                            judg_opts = ["🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
-                            curr_judg = str(curr_row.get("최종판정", ""))
-                            judg_default = judg_opts.index(curr_judg) if curr_judg in judg_opts else 0
-                            edit_judg = st.selectbox("최종 판정 수정", judg_opts, index=judg_default)
-                            
-                            edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
-                            
-                            edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")))
-                            
-                            update_btn = st.form_submit_button("🔄 수정 내용 반영하기", type="primary")
-                            
-                            if update_btn:
-                                if edit_file is not None and getattr(edit_file, "size", 0) > 0:
-                                    new_url = process_image_to_base64(edit_file)
+                        # 💡 form을 제거하고 일반 구성으로 변경하여 파일 업로더 객체 유실 방지
+                        raw_in_date = curr_row["입고일자"] if "입고일자" in curr_row else curr_row.get(0, kst_today)
+                        default_in_date = parse_date_safely(raw_in_date, kst_today)
+                        edit_in_date_val = st.date_input("포장재 입고 일자 수정", value=default_in_date, key=f"edit_in_{sel_idx}")
+                        edit_in_date_str = edit_in_date_val.isoformat()
+                        
+                        raw_inspect_date = curr_row["검사일자"] if "검사일자" in curr_row else curr_row.get(1, kst_today)
+                        default_inspect_date = parse_date_safely(raw_inspect_date, kst_today)
+                        edit_inspect_date_val = st.date_input("검사 일자 수정", value=default_inspect_date, key=f"edit_insp_{sel_idx}")
+                        edit_inspect_date_str = edit_inspect_date_val.isoformat()
+                        
+                        edit_mat_no = st.text_input("포장재 번호 수정", value=edit_mat_no_val, key=f"edit_mat_{sel_idx}")
+                        edit_pack_name = st.text_input("포장재 약호 수정", value=str(curr_row.get("포장재약호", "")), key=f"edit_pack_{sel_idx}")
+                        
+                        nail_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
+                        curr_nail = str(curr_row.get("손톱박리", ""))
+                        nail_default = nail_opts.index(curr_nail) if curr_nail in nail_opts else 0
+                        edit_nail = st.selectbox("손톱 박리 결과 수정", nail_opts, index=nail_default, key=f"edit_nail_{sel_idx}")
+                        
+                        tape_opts = ["🟢 적합 (PASS)", "🔴 부적합 (FAIL)", "🟡 시험 대기 (사양 확인 중)"]
+                        curr_tape = str(curr_row.get("테이프박리", ""))
+                        tape_default = tape_opts.index(curr_tape) if curr_tape in tape_opts else 0
+                        edit_tape = st.selectbox("테이프 박리 결과 수정", tape_opts, index=tape_default, key=f"edit_tape_{sel_idx}")
+                        
+                        judg_opts = ["🟢 최종 적합 (PASS)", "🔴 최종 부적합 (FAIL)", "🟠 조건부 진행 (특이사항 확인)", "🟡 판정 대기"]
+                        curr_judg = str(curr_row.get("최종판정", ""))
+                        judg_default = judg_opts.index(curr_judg) if curr_judg in judg_opts else 0
+                        edit_judg = st.selectbox("최종 판정 수정", judg_opts, index=judg_default, key=f"edit_judg_{sel_idx}")
+                        
+                        edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
+                        
+                        edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")), key=f"edit_rem_{sel_idx}")
+                        
+                        update_btn = st.button("🔄 수정 내용 반영하기", type="primary", key=f"update_btn_{sel_idx}")
+                        
+                        if update_btn:
+                            if edit_file is not None and getattr(edit_file, "size", 0) > 0:
+                                new_url = process_image_to_base64(edit_file)
+                            else:
+                                existing_img = curr_row.get("사진파일명", "none")
+                                if not existing_img or str(existing_img).lower() in ["nan", "nat", "none", "", "-", "null"]:
+                                    new_url = "none"
                                 else:
-                                    existing_img = curr_row.get("사진파일명", "none")
-                                    if not existing_img or str(existing_img).lower() in ["nan", "nat", "none", "", "-", "null"]:
-                                        new_url = "none"
-                                    else:
-                                        new_url = str(existing_img)
-                                
-                                updated_row_data = [
-                                    edit_in_date_str,
-                                    edit_inspect_date_str,
-                                    str(edit_mat_no),
-                                    str(edit_pack_name) if edit_pack_name.strip() else "-",
-                                    new_url,
-                                    edit_nail,
-                                    edit_tape,
-                                    edit_judg,
-                                    str(edit_rem) if edit_rem.strip() else "-"
-                                ]
-                                
-                                if update_sheet(curr_row.get("포장재번호"), updated_row_data):
-                                    st.session_state["show_edited_modal"] = True
-                                    st.rerun()
-                                else:
-                                    st.error("❌ 수정 중 오류가 발생했습니다.")
+                                    new_url = str(existing_img)
+                            
+                            updated_row_data = [
+                                edit_in_date_str,
+                                edit_inspect_date_str,
+                                str(edit_mat_no),
+                                str(edit_pack_name) if edit_pack_name.strip() else "-",
+                                new_url,
+                                edit_nail,
+                                edit_tape,
+                                edit_judg,
+                                str(edit_rem) if edit_rem.strip() else "-"
+                            ]
+                            
+                            if update_sheet(curr_row.get("포장재번호"), updated_row_data):
+                                st.session_state["show_edited_modal"] = True
+                                st.rerun()
+                            else:
+                                st.error("❌ 수정 중 오류가 발생했습니다.")
                 else:
                     st.info("검색 결과가 없습니다.")
 
@@ -581,7 +581,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.42 (Date String Raw Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.43 (Edit File Uploader Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
