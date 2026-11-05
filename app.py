@@ -301,8 +301,8 @@ try:
                 df_f = df_f[df_f["최종판정"].str.contains("적합|PASS", case=False, na=False)].reset_index(drop=True)
             elif "조건부" in selected_single_filter:
                 df_f = df_f[df_f["최종판정"].str.contains("조건부", case=False, na=False)].reset_index(drop=True)
-            elif "대기" in selected_single_filter:
-                df_f = df_f[df_f["최종판정"].str.contains("대기|확인", case=False, na=False)].reset_index(drop=True)
+            elif "판정 대기" in selected_single_filter:  # 💡 "대기" 단독 매칭 대신 "판정 대기" 정확히 매칭하도록 수정
+                df_f = df_f[df_f["최종판정"].str.contains("판정 대기", case=False, na=False)].reset_index(drop=True)
 
         try:
             df_f["_temp_date"] = pd.to_datetime(df_f["입고일자"], errors='coerce')
@@ -390,7 +390,6 @@ try:
                 """
                 modals_list.append(modal_html)
 
-            # 💡 테이블 전체에 깔끔한 고딕 폰트 적용 (포장재 약호 포함)
             row_str = f"""
 <tr>
     <td style="padding:8px 8px; width:85px; white-space:nowrap; font-size:11.5px; color:#333; text-align:center; vertical-align:middle; border-bottom:1px solid #e0e0e0; border-right:1px solid #e0e0e0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{in_val}</td>
@@ -582,7 +581,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.48 (Clean Font Family Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.49 (Filter Exact Match Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
