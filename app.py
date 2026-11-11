@@ -84,6 +84,46 @@ def get_judgment_badge(val):
     else:
         return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
+def sanitize_and_align_row(vals):
+    """
+    데이터 열이 밀리거나 잘못된 위치에 판정/날짜가 들어간 경우를 감지하여
+    올바른 스키마 ([입고일자, 검사일자, 포장재번호, 포장재약호, 사진파일명, 손톱박리, 테이프박리, 최종판정, 특이사항])로 바로잡아주는 정제 함수
+    """
+    while len(vals) < 9:
+        vals.append("-")
+        
+    in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
+    
+    # 만약 검사일자(d_d) 자리에 'PASS', 'FAIL', '적합', '부적합' 등의 판정 결과가 밀려 들어온 경우 보정
+    if any(keyword in d_d.upper() for keyword in ["PASS", "FAIL", "적합", "부적합", "대기"]):
+        # 밀린 컬럼들을 제자리로 시프트
+        rem_v = j_v
+        j_v = tape_v
+        tape_v = nail_v
+        nail_v = f_n
+        f_n = p_name
+        p_name = m_no
+        m_no = d_d
+        d_d = in_d  # 검사일자가 없으면 입고일자로 임시 대체
+        
+    if not f_n or f_n.lower() in ["nan", "nat", "", "none", ".none"]:
+        f_n = "none"
+        
+    if not j_v or j_v == "-":
+        j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
+        
+    return {
+        "입고일자": format_date_str(in_d),
+        "검사일자": format_date_str(d_d),
+        "포장재번호": m_no,
+        "포장재약호": p_name,
+        "사진파일명": f_n,
+        "손톱박리": nail_v,
+        "테이프박리": tape_v,
+        "최종판정": j_v,
+        "특이사항": rem_v
+    }
+
 @st.cache_data(ttl=60)
 def load_data():
     try:
@@ -92,40 +132,25 @@ def load_data():
         if response.status_code == 200:
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
-                data = data[1:]
+                data = data[1:] # 헤더 스킵
                 normalized_rows = []
                 for item in data:
                     if isinstance(item, list):
                         vals = [str(v).strip() for v in item]
-                        while len(vals) < 9:
-                            vals.append("-")
-                        in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
-                        
-                        if not f_n or f_n.lower() in ["nan", "nat", "", "none", ".none"]:
-                            f_n = "none"
-                            
-                        if not j_v or j_v == "-":
-                            j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
-                        normalized_rows.append({
-                            "입고일자": format_date_str(in_d), "검사일자": format_date_str(d_d), "포장재번호": m_no, "포장재약호": p_name,
-                            "사진파일명": f_n, "손톱박리": nail_v, "테이프박리": tape_v, "최종판정": j_v, "특이사항": rem_v
-                        })
+                        normalized_rows.append(sanitize_and_align_row(vals))
                     elif isinstance(item, dict):
-                        f_n = str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip()
-                        if not f_n or f_n.lower() in ["nan", "nat", "", "none", ".none"]:
-                            f_n = "none"
-                            
-                        normalized_rows.append({
-                            "입고일자": format_date_str(str(item.get("입고일자", item.get("입고 일자", "-"))).strip()),
-                            "검사일자": format_date_str(str(item.get("검사일자", item.get("검사 일자", "-"))).strip()),
-                            "포장재번호": str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
-                            "포장재약호": str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
-                            "사진파일명": f_n,
-                            "손톱박리": str(item.get("손톱박리", "-")).strip(),
-                            "테이프박리": str(item.get("테이프박리", "-")).strip(),
-                            "최종판정": str(item.get("최종판정", item.get("판정", "🟡 판정 대기"))).strip(),
-                            "특이사항": str(item.get("특이사항", "-")).strip()
-                        })
+                        vals = [
+                            str(item.get("입고일자", item.get("입고 일자", "-"))).strip(),
+                            str(item.get("검사일자", item.get("검사 일자", "-"))).strip(),
+                            str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
+                            str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
+                            str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip(),
+                            str(item.get("손톱박리", "-")).strip(),
+                            str(item.get("테이프박리", "-")).strip(),
+                            str(item.get("최종판정", item.get("판정", "🟡 판정 대기"))).strip(),
+                            str(item.get("특이사항", "-")).strip()
+                        ]
+                        normalized_rows.append(sanitize_and_align_row(vals))
                 return pd.DataFrame(normalized_rows)
     except Exception as e:
         print(f"Load error: {e}")
@@ -442,6 +467,7 @@ try:
             if admin_input == ADMIN_PW:
                 st.success("✅ 관리자 인증이 완료되었습니다.")
                 
+                # [개선된 백업 기능] CSV 대신 Excel(정제본)과 실제 압축 사진(JPG)을 담은 ZIP 파일 생성
                 zb = io.BytesIO()
                 with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
                     export_df = df.copy()
@@ -450,12 +476,35 @@ try:
                     if "검사일자" in export_df.columns:
                         export_df["검사일자"] = export_df["검사일자"].apply(format_date_str)
 
-                    csv_bytes = export_df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
-                    zf.writestr("inspection_history.csv", csv_bytes)
+                    # 엑셀 파일용 데이터 생성 (Base64 코드는 길기 때문에 보기 좋게 정제)
+                    export_df_excel = export_df.copy()
+                    if "사진파일명" in export_df_excel.columns:
+                        export_df_excel["사진정보"] = export_df_excel["사진파일명"].apply(lambda x: "[사진등록됨]" if str(x).startswith("data:image") else "[사진없음]")
+                        export_df_excel = export_df_excel.drop(columns=["사진파일명"])
+                    
+                    excel_buffer = io.BytesIO()
+                    with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                        export_df_excel.to_excel(writer, index=False, sheet_name="Inspection_History")
+                    zf.writestr("inspection_history.xlsx", excel_buffer.getvalue())
+
+                    # 사진 데이터 디코딩 후 압축 폴더(images/)에 실제 파일로 저장
+                    for idx, row in df.iterrows():
+                        img_data = str(row.get("사진파일명", ""))
+                        if img_data.startswith("data:image"):
+                            try:
+                                header, encoded = img_data.split(",", 1)
+                                img_bytes = base64.b64decode(encoded)
+                                mat_num = str(row.get("포장재번호", f"mat_{idx}"))
+                                insp_date = str(row.get("검사일자", "date"))
+                                filename = f"images/inspect_{idx}_{insp_date}_{mat_num}.jpg".replace("/", "-")
+                                zf.writestr(filename, img_bytes)
+                            except Exception as ex:
+                                print(f"Image backup error at row {idx}: {ex}")
+
                 zb.seek(0)
                 
                 backup_filename = f"backup_{get_kst_now().strftime('%Y%m%d')}.zip"
-                st.download_button("💾 전체 검사 내역 백업 다운로드", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
+                st.download_button("💾 전체 검사 내역 및 사진 백업 다운로드 (ZIP)", data=zb, file_name=backup_filename, mime="application/zip", type="primary", use_container_width=True)
                 
                 st.markdown("---")
                 st.subheader("✏️ 검사 내역 수정")
@@ -543,9 +592,9 @@ try:
 
                 st.markdown("---")
                 if st.button("🗑️ 사진 폴더 비우기", use_container_width=True):
-                    if os.path.exists(D):
-                        for f_name in os.listdir(D):
-                            f_path = os.path.join(D, f_name)
+                    if os.path.exists("images"):
+                        for f_name in os.listdir("images"):
+                            f_path = os.path.join("images", f_name)
                             if os.path.isfile(f_path):
                                 os.remove(f_path)
                     st.success("사진 폴더가 초기화되었습니다!")
@@ -581,7 +630,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.50 (Table Header Final Result Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.51 (Data Alignment & Photo Backup Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
