@@ -14,7 +14,7 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# [최신 업데이트] 방금 새로 발급받으신 앱스 스크립트 웹앱 URL 반영 완료!
+# 방금 발급받으신 최신 웹 앱 URL 유지
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztJPDmQLnuzgnpDmB6f5CSyoUW0iSXUREJjLZBrTxYjSn5vd3kCv13LY-8DN-h8LHW/exec"
 
 KST = timezone(timedelta(hours=9))
@@ -91,6 +91,7 @@ def sanitize_and_align_row(vals):
         
     in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
     
+    # 순서 밀림 방지 보정
     if any(keyword in d_d.upper() for keyword in ["PASS", "FAIL", "적합", "부적합", "대기"]):
         rem_v = j_v
         j_v = tape_v
@@ -101,8 +102,11 @@ def sanitize_and_align_row(vals):
         m_no = d_d
         d_d = in_d
         
-    if not f_n or f_n.lower() in ["nan", "nat", "", "none", ".none"]:
+    # [핵심 수정] 사진 데이터(Base64 또는 URL 등)가 들어있다면 절대 'none'으로 날리지 않고 온전히 보존!
+    if not f_n or str(f_n).strip().lower() in ["nan", "nat", "", "none", ".none"]:
         f_n = "none"
+    else:
+        f_n = str(f_n).strip()
         
     if not j_v or j_v == "-":
         j_v = "🟢 최종 적합 (PASS)" if ("적합" in nail_v and "적합" in tape_v) else "🟡 판정 대기"
@@ -127,23 +131,24 @@ def load_data():
         if response.status_code == 200:
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
-                data = data[1:]
+                data = data[1:] # 헤더 제외
                 normalized_rows = []
                 for item in data:
                     if isinstance(item, list):
-                        vals = [str(v).strip() for v in item]
+                        # 리스트 형태일 때 그대로 문자열 변환하되 사진 컬럼(인덱스 4) 데이터 유실 방지
+                        vals = [str(v) if v is not None else "-" for v in item]
                         normalized_rows.append(sanitize_and_align_row(vals))
                     elif isinstance(item, dict):
                         vals = [
-                            str(item.get("입고일자", item.get("입고 일자", "-"))).strip(),
-                            str(item.get("검사일자", item.get("검사 일자", "-"))).strip(),
-                            str(item.get("포장재번호", item.get("포장재 번호", "-"))).strip(),
-                            str(item.get("포장재약호", item.get("포장재 약호", "-"))).strip(),
-                            str(item.get("사진파일명", item.get("사진 파일명", "none"))).strip(),
-                            str(item.get("손톱박리", "-")).strip(),
-                            str(item.get("테이프박리", "-")).strip(),
-                            str(item.get("최종판정", item.get("판정", "🟡 판정 대기"))).strip(),
-                            str(item.get("특이사항", "-")).strip()
+                            str(item.get("입고일자", item.get("입고 일자", "-"))),
+                            str(item.get("검사일자", item.get("검사 일자", "-"))),
+                            str(item.get("포장재번호", item.get("포장재 번호", "-"))),
+                            str(item.get("포장재약호", item.get("포장재 약호", "-"))),
+                            str(item.get("사진파일명", item.get("사진 파일명", "none"))),
+                            str(item.get("손톱박리", "-")),
+                            str(item.get("테이프박리", "-")),
+                            str(item.get("최종판정", item.get("판정", "🟡 판정 대기"))),
+                            str(item.get("특이사항", "-"))
                         ]
                         normalized_rows.append(sanitize_and_align_row(vals))
                 
@@ -376,13 +381,7 @@ try:
                 modal_id = f"modal_{idx}"
                 img_td = f'<a href="javascript:void(0);" onclick="document.getElementById(\'{modal_id}\').style.display=\'flex\';" style="text-decoration:none; font-size:16px; cursor:pointer;" title="사진 보기">🔍</a>'
                 
-                if img_val.startswith("data:image"):
-                    modal_content = f"""
-                    <div style="background:#f8f9fa; border-radius:6px; padding:4px; margin-bottom:10px; max-height:280px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
-                        <img src="{img_val}" style="max-width:100%; height:auto; border-radius:4px; display:inline-block;" />
-                    </div>
-                    """
-                elif "http" in img_val:
+                if img_val.startswith("data:image") or "http" in img_val:
                     modal_content = f"""
                     <div style="background:#f8f9fa; border-radius:6px; padding:4px; margin-bottom:10px; max-height:280px; overflow-y:auto; text-align:center; border:1px solid #e1e4e8;">
                         <img src="{img_val}" style="max-width:100%; height:auto; border-radius:4px; display:inline-block;" />
@@ -608,7 +607,7 @@ try:
                         color: #ff2121;
                     }
                     </style>
-                """, unsafe_allow_html=True)
+                """, unsafe_allow_html.True)
 
                 if st.button("🚨 전체 데이터 초기화", use_container_width=True):
                     if clear_sheet_data():
@@ -627,7 +626,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.58 (URL Updated)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.59 (Image Data Persistence Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
