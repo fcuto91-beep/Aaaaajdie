@@ -85,18 +85,12 @@ def get_judgment_badge(val):
         return f'<span style="background-color:#fef7e0; color:#b06000; padding:2px 4px; border-radius:8px; font-size:8.5px; white-space:nowrap; display:inline-block;">🟡 {html.escape(v_str)}</span>'
 
 def sanitize_and_align_row(vals):
-    """
-    데이터 열이 밀리거나 잘못된 위치에 판정/날짜가 들어간 경우를 감지하여
-    올바른 스키마 ([입고일자, 검사일자, 포장재번호, 포장재약호, 사진파일명, 손톱박리, 테이프박리, 최종판정, 특이사항])로 바로잡아주는 정제 함수
-    """
     while len(vals) < 9:
         vals.append("-")
         
     in_d, d_d, m_no, p_name, f_n, nail_v, tape_v, j_v, rem_v = vals[:9]
     
-    # 만약 검사일자(d_d) 자리에 'PASS', 'FAIL', '적합', '부적합' 등의 판정 결과가 밀려 들어온 경우 보정
     if any(keyword in d_d.upper() for keyword in ["PASS", "FAIL", "적합", "부적합", "대기"]):
-        # 밀린 컬럼들을 제자리로 시프트
         rem_v = j_v
         j_v = tape_v
         tape_v = nail_v
@@ -104,7 +98,7 @@ def sanitize_and_align_row(vals):
         f_n = p_name
         p_name = m_no
         m_no = d_d
-        d_d = in_d  # 검사일자가 없으면 입고일자로 임시 대체
+        d_d = in_d
         
     if not f_n or f_n.lower() in ["nan", "nat", "", "none", ".none"]:
         f_n = "none"
@@ -132,7 +126,7 @@ def load_data():
         if response.status_code == 200:
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
-                data = data[1:] # 헤더 스킵
+                data = data[1:]
                 normalized_rows = []
                 for item in data:
                     if isinstance(item, list):
@@ -151,7 +145,20 @@ def load_data():
                             str(item.get("특이사항", "-")).strip()
                         ]
                         normalized_rows.append(sanitize_and_align_row(vals))
-                return pd.DataFrame(normalized_rows)
+                
+                df_loaded = pd.DataFrame(normalized_rows)
+                
+                if not df_loaded.empty:
+                    # 시트 입력 순서 인덱스 부여
+                    df_loaded["_original_index"] = range(len(df_loaded))
+                    
+                    # 입고일자 최신순 정렬 + 같은 날짜 내에서는 시트 입력 순서(그룹)가 절대 깨지지 않도록 다중 정렬 적용
+                    df_loaded = df_loaded.sort_values(
+                        by=["입고일자", "_original_index"], 
+                        ascending=[False, False]
+                    ).drop(columns=["_original_index"]).reset_index(drop=True)
+                    
+                return df_loaded
     except Exception as e:
         print(f"Load error: {e}")
     
@@ -329,12 +336,7 @@ try:
             elif "판정 대기" in selected_single_filter:
                 df_f = df_f[df_f["최종판정"].str.contains("판정 대기", case=False, na=False)].reset_index(drop=True)
 
-        try:
-            df_f["_temp_date"] = pd.to_datetime(df_f["입고일자"], errors='coerce')
-            df_f = df_f.sort_values(by="_temp_date", ascending=True).drop(columns=["_temp_date"]).reset_index(drop=True)
-            df_f = df_f.iloc[::-1].reset_index(drop=True)
-        except Exception:
-            pass
+        df_f = df_f.reset_index(drop=True)
 
         def get_badge(val):
             v_str = str(val).strip()
@@ -467,7 +469,6 @@ try:
             if admin_input == ADMIN_PW:
                 st.success("✅ 관리자 인증이 완료되었습니다.")
                 
-                # [개선된 백업 기능] CSV 대신 Excel(정제본)과 실제 압축 사진(JPG)을 담은 ZIP 파일 생성
                 zb = io.BytesIO()
                 with zipfile.ZipFile(zb, "w", zipfile.ZIP_DEFLATED) as zf:
                     export_df = df.copy()
@@ -476,7 +477,6 @@ try:
                     if "검사일자" in export_df.columns:
                         export_df["검사일자"] = export_df["검사일자"].apply(format_date_str)
 
-                    # 엑셀 파일용 데이터 생성 (Base64 코드는 길기 때문에 보기 좋게 정제)
                     export_df_excel = export_df.copy()
                     if "사진파일명" in export_df_excel.columns:
                         export_df_excel["사진정보"] = export_df_excel["사진파일명"].apply(lambda x: "[사진등록됨]" if str(x).startswith("data:image") else "[사진없음]")
@@ -487,7 +487,6 @@ try:
                         export_df_excel.to_excel(writer, index=False, sheet_name="Inspection_History")
                     zf.writestr("inspection_history.xlsx", excel_buffer.getvalue())
 
-                    # 사진 데이터 디코딩 후 압축 폴더(images/)에 실제 파일로 저장
                     for idx, row in df.iterrows():
                         img_data = str(row.get("사진파일명", ""))
                         if img_data.startswith("data:image"):
@@ -630,7 +629,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.51 (Data Alignment & Photo Backup Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.53 (Sequence Grouping Fix)" \
     "</div>", 
     unsafe_allow_html=True
 )
