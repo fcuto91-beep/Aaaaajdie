@@ -15,7 +15,7 @@ st.set_page_config(page_title="Inspection", layout="wide")
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
 # [최신 업데이트] 방금 새로 발급받으신 앱스 스크립트 웹앱 URL 반영 완료!
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwn7BfUJiox988RiPQL4rJeoXZyomJe_t8SUS1mVePKlAuBT5uI9NGKFcS4z8eNEa2GmA/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztJPDmQLnuzgnpDmB6f5CSyoUW0iSXUREJjLZBrTxYjSn5vd3kCv13LY-8DN-h8LHW/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -627,7 +627,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.57 (Final URL & Update Sync)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.58 (URL Updated)" \
     "</div>", 
     unsafe_allow_html=True
 )
