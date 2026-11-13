@@ -14,8 +14,8 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# 최신 웹 앱 URL 유지
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztJPDmQLnuzgnpDmB6f5CSyoUW0iSXUREJjLZBrTxYjSn5vd3kCv13LY-8DN-h8LHW/exec"
+# [최신 업데이트] 방금 새로 발급받으신 앱스 스크립트 웹앱 URL 반영 완료!
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJBGclPh0IBzeWHv_TWqztaFJRZivoL71lMlFID-Y2k8-kq4ylzDtufA7HV0KztJrAOA/exec"
 
 KST = timezone(timedelta(hours=9))
 
@@ -169,34 +169,27 @@ def process_image_to_base64(uploaded_file):
         uploaded_file.seek(0)
         image = Image.open(uploaded_file)
         
-        if image.width > 500:
-            ratio = 500 / image.width
+        # 이미지 크기를 최적화하여 업로드 용량 제한 우회 (가로 400px 제한)
+        if image.width > 400:
+            ratio = 400 / image.width
             new_height = int(image.height * ratio)
-            image = image.resize((500, new_height), Image.Resampling.LANCZOS)
+            image = image.resize((400, new_height), Image.Resampling.LANCZOS)
         
         if image.mode in ("RGBA", "P"):
             image = image.convert("RGB")
             
         buffered = io.BytesIO()
-        image.save(buffered, format="JPEG", quality=60)
+        image.save(buffered, format="JPEG", quality=50) # 화질 품질 최적화
         b64_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
         return f"data:image/jpeg;base64,{b64_str}"
     except Exception as e:
         print(f"Image compression error: {e}")
-        try:
-            uploaded_file.seek(0)
-            bytes_data = uploaded_file.getvalue()
-            b64_str = base64.b64encode(bytes_data).decode('utf-8')
-            mime = uploaded_file.type if uploaded_file.type else "image/jpeg"
-            return f"data:{mime};base64,{b64_str}"
-        except Exception as err:
-            print(f"Fallback error: {err}")
     return "none"
 
 def append_to_sheet(row_data):
     try:
         payload = {"action": "append", "row": row_data}
-        response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=15)
         st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
@@ -207,7 +200,7 @@ def update_sheet(old_mat, row_data):
     try:
         clean_mat = str(old_mat).strip()
         payload = {"action": "update", "mat_no": clean_mat, "row": row_data}
-        response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+        response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=15)
         st.cache_data.clear()
         return response.status_code == 200
     except Exception as e:
@@ -623,7 +616,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.60 (Syntax Error Fixed)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.61 (Image Compression & URL Optimized)" \
     "</div>", 
     unsafe_allow_html=True
 )
