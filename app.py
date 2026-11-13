@@ -149,10 +149,7 @@ def load_data():
                 df_loaded = pd.DataFrame(normalized_rows)
                 
                 if not df_loaded.empty:
-                    # 시트 입력 순서 인덱스 부여
                     df_loaded["_original_index"] = range(len(df_loaded))
-                    
-                    # 입고일자 최신순 정렬 + 같은 날짜 내에서는 시트 입력 순서(그룹)가 절대 깨지지 않도록 다중 정렬 적용
                     df_loaded = df_loaded.sort_values(
                         by=["입고일자", "_original_index"], 
                         ascending=[False, False]
@@ -629,7 +626,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.53 (Sequence Grouping Fix)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.54 (Typo Fix & Update Sync Final)" \
     "</div>", 
     unsafe_allow_html=True
 )
