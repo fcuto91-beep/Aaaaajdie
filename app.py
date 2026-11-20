@@ -12,7 +12,8 @@ from PIL import Image
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
-ADMIN_PW = "1234"
+ACCESS_PW = "1234"  # 초기 접속(열람/기입) 비밀번호
+ADMIN_PW = "1234"   # 관리자 메뉴 비밀번호
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJBGclPh0IBzeWHv_TWqztaFJRZivoL71lMlFID-Y2k8-kq4ylzDtufA7HV0KztJrAOA/exec"
 
 KST = timezone(timedelta(hours=9))
@@ -226,10 +227,44 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
+# ==========================================
+# 🔐 초기 접속 비밀번호 인증 게이트
+# ==========================================
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+if not st.session_state["authenticated"]:
+    st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-top: 30px; margin-bottom: 10px; word-break: keep-all;'>🔒 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666; font-size: 14px; margin-bottom: 24px;'>보안을 위해 승인된 사용자만 접속할 수 있습니다. 접속 비밀번호를 입력해 주세요.</p>", unsafe_allow_html=True)
+
+    _, login_col, _ = st.columns([1, 1.5, 1])
+    with login_col:
+        with st.form("access_login_form"):
+            pw_input = st.text_input("접속 비밀번호", type="password", placeholder="비밀번호 입력")
+            login_submit = st.form_submit_button("🔓 접속하기", type="primary", use_container_width=True)
+
+        if login_submit:
+            if pw_input == ACCESS_PW:
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("❌ 접속 비밀번호가 일치하지 않습니다.")
+
+    st.stop()
+
+# ==========================================
+# ✅ 인증 완료 후 메인 화면
+# ==========================================
 st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
 current_time_str = get_kst_now().strftime('%Y-%m-%d %H:%M:%S')
-st.info("⏰ 일자: **" + current_time_str + "**")
+col_info, col_lock = st.columns([5, 1])
+with col_info:
+    st.info("⏰ 일자: **" + current_time_str + "**")
+with col_lock:
+    if st.button("🔒 화면 잠금", use_container_width=True):
+        st.session_state["authenticated"] = False
+        st.rerun()
 
 with st.form("f1", clear_on_submit=True):
     st.subheader("📝 시험 결과 입력")
@@ -619,7 +654,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.63 (Notice Highlighted & CI Removed)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.64 (Initial Access Password Gate Added)" \
     "</div>", 
     unsafe_allow_html=True
 )
