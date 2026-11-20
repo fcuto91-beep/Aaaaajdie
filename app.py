@@ -14,7 +14,6 @@ st.set_page_config(page_title="Inspection", layout="wide")
 
 LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
-# [최신 업데이트] 방금 새로 발급받으신 앱스 스크립트 웹앱 URL 반영 완료!
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJBGclPh0IBzeWHv_TWqztaFJRZivoL71lMlFID-Y2k8-kq4ylzDtufA7HV0KztJrAOA/exec"
 
 KST = timezone(timedelta(hours=9))
@@ -169,7 +168,6 @@ def process_image_to_base64(uploaded_file):
         uploaded_file.seek(0)
         image = Image.open(uploaded_file)
         
-        # 이미지 크기를 최적화하여 업로드 용량 제한 우회 (가로 400px 제한)
         if image.width > 400:
             ratio = 400 / image.width
             new_height = int(image.height * ratio)
@@ -179,7 +177,7 @@ def process_image_to_base64(uploaded_file):
             image = image.convert("RGB")
             
         buffered = io.BytesIO()
-        image.save(buffered, format="JPEG", quality=50) # 화질 품질 최적화
+        image.save(buffered, format="JPEG", quality=50)
         b64_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
         return f"data:image/jpeg;base64,{b64_str}"
     except Exception as e:
@@ -260,6 +258,7 @@ with st.form("f1", clear_on_submit=True):
     
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
     rem = st.text_area("특이사항")
+    st.caption("⚠️ (대외비, 예민정보, 개인정보 기입 금지)")
     ok = st.form_submit_button("💾 Save", type="primary")
 
 if ok:
@@ -543,6 +542,7 @@ try:
                         edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
                         
                         edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")), key=f"edit_rem_{sel_idx}")
+                        st.caption("⚠️ (대외비, 예민정보, 개인정보 기입 금지)")
                         
                         update_btn = st.button("🔄 수정 내용 반영하기", type="primary", key=f"update_btn_{sel_idx}")
                         
@@ -616,7 +616,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.61 (Image Compression & URL Optimized)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.62 (Confidentiality Notice Added)" \
     "</div>", 
     unsafe_allow_html=True
 )
