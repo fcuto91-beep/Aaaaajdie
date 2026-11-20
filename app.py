@@ -12,7 +12,6 @@ from PIL import Image
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
-LOGO_PATH = "logo.png"
 ADMIN_PW = "1234"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJBGclPh0IBzeWHv_TWqztaFJRZivoL71lMlFID-Y2k8-kq4ylzDtufA7HV0KztJrAOA/exec"
 
@@ -227,12 +226,6 @@ def show_edit_success_popup():
     if st.button("확인", type="primary", use_container_width=True):
         st.rerun()
 
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, use_column_width=600)
-
-st.markdown("")
 st.markdown("<h1 style='text-align: center; font-size: 24px !important; font-weight: bold; margin-bottom: 10px; word-break: keep-all;'>📦🧴 포장재 착인 검사 이력 관리</h1>", unsafe_allow_html=True)
 
 current_time_str = get_kst_now().strftime('%Y-%m-%d %H:%M:%S')
@@ -258,7 +251,12 @@ with st.form("f1", clear_on_submit=True):
     
     up_file = st.file_uploader("검사 사진", type=["jpg", "jpeg", "png"])
     rem = st.text_area("특이사항")
-    st.caption("⚠️ (대외비, 예민정보, 개인정보 기입 금지)")
+    st.markdown(
+        "<div style='color:#d93025; font-size:15px; font-weight:700; margin-top:-6px; margin-bottom:10px;'>"
+        "⚠️ (대외비, 예민정보, 개인정보 기입 금지)"
+        "</div>",
+        unsafe_allow_html=True
+    )
     ok = st.form_submit_button("💾 Save", type="primary")
 
 if ok:
@@ -542,7 +540,12 @@ try:
                         edit_file = st.file_uploader(f"새로운 사진 교체 (선택사항 - 현재 포장재 번호: {edit_mat_no_val})", type=["jpg", "jpeg", "png"], key=f"uploader_{sel_idx}")
                         
                         edit_rem = st.text_area("특이사항 수정", value=str(curr_row.get("특이사항", "-")), key=f"edit_rem_{sel_idx}")
-                        st.caption("⚠️ (대외비, 예민정보, 개인정보 기입 금지)")
+                        st.markdown(
+                            "<div style='color:#d93025; font-size:15px; font-weight:700; margin-top:-6px; margin-bottom:10px;'>"
+                            "⚠️ (대외비, 예민정보, 개인정보 기입 금지)"
+                            "</div>",
+                            unsafe_allow_html=True
+                        )
                         
                         update_btn = st.button("🔄 수정 내용 반영하기", type="primary", key=f"update_btn_{sel_idx}")
                         
@@ -616,7 +619,7 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: right; color: #888; font-size: 12px; line-height: 1.4;'>" \
-    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.62 (Confidentiality Notice Added)" \
+    "Author : 메이크업공정혁신팀 김태현 책임기사<br>Version : v1.11.63 (Notice Highlighted & CI Removed)" \
     "</div>", 
     unsafe_allow_html=True
 )
