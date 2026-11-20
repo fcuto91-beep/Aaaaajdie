@@ -12,8 +12,8 @@ from PIL import Image
 
 st.set_page_config(page_title="Inspection", layout="wide")
 
-ACCESS_PW = "1234"  # 초기 접속(열람/기입) 비밀번호
-ADMIN_PW = "1234"   # 관리자 메뉴 비밀번호
+ACCESS_PW = "kolmar1990!"  # 초기 접속(열람/기입) 비밀번호
+ADMIN_PW = "83121609"   # 관리자 메뉴 비밀번호
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJBGclPh0IBzeWHv_TWqztaFJRZivoL71lMlFID-Y2k8-kq4ylzDtufA7HV0KztJrAOA/exec"
 
 KST = timezone(timedelta(hours=9))
